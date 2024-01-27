@@ -116,28 +116,26 @@ architecture gth_single_10p24g_arch of gth_single_10p24g is
 --============================================================================
 begin
 
+  g_ref_clk0: if g_REFCLK_01 = 0 generate
+    refclks(0) <= gth_gt_clk_i.GTREFCLK0;
+    refclks(1) <= '0';
+  end generate;
+
+  g_ref_clk1: if g_REFCLK_01 = 1 generate
+    refclks(0) <= '0';
+    refclks(1) <= gth_gt_clk_i.GTREFCLK1;
+  end generate;
+
   -- CPLL is used
   g_cpll : if not g_USE_QPLL generate
-    g_ref_clk0: if g_REFCLK_01 = 0 generate
-      refclks(0) <= gth_gt_clk_i.GTREFCLK0;
-    end generate;
-
-    g_ref_clk1: if g_REFCLK_01 = 1 generate
-      refclks(1) <= gth_gt_clk_i.GTREFCLK1;
-    end generate;
-
     rxsysclksel <= "00";
     txsysclksel <= "00";
-    s_cpll_pd <= '0';
-  
   end generate;
 
   -- QPLL is used
   g_qpll : if g_USE_QPLL generate
-    refclks <= "00";
     rxsysclksel <= "11";
     txsysclksel <= "11";
-    s_cpll_pd <= '1';
   end generate;
 
   -- select the user bus width
