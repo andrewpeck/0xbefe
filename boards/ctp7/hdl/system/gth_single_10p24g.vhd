@@ -802,7 +802,7 @@ begin
       ------------------ Transmit Ports - Pattern Generator Ports ----------------
       TXPRBSFORCEERR            => gth_tx_ctrl_i.txprbsforceerr,
       ------------------ Transmit Ports - TX Buffer Bypass Ports -----------------
-      TXDLYBYPASS               => '0',
+      TXDLYBYPASS               => '1',
       TXDLYEN                   => gth_tx_init_i.TXDLYEN,
       TXDLYHOLD                 => '0',
       TXDLYOVRDEN               => '0',
