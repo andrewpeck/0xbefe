@@ -4,14 +4,14 @@ import paramiko
 import argparse
 
 queso_id_ip_map = {
-    1 : "169.254.119.34",
-    2 : "169.254.52.40",
-    3 : "169.254.118.3",
-    4 : "169.254.66.95",
-    5 : "169.254.122.125",
-    6 : "169.254.200.178",
-    7 : "169.254.8.226",
-    8 : "169.254.57.247",
+    "1" : "169.254.119.34",
+    "2" : "169.254.52.40",
+    "3" : "169.254.118.3",
+    "4" : "169.254.66.95",
+    "5" : "169.254.122.125",
+    "6" : "169.254.200.178",
+    "7" : "169.254.8.226",
+    "8" : "169.254.57.247",
 }
 
 if __name__ == "__main__":
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--niter", action="store", dest="niter", default="50", help="niter = Number of iterations (default=50)")
     args = parser.parse_args()
 
-    for i in range(args.niter):
+    for i in range(int(args.niter)):
         print("iteration", i)
         # 1. only power on and do nothing
         os.system("python3 me0_lpgbt/queso_testing/queso_initialization.py -i me0_lpgbt/queso_testing/resources/input_queso.txt -p")
@@ -92,9 +92,9 @@ if __name__ == "__main__":
                             print("ERROR in i2c SUB GBT")
                             sys.exit()
                     sleep(2)
-               ssh.close()
+                ssh.close()
         # 3. power off
         os.system("python3 me0_lpgbt/queso_testing/queso_initialization.py -i me0_lpgbt/queso_testing/resources/input_queso.txt -o")
         sleep(5)
         
-    print("50 iterations passed")
+    print(args.niter + " iterations passed")
