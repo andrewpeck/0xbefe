@@ -26,22 +26,22 @@ use work.lpgbtfpga_package.all;
 
 entity gem_amc is
     generic(
-        g_SLR                : integer;
-        g_GEM_STATION        : integer;
-        g_NUM_OF_OHs         : integer;
-        g_OH_VERSION         : integer;
-        g_GBT_WIDEBUS        : integer;
-        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;
-        g_NUM_GBTS_PER_OH    : integer;
-        g_NUM_VFATS_PER_OH   : integer;
-        g_USE_TRIG_TX_LINKS  : boolean := true;  -- if true, then trigger output links will be instantiated
-        g_NUM_TRIG_TX_LINKS  : integer;
-
-        g_NUM_IPB_SLAVES     : integer;
-        g_IPB_CLK_PERIOD_NS  : integer;
-        g_DAQ_CLK_FREQ       : integer;
-        g_IS_SLINK_ROCKET    : boolean;
-        g_EXT_TTC_RECEIVER   : boolean := true -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
+        g_SLR                  : integer;
+        g_GEM_STATION          : integer;
+        g_NUM_OF_OHs           : integer;
+        g_OH_VERSION           : integer;
+        g_GBT_WIDEBUS          : integer;
+        g_OH_TRIG_LINK_TYPE    : t_oh_trig_link_type;
+        g_NUM_GBTS_PER_OH      : integer;
+        g_NUM_VFATS_PER_OH     : integer;
+        g_USE_TRIG_TX_LINKS    : boolean := true;  -- if true, then trigger output links will be instantiated
+        g_NUM_TRIG_TX_LINKS    : integer;
+        g_NUM_IPB_SLAVES       : integer;
+        g_IPB_CLK_PERIOD_NS    : integer;
+        g_DAQ_CLK_FREQ         : integer;
+        g_IS_SLINK_ROCKET      : boolean;
+        g_EXT_TTC_RECEIVER     : boolean := true; -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
+        g_DISABLE_ME0_CLUSTERS : boolean := false -- if true, the ME0 S-bit clusterization algorithm will not be instanciated
     );
     port(
         reset_i                 : in   std_logic;
@@ -491,8 +491,9 @@ begin
         me0_cluster: entity work.sbit_me0
             generic map(
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                g_DISABLE_CLUSTERS  => g_DISABLE_ME0_CLUSTERS,
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG             => CFG_DEBUG_SBIT_ME0
             )
             port map(

@@ -383,21 +383,22 @@ begin
     g_gem_logic : if not CFG_LPGBT_2P56G_LOOPBACK_TEST generate
         i_gem : entity work.gem_amc
             generic map(
-                g_SLR                => 0,
-                g_GEM_STATION        => CFG_GEM_STATION(0),
-                g_NUM_OF_OHs         => CFG_NUM_OF_OHs(0),
-                g_OH_VERSION         => CFG_OH_VERSION(0),
-                g_GBT_WIDEBUS        => CFG_GBT_WIDEBUS(0),
-                g_NUM_GBTS_PER_OH    => CFG_NUM_GBTS_PER_OH(0),
-                g_NUM_VFATS_PER_OH   => CFG_NUM_VFATS_PER_OH(0),
-                g_USE_TRIG_TX_LINKS  => CFG_USE_TRIG_TX_LINKS(0),
-                g_NUM_TRIG_TX_LINKS  => CFG_NUM_TRIG_TX(0),
-                g_OH_TRIG_LINK_TYPE  => CFG_OH_TRIG_LINK_TYPE(0),
-                g_NUM_IPB_SLAVES     => C_NUM_IPB_SLAVES,
-                g_IPB_CLK_PERIOD_NS  => 20,
-                g_DAQ_CLK_FREQ       => 62_500_000, --50_000_000
-                g_IS_SLINK_ROCKET    => false,
-                g_EXT_TTC_RECEIVER   => false
+                g_SLR                  => 0,
+                g_GEM_STATION          => CFG_GEM_STATION(0),
+                g_NUM_OF_OHs           => CFG_NUM_OF_OHs(0),
+                g_OH_VERSION           => CFG_OH_VERSION(0),
+                g_GBT_WIDEBUS          => CFG_GBT_WIDEBUS(0),
+                g_NUM_GBTS_PER_OH      => CFG_NUM_GBTS_PER_OH(0),
+                g_NUM_VFATS_PER_OH     => CFG_NUM_VFATS_PER_OH(0),
+                g_USE_TRIG_TX_LINKS    => CFG_USE_TRIG_TX_LINKS(0),
+                g_NUM_TRIG_TX_LINKS    => CFG_NUM_TRIG_TX(0),
+                g_OH_TRIG_LINK_TYPE    => CFG_OH_TRIG_LINK_TYPE(0),
+                g_NUM_IPB_SLAVES       => C_NUM_IPB_SLAVES,
+                g_IPB_CLK_PERIOD_NS    => 20,
+                g_DAQ_CLK_FREQ         => 62_500_000, --50_000_000
+                g_IS_SLINK_ROCKET      => false,
+                g_EXT_TTC_RECEIVER     => false,
+                g_DISABLE_ME0_CLUSTERS => true
             )
             port map(
                 reset_i                 => usr_logic_reset,
