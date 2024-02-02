@@ -9,6 +9,8 @@ include:
     # - local: '/Top/csc_x2o_r1/gitlab-ci.yml' # special build
     # - local: '/Top/csc_x2o_tamu/gitlab-ci.yml' # special build
     - local: '/Top/ge11_ctp7/gitlab-ci.yml'
+    - local: '/Top/ge11_x2o/gitlab-ci.yml'
+    # - local: '/Top/ge11_x2o_r1/gitlab-ci.yml' # special build
     - local: '/Top/ge210_cvp13/gitlab-ci.yml'
     - local: '/Top/ge21_apex/gitlab-ci.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci.yml'
@@ -33,6 +35,8 @@ include:
     # - local: '/Top/csc_x2o_r1/gitlab-ci-devel.yml' # special build
     # - local: '/Top/csc_x2o_tamu/gitlab-ci-devel.yml' # special build
     - local: '/Top/ge11_ctp7/gitlab-ci-devel.yml'
+    - local: '/Top/ge11_x2o/gitlab-ci-devel.yml'
+    # - local: '/Top/ge11_x2o_r1/gitlab-ci-devel.yml' # special build
     - local: '/Top/ge210_cvp13/gitlab-ci-devel.yml'
     - local: '/Top/ge21_apex/gitlab-ci-devel.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci-devel.yml'
