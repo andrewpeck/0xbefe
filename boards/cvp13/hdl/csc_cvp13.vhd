@@ -202,8 +202,10 @@ architecture csc_cvp13_arch of csc_cvp13 is
     signal daqlink_to_daq           : t_daqlink_to_daq_arr(CFG_NUM_SLRS - 1 downto 0) := (others => DAQLINK_TO_DAQ_NULL);
 
     -------------------- PROMless ---------------------------------
-    signal to_promless              : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
-    signal from_promless            : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => FROM_PROMLESS_NULL);
+    signal to_promless_cfeb         : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
+    signal from_promless_cfeb       : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others =>FROM_PROMLESS_NULL);
+    signal to_promless_alct         : t_to_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others => TO_PROMLESS_NULL);
+    signal from_promless_alct       : t_from_promless_arr(CFG_NUM_SLRS - 1 downto 0) := (others =>FROM_PROMLESS_NULL);
 
 begin
     
@@ -379,7 +381,9 @@ begin
 --            ipb_miso_o      => ipb_sys_miso_arr(C_IPB_SYS_SLV.promless),
 --            ipb_mosi_i      => ipb_sys_mosi_arr(C_IPB_SYS_SLV.promless)
 --        );
-    from_promless <= (others => FROM_PROMLESS_NULL);
+
+    from_promless_cfeb <= (others => FROM_PROMLESS_NULL);
+    from_promless_alct <= (others => FROM_PROMLESS_NULL);
 
     --================================--
     -- Board System registers
@@ -560,8 +564,10 @@ begin
                 board_id_i              => board_id,
                 
                 -- PROMless
-                to_promless_o           => to_promless(slr),
-                from_promless_i         => from_promless(slr)          
+                to_promless_cfeb_o      => to_promless_cfeb(slr),
+                from_promless_cfeb_i    => from_promless_cfeb(slr),
+                to_promless_alct_o      => to_promless_alct(slr),
+                from_promless_alct_i    => from_promless_alct(slr)
             );
             
         -- DMB link mapping
