@@ -11,82 +11,85 @@ OFF = False
 POWER = {'ON':ON,'OFF':OFF}
 
 class PowerSupply:
-    def __init__(self,port,baudrate):
+    def __init__(self,port=PORT_NAME,baudrate=BAUDRATE):
         try:
             self._ser = serial.Serial(
-                port=PORT_NAME,
-                baudrate=BAUDRATE
+                port=port,
+                baudrate=baudrate
             )
+            self._ser.write('ECHO OFF\r\n'.encode())
+            self.read_serial()
             # Read in values from serial device
             self._ramp_time = self.get_ramp_time(read=True)
             self._output    = self.get_output(read=True)
             self._voltage   = self.get_voltage(read=True)
             self._current   = self.get_current(read=True)
-            self.v_sequence = None
+            self._v_sequence = None
         except serial.SerialException:
             print(f'Failed to open serial device: {PORT_NAME}')
             sys.exit()
 
     @property
     def v_sequence(self):
-        return self.v_sequence
+        return self._v_sequence
     @v_sequence.setter
     def v_sequence(self,v_list):
-        self.v_sequence = v_list
+        self._v_sequence = v_list
 
     def set_ramp_time(self,ramp:int):
-        self.ser.write(f'RAMP {ramp:d}\r\n')
+        self._ser.write(f'RAMP {ramp:d}\r\n'.encode())
         self._ramp_time = ramp
 
     def get_ramp_time(self,read=False):
         if read:
-            self.ser.write('RAMP\r\n')
-            return self.read_serial()
-        else:
-            return self._ramp_time
+            self._ser.write('RAMP\r\n'.encode())
+            ramp = self.read_serial()
+            try:
+                self._ramp_time = int(ramp.split()[0])
+            except TypeError:
+                print('ERROR:couldn\'t cast serial output to int')
+        return self._ramp_time
         
     def set_voltage(self,voltage):
-        self.ser.write(f'VSET {voltage}\r\n')
+        self._ser.write(f'VSET {voltage}\r\n'.encode())
         self._voltage = voltage
 
     def get_voltage(self,read=False):
         if read:
-            self.ser.write('VREAD\r\n')
-            return self.read_serial()
-        else:
-            return self._voltage
+            self._ser.write('VREAD\r\n'.encode())
+            self._voltage = self.read_serial()
+        return self._voltage
 
     def set_current(self,current):
-        self.ser.write(f'ISET {current}\r\n')
+        self._ser.write(f'ISET {current}\r\n'.encode())
         self._current = current
 
     def get_current(self,read=False):
         if read:
-            self.ser.write('IREAD\r\n')
-            return self.read_serial()
-        else:
-            return self._current
+            self._ser.write('IREAD\r\n'.encode())
+            self._current = self.read_serial()
+        return self._current
 
     def set_output(self,output:bool):
         if output:
-            self.ser.write('PWR ON\r\n')
+            self._ser.write('PWR ON\r\n'.encode())
         else:
-            self.ser.write('PWR OFF\r\n')
+            self._ser.write('PWR OFF\r\n'.encode())
         self._output = output
 
     def get_output(self,read=False):
         if read:
-            self.ser.write('OUTPUT\r\n')
+            self._ser.write('PWR\r\n'.encode())
             # Cast to bool
-            return POWER[self.read_serial()]
-        else:
-            return self._output
+            self._output = POWER[self.read_serial()]
+        return self._output
 
     def read_serial(self):
         out = ''
-        time.sleep(0.1)
-        while self.ser.inWaiting() > 0:
-            out += self.ser.read(1)
+        time.sleep(1)
+        while self._ser.inWaiting() > 0:
+            out += self._ser.read(1).decode()
+        out = out.removesuffix('\r\n')
         return out
 
     def power_sequence(self,power:bool):
@@ -95,17 +98,17 @@ class PowerSupply:
         # Power on sequence
         if power:
             # Check if output is OFF and turn on
-            if self.get_output() == 'OFF':
-                if voltages[0]!=0:
-                    self.set_voltage(0)
-                self.set_output(ON)
+            self.set_voltage(0.001)
+            self.set_output(ON)
             for voltage in voltages:
+                time.sleep(3)
+                # time.sleep(self.get_ramp_time()/1000)
                 self.set_voltage(voltage)
-                time.sleep(self._ramp_time/1000)
+
         else:
             voltages = voltages[::-1]
-            if voltages[-1]!=0:
-                voltages.append(0)
+            if voltages[-1]!=0.001:
+                voltages.append(0.001)
             for voltage in voltages:
                 self.set_voltage(voltage)
                 time.sleep(self._ramp_time/1000)
@@ -183,11 +186,20 @@ def main():
             print('Power sequence arg not used. Setting max voltage value.')
             try:
                 voltage = max(map(float,args.voltage))
-                pwr.set_voltage(voltage)
             except TypeError:
                 print('ERROR:Must provide float values for voltage arg.')
                 pwr.close()
                 sys.exit()
+        else:
+            try:
+                voltage = float(args.voltage[0])
+            except TypeError:
+                print('ERROR:Must provide float values for voltage arg.')
+                pwr.close()
+                sys.exit()
+        pwr.set_voltage(voltage)
+        print('object val:{v:f}'.format(v=pwr.get_voltage()))
+        print(pwr.get_voltage(read=True))
     elif args.power:
         print('Must provide at least one voltage w/ -v/--voltage for power sequence.')
         pwr.close()
