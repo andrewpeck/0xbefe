@@ -17,8 +17,8 @@ class PowerSupply:
                 port=port,
                 baudrate=baudrate
             )
+            # Turn off echo commands and flush serial buffer
             self._ser.write('ECHO OFF\r\n'.encode())
-            self.read_serial()
             # Read in values from serial device
             self._ramp_time = self.get_ramp_time(read=True)
             self._output    = self.get_output(read=True)
@@ -41,6 +41,8 @@ class PowerSupply:
         self._ramp_time = ramp
 
     def get_ramp_time(self,read=False):
+        # Flush serial
+        self.read_serial(0)
         if read:
             self._ser.write('RAMP\r\n'.encode())
             ramp = self.read_serial()
@@ -55,9 +57,16 @@ class PowerSupply:
         self._voltage = voltage
 
     def get_voltage(self,read=False):
+        # flush serial
+        self.read_serial(0)
         if read:
+            # Read voltage value
             self._ser.write('VREAD\r\n'.encode())
-            self._voltage = self.read_serial()
+            self._voltage = float(self.read_serial().split()[0])
+        else:
+            # Read set voltage
+            self._ser.write('VSET\r\n'.encode())
+            self._voltage = float(self.read_serial().split()[0])
         return self._voltage
 
     def set_current(self,current):
@@ -65,9 +74,16 @@ class PowerSupply:
         self._current = current
 
     def get_current(self,read=False):
+        # Flush serial
+        self.read_serial(0)
         if read:
+            # Read current value
             self._ser.write('IREAD\r\n'.encode())
-            self._current = self.read_serial()
+            self._current = float(self.read_serial().split()[0])
+        else:
+            # Read current limit
+            self._ser.write('ISET\r\n'.encode())
+            self._current = float(self.read_serial().split()[0])
         return self._current
 
     def set_output(self,output:bool):
@@ -78,15 +94,17 @@ class PowerSupply:
         self._output = output
 
     def get_output(self,read=False):
+        # Flush serial
+        self.read_serial(0)
         if read:
             self._ser.write('PWR\r\n'.encode())
             # Cast to bool
             self._output = POWER[self.read_serial()]
         return self._output
 
-    def read_serial(self):
+    def read_serial(self,sleep=1):
         out = ''
-        time.sleep(1)
+        time.sleep(sleep)
         while self._ser.inWaiting() > 0:
             out += self._ser.read(1).decode()
         out = out.removesuffix('\r\n')
@@ -95,6 +113,7 @@ class PowerSupply:
     def power_sequence(self,power:bool):
         # Power on sequence
         if power:
+            print('Powering ON')
             # Copy voltage sequence to not alter property
             voltages = self.v_sequence.copy()
             # Check if output is OFF and turn on
@@ -106,22 +125,25 @@ class PowerSupply:
                 self.set_voltage(voltage)
                 time.sleep((self.get_ramp_time()+100)/1000)
         else:
+            print('Powering OFF')
             self.set_voltage(0.001)
-    
+        
     def close(self):
         self._ser.close()
 
 def main():
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Programmable Power Supply")
-    parser.add_argument('-i','--current',action='store',dest='current',help='current = Current limit to set power supply to.')
     parser.add_argument('-t','--ramp_time',action='store',dest='ramp_time',help='ramp_time = ramp time in ms to configure power supply.')
+    parser.add_argument('-i','--current',action='store',dest='current',help='current = Current limit to set power supply to.')
     parser.add_argument('-v','--voltage',action='store',nargs='+',dest='voltage',help='voltage = Voltage(s) to set power supply to. If multiple values are given, they will be set sequentially for power on/off. Values are taken to be in ascending order, and will be reversed for power-off sequence.')
     parser.add_argument('-p','--power',action='store',dest='power',help='power = \'ON\' = Run power up sequence, \'OFF\' = Run power down sequence.')
     parser.add_argument('-o','--output',action='store',dest='output',help='output = Toggle OUTPUT \'ON\'/\'OFF\'. Use for debugging or configuring purposes only. Output is set last. Use \'-p\'/\'--power\' for power ON/OFF sequence.')
+    parser.add_argument('-r','--read',action='store_true',dest='read',help='read = Read and print power supply output at the end of operations.')
     args = parser.parse_args()
 
     pwr = PowerSupply()
+
     # configure power sequence
     if args.power:
         # Get boolean for power arg
@@ -198,6 +220,14 @@ def main():
     # Or turn ON/OFF output
     elif output!=None:
         pwr.set_output(output)
+    
+    if args.read:
+        print(f'V_SET = {pwr.get_voltage()} V')
+        print(f'V_READ = {pwr.get_voltage(read=True)} V')
+        print(f'I_SET = {pwr.get_current()} A')
+        print(f'I_READ = {pwr.get_current(read=True)} A')
+        print(f'OUTPUT = {int(pwr.get_output(read=True)):d}')
+        print(f'RAMP_TIME = {pwr.get_ramp_time(read=True)} s')
 
 if __name__ == "__main__":
     main()
