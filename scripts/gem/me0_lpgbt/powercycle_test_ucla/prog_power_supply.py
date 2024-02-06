@@ -93,25 +93,20 @@ class PowerSupply:
         return out
 
     def power_sequence(self,power:bool):
-        # Copy voltage sequence to not alter property
-        voltages = self.v_sequence.copy()
         # Power on sequence
         if power:
+            # Copy voltage sequence to not alter property
+            voltages = self.v_sequence.copy()
             # Check if output is OFF and turn on
-            self.set_voltage(0.001)
-            self.set_output(ON)
+            if not self.get_output():
+                self.set_voltage(0.001)
+                self.set_output(ON)
+                time.sleep(1)
             for voltage in voltages:
-                time.sleep(3)
-                # time.sleep(self.get_ramp_time()/1000)
                 self.set_voltage(voltage)
-
+                time.sleep((self.get_ramp_time()+100)/1000)
         else:
-            voltages = voltages[::-1]
-            if voltages[-1]!=0.001:
-                voltages.append(0.001)
-            for voltage in voltages:
-                self.set_voltage(voltage)
-                time.sleep(self._ramp_time/1000)
+            self.set_voltage(0.001)
     
     def close(self):
         self._ser.close()
@@ -136,12 +131,6 @@ def main():
             print('ERROR:-p/--power valid inputs are \'ON\'/\'OFF\'.')
             pwr.close()
             sys.exit()
-        
-        # Check power ON or OFF
-        if power:
-            # Check that output is off before configuring
-            if pwr.get_output(read=True):
-                pwr.set_output(OFF)
     else:
         power = None
 
@@ -198,9 +187,7 @@ def main():
                 pwr.close()
                 sys.exit()
         pwr.set_voltage(voltage)
-        print('object val:{v:f}'.format(v=pwr.get_voltage()))
-        print(pwr.get_voltage(read=True))
-    elif args.power:
+    elif power:
         print('Must provide at least one voltage w/ -v/--voltage for power sequence.')
         pwr.close()
         sys.exit()
