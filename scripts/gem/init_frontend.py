@@ -82,7 +82,7 @@ def init_gem_frontend():
                 writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
                 writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
                 sleep(0.1)
-                writeGbtRegAddrs(0x055, 0x20) # Set GPIOs back high only for VTRx+
+                writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high only for VTRx+
                 sleep(0.1)
         sleep(2)
 
@@ -127,14 +127,6 @@ def init_gem_frontend():
                 gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
                 sleep(0.5)
                 
-                if gbt%2 == 0 and oh_ver == 2:
-                    #selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                    #writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
-                    #writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
-                    #sleep(0.1)
-                    #writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
-                    sleep(2.5)
-
                 # Enable TX channels of VTRx+
                 if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
                     continue
@@ -203,32 +195,32 @@ def init_gem_frontend():
                         sleep(0.01)
                 elif oh_ver == 2:
                     # Assuming OHv2 never connected to an old VTRx+
-
+                    '''
                     # Read first to check if old VTRx+
-                    #writeGbtRegAddrs(0x110, control_register_data_check)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x110, check_reg_addr)
-                    #writeGbtRegAddrs(0x114, 0x8)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
-                    #writeGbtRegAddrs(0x114, 0xC)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x110, control_register_data_check)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
-                    #writeGbtRegAddrs(0x114, 0xD)
-                    #sleep(0.01)
-                    #vtrx_data = readGbtRegAddrs(0x1AD)
-                    #if vtrx_data == 0x01:
-                    #    old_vtrx = 1
-                    #writeGbtRegAddrs(0x110, 0x0)
-                    #writeGbtRegAddrs(0x111, 0x0)
-                    #writeGbtRegAddrs(0x10F, 0x0)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-
+                    writeGbtRegAddrs(0x110, control_register_data_check)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, check_reg_addr)
+                    writeGbtRegAddrs(0x114, 0x8)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
+                    writeGbtRegAddrs(0x114, 0xC)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, control_register_data_check)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
+                    writeGbtRegAddrs(0x114, 0xD)
+                    sleep(0.01)
+                    vtrx_data = readGbtRegAddrs(0x1AD)
+                    if vtrx_data == 0x01:
+                        old_vtrx = 1
+                    writeGbtRegAddrs(0x110, 0x0)
+                    writeGbtRegAddrs(0x111, 0x0)
+                    writeGbtRegAddrs(0x10F, 0x0)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    '''
                     # Write
                     if not old_vtrx: # Need to enable TX channel of VTRx+ only for new VTRx+
                         writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
@@ -280,6 +272,8 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
                         '''
+                if oh_ver == 2:
+                   sleep(2.5)
             
             # Read in me0 DAQ phase scan results
             bestphase_list = {}

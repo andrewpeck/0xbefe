@@ -14,7 +14,7 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 resultDir = scripts_gem_dir + "/results"
 
-def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, calpulse_only, l1a_bxgap, s_bit_channel_mapping):
+def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, threshold, nl1a, calpulse_only, l1a_bxgap, s_bit_channel_mapping):
     vfatDir = resultDir + "/vfat_data"
     dataDir = vfatDir + "/vfat_sbit_crosstalk_results"
 
@@ -31,7 +31,9 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ca
 
     sbit_data = {}
     cal_mode = {}
+    threshold_orig = {}
     channel_list = range(0,128)
+
     # Check ready and get nodes
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -54,6 +56,10 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ca
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
             
+        if threshold != -9999:
+            threshold_orig[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
+            print("Setting threshold = %d (DAC)"%threshold)
+            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
         for channel in channel_list:
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # unmask all channels and disable calpulsing
         cal_mode[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)))
@@ -167,6 +173,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, set_cal_mode, cal_dac, nl1a, ca
         print("Unconfiguring VFAT %d" % (vfat))
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # disable calpulsing on all channels for this VFAT
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
         configureVfat(0, vfat, oh_select, 0)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
@@ -208,6 +215,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--vfats", action="store", dest="vfats", nargs="+", help="vfats = VFAT number (0-23)")
     parser.add_argument("-m", "--cal_mode", action="store", dest="cal_mode", default = "current", help="cal_mode = voltage or current (default = current)")
     parser.add_argument("-d", "--cal_dac", action="store", dest="cal_dac", help="cal_dac = Value of CAL_DAC register (default = 50 for voltage pulse mode and 150 for current pulse mode)")
+    parser.add_argument("-x", "--threshold", action="store", dest="threshold", help="threshold = the CFG_THR_ARM_DAC value (default=configured value of VFAT)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", help="nl1a = fixed number of L1A cycles")
@@ -261,6 +269,13 @@ if __name__ == "__main__":
         cal_dac = int(args.cal_dac)
         if cal_dac > 255 or cal_dac < 0:
             print (Colors.YELLOW + "CAL_DAC must be between 0 and 255" + Colors.ENDC)
+            sys.exit()
+
+    threshold = -9999
+    if args.threshold is not None:
+        threshold = int(args.threshold)
+        if threshold not in range(0,256):
+            print (Colors.YELLOW + "Threshold has to 8 bits (0-255)" + Colors.ENDC)
             sys.exit()
 
     nl1a = 0
@@ -322,7 +337,7 @@ if __name__ == "__main__":
 
     # Running Sbit SCurve
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac , nl1a, args.calpulse_only, l1a_bxgap, s_bit_channel_mapping)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, cal_mode, cal_dac, threshold, nl1a, args.calpulse_only, l1a_bxgap, s_bit_channel_mapping)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

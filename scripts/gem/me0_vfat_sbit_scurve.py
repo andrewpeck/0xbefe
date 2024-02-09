@@ -30,6 +30,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
 
     sbit_data = {}
     cal_mode = {}
+    threshold_orig = {}
+
     # Check ready and get nodes
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -53,6 +55,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
             
         if threshold != -9999:
+            threshold_orig[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
             print("Setting threshold = %d (DAC)"%threshold)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
         for channel in channel_list:
@@ -204,6 +207,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
         print("Unconfiguring VFAT %d" % (vfat))
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # disable calpulsing on all channels for this VFAT
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
         configureVfat(0, vfat, oh_select, 0)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 

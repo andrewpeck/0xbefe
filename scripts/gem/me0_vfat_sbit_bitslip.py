@@ -8,7 +8,7 @@ import random
 import json
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, n_allowed_missing_hits, input_file, bitslip_all):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap, set_cal_mode, cal_dac, threshold, n_allowed_missing_hits, input_file, bitslip_all):
     print ("%s VFAT S-Bit Bitslipping\n"%gem)
 
     if bitslip_all is not None:
@@ -73,6 +73,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         for elink in range(8):
             sbit_bistlip_nodes[vfat][elink] = get_backend_node("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh_select,vfat,elink))
 
+    threshold_orig = {}
+
     # Configure all VFATs
     for vfat in vfat_list:
         print("Configuring VFAT %02d" % (vfat))
@@ -101,6 +103,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
         write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DAC"% (oh_select, vfat)), cal_dac)
+
+        if threshold != -9999:
+            threshold_orig[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
+            print("Setting threshold = %d (DAC)"%threshold)
+            write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
         for i in range(128):
             enableVfatchannel(vfat, oh_select, i, 1, 0) # mask all channels and disable calpulsing
         print ("")
@@ -197,15 +204,17 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, l1a_bxgap,
         print ("")
     # End of VFAT loop
 
-    # Unconfigure all VFATs
-    for vfat in vfat_list:
-        print("Unconfiguring VFAT %02d" % (vfat))
-        configureVfat(0, vfat, oh_select, 0)
-        print ("")
     if calpulse_only:
         write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     else:
         write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
+        
+    # Unconfigure all VFATs
+    for vfat in vfat_list:
+        print("Unconfiguring VFAT %02d" % (vfat))
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
+        configureVfat(0, vfat, oh_select, 0)
+        print ("")
     
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results"
@@ -277,7 +286,8 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--nl1a", action="store", dest="nl1a", default = "1000", help="nl1a = fixed number of L1A cycles")
     parser.add_argument("-l", "--calpulse_only", action="store_true", dest="calpulse_only", help="calpulse_only = to use only calpulsing without L1A's")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
-    parser.add_argument("-x", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
+    parser.add_argument("-y", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
+    parser.add_argument("-x", "--threshold", action="store", dest="threshold", help="threshold = the CFG_THR_ARM_DAC value (default=configured value of VFAT)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-t", "--bitslip", action="store", dest="bitslip", help="bitslip = write this bitslip to all elinks of vfats")
@@ -331,7 +341,14 @@ if __name__ == "__main__":
 
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
-        
+    
+    threshold = -9999
+    if args.threshold is not None:
+        threshold = int(args.threshold)
+        if threshold not in range(0,256):
+            print (Colors.YELLOW + "Threshold has to 8 bits (0-255)" + Colors.ENDC)
+            sys.exit()
+
     # Initialization 
     initialize(args.gem, args.system)
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
@@ -339,7 +356,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, int(args.n_miss), args.input_file, args.bitslip)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, int(args.bxgap), set_cal_mode, cal_dac, threshold, int(args.n_miss), args.input_file, args.bitslip)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()
