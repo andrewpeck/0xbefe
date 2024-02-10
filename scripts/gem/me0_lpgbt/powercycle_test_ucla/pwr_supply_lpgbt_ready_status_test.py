@@ -5,13 +5,16 @@ from time import sleep
 import sys, os
 import argparse
 
+print('Configuring Power Supply\n')
+pwr = PowerSupply()
+
 def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
 
     if sys.version_info[0] < 3:
         raise Exception("Python version 3.x required")
 
     # Configure power supply
-    pwr = PowerSupply()
+    global pwr
     if ramp_time is not None:
         pwr.set_ramp_time(ramp_time)
     if current is not None:
@@ -22,7 +25,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
     print ("Turning off power, then on and getting initial list of registers and turning off power")
     # Turn power supply off
     pwr.power_sequence(OFF)
-    sleep(1)
+    sleep(1) 
     # Turn power supply on
     pwr.power_sequence(ON)
     # Check value set
@@ -30,11 +33,10 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
     if not set_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
-    
     # Wait and check if value reached
     v_read = pwr.get_voltage(read=True)
     read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
-    timeout = 5
+    timeout = 10
     while not read_status:
         timeout -= 1
         if timeout == 1:
@@ -45,7 +47,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
     else:
-        print(Colors.GREEN + 'Power ON done!' + Colors.ENDC)
+        print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
     sleep(0.5)
 
     # Configure lpGBTs
@@ -80,15 +82,13 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
 
     # Turn power supply off
     pwr.power_sequence(OFF)
-    
     # Check value set
     set_status = pwr.get_voltage() == 0.001
     if not set_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
-    
     # Wait and check if value reached
-    timeout = 5
+    timeout = 10
     read_status = pwr.get_voltage(read=True) < 0.1
     while not read_status:
         timeout -= 1
@@ -99,7 +99,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
     else:
-        print(Colors.GREEN + 'Power OFF done!' + Colors.ENDC)
+        print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
     sleep(0.5)
    
     n_error_backend_ready_boss = {}
@@ -141,7 +141,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         # Wait and check if value reached
         v_read = pwr.get_voltage(read=True)
         read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
-        timeout = 5
+        timeout = 10
         while not read_status:
             timeout -= 1
             if timeout == 1:
@@ -152,7 +152,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
             print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
             rw_terminate()
         else:
-            print(Colors.GREEN + 'Power ON done!' + Colors.ENDC)
+            print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
         sleep(0.5)
 
         # Configure lpGBTs
@@ -285,7 +285,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
             print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
             rw_terminate()
         # Wait and check if value reached
-        timeout = 5
+        timeout = 10
         read_status = pwr.get_voltage(read=True) < 0.1
         while not read_status:
             timeout -= 1
@@ -296,7 +296,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
             print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
             rw_terminate()
         else:
-            print(Colors.GREEN + 'Power OFF done!' + Colors.ENDC)
+            print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
         sleep(0.5)
 
     print ("\nEnd of powercycle iteration")
@@ -392,6 +392,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         print (str_n_error_reg_list_sub)
 
     print ("")
+    pwr.close()
 
 if __name__ == "__main__":
     # Parsing arguments
@@ -440,7 +441,7 @@ if __name__ == "__main__":
         sys.exit()
     else:
         try:
-            voltages = [float(v) for v in args.voltages]
+            voltages = [float(v) for v in args.voltage]
         except TypeError:
             print(Colors.YELLOW + 'Must enter floating point values for voltages' + Colors.ENDC)
             sys.exit()
@@ -470,9 +471,13 @@ if __name__ == "__main__":
         main(args.system, oh_select, gbt_list, ramp_time, current, voltages, int(args.niter))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        pwr.power_sequence(OFF)
+        pwr.close()
         rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        pwr.power_sequence(OFF)
+        pwr.close()
         rw_terminate()
 
     # Termination
