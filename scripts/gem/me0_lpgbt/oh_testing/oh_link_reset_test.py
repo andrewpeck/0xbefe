@@ -33,7 +33,7 @@ def main(system, oh_select, gbt_list, niter):
     if sys.version_info[0] < 3:
         raise Exception("Python version 3.x required")
 
-    # Run a init frontend
+    # Run a init backend
     os.system("python3 init_backend.py")
     sleep(2)
 
