@@ -24,6 +24,10 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--niter", action="store", dest="niter", default="50", help="niter = Number of iterations (default=50)")
     args = parser.parse_args()
 
+    # Turn off power to start with
+    os.system("python3 me0_lpgbt/queso_testing/queso_initialization.py -i me0_lpgbt/queso_testing/resources/input_queso.txt -o")
+    sleep(5)
+    
     for i in range(int(args.niter)):
         print("iteration", i)
         # 1. only power on and do nothing

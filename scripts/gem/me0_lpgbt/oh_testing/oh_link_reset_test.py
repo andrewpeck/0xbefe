@@ -34,7 +34,7 @@ def main(system, oh_select, gbt_list, niter):
         raise Exception("Python version 3.x required")
 
     # Run a init frontend
-    os.system("python3 init_frontend.py")
+    os.system("python3 init_backend.py")
     sleep(2)
 
     # Get first list of registers to compare

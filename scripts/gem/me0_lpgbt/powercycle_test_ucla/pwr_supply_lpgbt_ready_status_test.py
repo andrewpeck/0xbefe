@@ -19,7 +19,10 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
     pwr.v_sequence = voltages
 
     # Get first list of registers to compare
-    print ("Turning on power and getting initial list of registers and turning off power")
+    print ("Turning off power, then on and getting initial list of registers and turning off power")
+    # Turn power supply off
+    pwr.power_sequence(OFF)
+    sleep(1)
     # Turn power supply on
     pwr.power_sequence(ON)
     # Check value set
@@ -27,6 +30,7 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
     if not set_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
+    
     # Wait and check if value reached
     v_read = pwr.get_voltage(read=True)
     read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
@@ -76,11 +80,13 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
 
     # Turn power supply off
     pwr.power_sequence(OFF)
+    
     # Check value set
     set_status = pwr.get_voltage() == 0.001
     if not set_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
+    
     # Wait and check if value reached
     timeout = 5
     read_status = pwr.get_voltage(read=True) < 0.1

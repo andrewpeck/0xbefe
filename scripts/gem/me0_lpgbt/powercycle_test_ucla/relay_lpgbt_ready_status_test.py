@@ -17,7 +17,20 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         rw_terminate()
 
     # Get first list of registers to compare
-    print ("Turning on power and getting initial list of registers and turning off power")
+    print ("Turning off power, then on and getting initial list of registers and turning off power")
+
+    for relay_number in relay_number_list:
+        set_status = relay_object.relay_set(relay_number, 0)
+        if not set_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        read_status = relay_object.relay_read(relay_number)
+        if not read_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        sleep (0.5)
+    sleep(10)
+
     for relay_number in relay_number_list:
         set_status = relay_object.relay_set(relay_number, 1)
         if not set_status:

@@ -120,7 +120,19 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
     for n in range(0,niter):
         print ("Iteration: %d\n"%(n+1))
 
-        # Turn on relay
+        # Turn off and on relay
+        for relay_number in relay_number_list:
+            set_status = relay_object.relay_set(relay_number, 0)
+            if not set_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            read_status = relay_object.relay_read(relay_number)
+            if not read_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            sleep(0.5)
+        sleep(10)
+
         for relay_number in relay_number_list:
             set_status = relay_object.relay_set(relay_number, 1)
             if not set_status:
