@@ -99,6 +99,7 @@ def init_gem_frontend():
                     continue
                 me0_lpgbt_reset(oh, gbt, gbt_ver)
         sleep(2)
+        print (Colors.GREEN + "Reset boss lpGBTs DONE" + Colors.ENDC)
 
         # Reset VTRx+ (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
@@ -113,6 +114,7 @@ def init_gem_frontend():
                     continue
                 me0_vtrxp_reset(oh, gbt)
         sleep(2)
+        print (Colors.GREEN + "Reset VTRx+ DONE" + Colors.ENDC)
 
         # Do some lpGBT read operations from sub lpGBT in OH-v1s to get the EC working
         for oh in range(max_ohs):
@@ -300,6 +302,7 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
                         '''
+        print (Colors.GREEN + "Configure boss lpGBTs DONE" + Colors.ENDC)
 
         # Reset sub lpGBTs
         for oh in range(max_ohs):
@@ -309,9 +312,9 @@ def init_gem_frontend():
                 if gbt%2 != 0:  
                     continue
                 timeout = 2.5
-                t0 = time()
+                t0 = time.time()
                 while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
-                    if (time()-t0)>timeout:
+                    if (time.time()-t0)>timeout:
                         break
                     continue
                 gbt_ver = gbt_ver_list[gbt]
@@ -320,6 +323,7 @@ def init_gem_frontend():
                 else: 
                     me0_sub_lpgbt_reset(oh, gbt) # GPIO reset
         sleep(2)
+        print (Colors.GREEN + "Reset sub lpGBTs DONE" + Colors.ENDC)
 
         # Configure sub lpGBTs
         for oh in range(max_ohs):
@@ -352,11 +356,12 @@ def init_gem_frontend():
                 if gbt%2 != 0:  
                     continue
                 timeout = 2.5
-                t0 = time()
+                t0 = time.time()
                 while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
-                    if (time()-t0)>timeout:
+                    if (time.time()-t0)>timeout:
                         break
                     continue
+        print (Colors.GREEN + "Configure sub lpGBTs DONE" + Colors.ENDC)
 
         # Configure vfat phase
         for oh in range(max_ohs):
@@ -487,7 +492,7 @@ def init_gem_frontend():
                     for elink in range(0,8):
                         set_bitslip = bitslip_list_sbit[vfat][elink]
                         write_reg("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh,vfat,elink), set_bitslip)
-
+        print (Colors.GREEN + "Setting DAQ and Sbit Elink Phases DONE" + Colors.ENDC)
 
     print("\nSetting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")
