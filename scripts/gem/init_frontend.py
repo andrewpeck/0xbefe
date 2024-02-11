@@ -8,7 +8,7 @@ from gem.gem_utils import *
 import time
 from os import path
 
-def me0_boss_lpgbt_reset(oh, gbt, gbt_ver):
+def me0_lpgbt_reset(oh, gbt, gbt_ver):
     selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
     # Set this register to the magic number to be able to force the PUSM state
     if gbt_ver == 0:
@@ -24,13 +24,34 @@ def me0_boss_lpgbt_reset(oh, gbt, gbt_ver):
         writeGbtRegAddrs(0x13F, 0x80)
     sleep(0.1)
 
-def me0_sub_lpgbt_vtrxp_reset(oh, gbt):
+    if gbt_ver == 0:
+        writeGbtRegAddrs(0x130, 0x00)
+        writeGbtRegAddrs(0x12F, 0x00)
+    elif gbt_ver == 1:
+        writeGbtRegAddrs(0x140, 0x00)
+        writeGbtRegAddrs(0x13F, 0x00)
+    sleep(0.1)
+
+def me0_sub_lpgbt_reset(oh, gbt):
     selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs to high 
+    sleep(0.1)
     writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
-    writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
+    writeGbtRegAddrs(0x055, 0x20) # Set GPIO low - resets sub lpGBT
     sleep(0.1)
-    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high only for VTRx+
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIO back high 
     sleep(0.1)
+
+def me0_vtrxp_reset(oh, gbt):
+    selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs to high 
+    sleep(0.1)
+    writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
+    writeGbtRegAddrs(0x055, 0x02) # Set GPIO low - resets VTRx+
+    sleep(0.1)
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIO back high 
+    sleep(0.1)
+
 
 def init_gem_frontend():
 
@@ -76,10 +97,10 @@ def init_gem_frontend():
                     continue
                 if gbt_ready == 1:
                     continue
-                me0_boss_lpgbt_reset(oh, gbt, gbt_ver)
+                me0_lpgbt_reset(oh, gbt, gbt_ver)
         sleep(2)
 
-        # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
+        # Reset VTRx+ (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
@@ -90,7 +111,7 @@ def init_gem_frontend():
                 # Only do this for boss lpGBT
                 if gbt%2 != 0:
                     continue
-                me0_sub_lpgbt_vtrxp_reset(oh, gbt)
+                me0_vtrxp_reset(oh, gbt)
         sleep(2)
 
         # Do some lpGBT read operations from sub lpGBT in OH-v1s to get the EC working
@@ -109,11 +130,13 @@ def init_gem_frontend():
                 else:
                     continue
 
-        # Configure lpGBTs and vfat phase
+        # Configure boss lpGBTs
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
 
             for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
                 gbt_ver = gbt_ver_list[gbt]
                 oh_ver = -9999
                 if gbt_ver == 0:
@@ -132,12 +155,9 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
-                sleep(0.5)
-                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
+                sleep(0.1)
                 
                 # Enable TX channels of VTRx+
-                if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
-                    continue
                 selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
 
                 nbytes_write = 2
@@ -280,9 +300,68 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
                         '''
-                if oh_ver == 2:
-                   sleep(2.5)
-            
+
+        # Reset sub lpGBTs
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
+            for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
+                timeout = 2.5
+                t0 = time()
+                while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                    if (time()-t0)>timeout:
+                        break
+                    continue
+                gbt_ver = gbt_ver_list[gbt]
+                if gbt_ver == 0: 
+                    me0_lpgbt_reset(oh, gbt+1, gbt_ver_list[gbt+1]) # reset using registers on sub
+                else: 
+                    me0_sub_lpgbt_reset(oh, gbt) # GPIO reset
+        sleep(2)
+
+        # Configure sub lpGBTs
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
+            for gbt in range(num_gbts):
+                if gbt%2 == 0:  
+                    continue
+                gbt_ver = gbt_ver_list[gbt]
+                oh_ver = -9999
+                if gbt_ver == 0:
+                    oh_ver = 1
+                elif gbt_ver == 1:
+                    oh_ver = 2
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
+                if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
+                    print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    continue
+
+                # Configure lpGBT
+                gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
+                gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1] # Get the correct lpGBT config file
+                print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
+                if not path.exists(gbt_config):
+                    printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
+                gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
+                sleep(0.1)
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
+                timeout = 2.5
+                t0 = time()
+                while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                    if (time()-t0)>timeout:
+                        break
+                    continue
+
+        # Configure vfat phase
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
             # Read in me0 DAQ phase scan results
             bestphase_list = {}
             phase_scan_filename = get_config("CONFIG_ME0_VFAT_PHASE_SCAN")
