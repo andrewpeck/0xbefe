@@ -133,7 +133,9 @@ def init_gem_frontend():
                     continue
 
         # Configure boss lpGBTs
+        skip_config = {}
         for oh in range(max_ohs):
+            skip_config[oh] = {}
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
 
             for gbt in range(num_gbts):
@@ -148,7 +150,9 @@ def init_gem_frontend():
                 gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
                 if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    skip_config[oh][gbt] = 1
                     continue
+                skip_config[oh][gbt] = 0
 
                 # Configure lpGBT
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
@@ -313,7 +317,7 @@ def init_gem_frontend():
                     continue
                 timeout = 2.5
                 t0 = time.time()
-                while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                while not skip_config[oh][gbt] and read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
                     if (time.time()-t0)>timeout:
                         break
                     continue
@@ -341,7 +345,9 @@ def init_gem_frontend():
                 gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
                 if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    skip_config[oh][gbt] = 1
                     continue
+                skip_config[oh][gbt] = 0
 
                 # Configure lpGBT
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
@@ -357,7 +363,7 @@ def init_gem_frontend():
                     continue
                 timeout = 2.5
                 t0 = time.time()
-                while read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                while not skip_config[oh][gbt] and read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
                     if (time.time()-t0)>timeout:
                         break
                     continue
