@@ -130,8 +130,22 @@ def main(system, oh_select, gbt_list, niter):
                 select_ic_link(oh_select, gbt)
                 link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
                 if (link_ready!=1):
-                    print (Colors.YELLOW + "  Link STILL NOT READY" + Colors.ENDC)
+                    print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                     n_error_backend_ready_boss[gbt] += 1
+
+                    # Link Resets again
+                    reset_all_links()
+                    # Reconfigure lpGBTs
+                    os.system("python3 init_frontend.py")
+                    sleep(1)
+                    select_ic_link(oh_select, gbt)
+                    link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+
+                    if (link_ready!=1):
+                        print (Colors.RED + "  Link STILL NOT READY" + Colors.ENDC)
+                        n_error_backend_ready_boss[gbt] += 1
+                    else:
+                        print (Colors.GREEN + "  Link READY" + Colors.ENDC)
                 else:
                     print (Colors.GREEN + "  Link READY" + Colors.ENDC)
             else:
