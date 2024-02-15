@@ -118,14 +118,10 @@ package system_package is
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),    -- GTH FW Ch 61
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),    -- GTH FW Ch 62
     (gth_tx_10p24g_rx_4p0g,    false, GTH_USRCLK_320,    GTH_USRCLK_160,    100, 4, "BUFH"),    -- GTH FW Ch 63
-    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 64 -- uncomment for LpGBT loopback
-    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 65 -- uncomment for LpGBT loopback
-    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 66 -- uncomment for LpGBT loopback
-    -- (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH")     -- GTH FW Ch 67 -- uncomment for LpGBT loopback
-    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),    -- GTH FW Ch 64
-    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),    -- GTH FW Ch 65
-    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE"),    -- GTH FW Ch 66
-    (gth_null,                 false, GTH_USRCLK_NULL,   GTH_USRCLK_NULL,   100, 4, "NONE")     -- GTH FW Ch 67
+    (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 64
+    (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 65
+    (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH"),    -- GTH FW Ch 66
+    (gth_10p24g,               false, GTH_USRCLK_320,    GTH_USRCLK_320,    32,  1, "BUFH")     -- GTH FW Ch 67
 
   );
 

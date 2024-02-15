@@ -34,8 +34,8 @@ entity gth_wrapper is
   generic (
       g_EXAMPLE_SIMULATION     : integer                := 0;
       g_STABLE_CLOCK_PERIOD    : integer range 4 to 250 := 20;  --Period of the stable clock driving this state-machine, unit is [ns]
-      g_NUM_OF_GTH_GTs         : integer                := 64;
-      g_NUM_OF_GTH_COMMONs     : integer                := 16;
+      g_NUM_OF_GTH_GTs         : integer;
+      g_NUM_OF_GTH_COMMONs     : integer;
       g_GT_SIM_GTRESET_SPEEDUP : string                 := "FALSE";  -- Set to "TRUE" to speed up sim reset
       g_DATA_REG_STAGES        : integer                := 0 -- optional: if set to a non-zero value, the provided number of register stages will be insterted in the data path (this can be used to ease timing where latency is not critical)
   );
