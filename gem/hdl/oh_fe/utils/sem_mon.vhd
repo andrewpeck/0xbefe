@@ -18,25 +18,31 @@ entity sem_mon is
     clk_i            : in  std_logic; -- 80 MHz clock for the SEM core
     sysclk_i         : in  std_logic; -- 40 MHz wishbone clock
 
-    -- SEM state
-    idle_o           : out std_logic;
-    initialization_o : out std_logic;
-    observation_o    : out std_logic;
+    -- one-hot encoded SEM FSM state
+    --
+    -- 0x01  -- idle
+    -- 0x02  -- initialization
+    -- 0x04  -- observation
+    -- 0x08  -- correction
+    -- 0x10  -- classification
+    -- 0x20  -- injection
+    --
+    -- 0x3e  -- fatal error
+    -- other -- unknown error
+    state_o          : out std_logic_vector(5 downto 0);
+
+    -- observation is ongoing
     alive_o          : out std_logic;
-    correction_o     : out std_logic;
-    uncorrectable_o  : out std_logic;
-    classification_o : out std_logic;
-    essential_o      : out std_logic;
-    injection_o      : out std_logic;
 
     -- injection interface
     inject_strobe    : in  std_logic;
     inject_address   : in  std_logic_vector(39 downto 0);
 
     -- action events
+    injection_pulse_o     : out std_logic;
     correction_pulse_o    : out std_logic;
-    uncorrectable_pulse_o : out std_logic;
-    essential_pulse_o     : out std_logic
+    correctable_pulse_o   : out std_logic;
+    uncorrectable_pulse_o : out std_logic
     );
 end sem_mon;
 
@@ -134,8 +140,10 @@ architecture behavioral of sem_mon is
   signal status_initialization                   : std_logic;
   signal status_observation, status_heartbeat    : std_logic;
   signal status_correction, status_uncorrectable : std_logic;
-  signal status_classification, status_essential : std_logic;
+  signal status_classification                   : std_logic;
   signal status_injection                        : std_logic;
+
+  signal idle                                    : std_logic;
 
   -- heartbeat
   signal heartbeat_r        : std_logic := '0';
@@ -146,23 +154,24 @@ architecture behavioral of sem_mon is
   signal inject_strobe_os : std_logic := '0';
 
   -- action events
-  signal correction_r     : std_logic;
-  signal uncorrectable_r  : std_logic;
-  signal essential_r      : std_logic;
+  signal correction_r : std_logic;
+  signal injection_r  : std_logic;
 
 begin
 
   -- state
-  idle_o <= not (status_initialization or status_observation or
-                 status_correction or status_classification or status_injection);
+  idle <= not status_initialization
+          and not status_observation
+          and not status_correction
+          and not status_classification
+          and not status_injection;
 
-  initialization_o <= status_initialization;
-  observation_o    <= status_observation;
-  correction_o     <= status_correction;
-  uncorrectable_o  <= status_uncorrectable;
-  classification_o <= status_classification;
-  essential_o      <= status_essential;
-  injection_o      <= status_injection;
+  state_o <= status_injection &
+             status_classification &
+             status_correction &
+             status_observation &
+             status_initialization &
+             idle;
 
   -- heartbeat
   process (clk_i) is
@@ -204,15 +213,18 @@ begin
   process (sysclk_i) is
   begin
     if (rising_edge(sysclk_i)) then
-      correction_r    <= status_correction;
-      uncorrectable_r <= status_uncorrectable;
-      essential_r     <= status_essential;
+      injection_r  <= status_injection;
+      correction_r <= status_correction;
     end if;
   end process;
 
-  correction_pulse_o    <= '1' when correction_r = '0' and status_correction = '1'       else '0';
-  uncorrectable_pulse_o <= '1' when uncorrectable_r = '0' and status_uncorrectable = '1' else '0';
-  essential_pulse_o     <= '1' when essential_r = '0' and status_essential = '1'         else '0';
+  injection_pulse_o  <= '1' when injection_r  = '0' and status_injection  = '1' else '0';
+  correction_pulse_o <= '1' when correction_r = '0' and status_correction = '1' else '0';
+
+  -- sample 'status_uncorrectable' while leaving the "Correction" state (i.e.
+  -- on the falling edge of 'status_correction')
+  correctable_pulse_o   <= not status_uncorrectable when correction_r = '1' and status_correction = '0' else '0';
+  uncorrectable_pulse_o <=     status_uncorrectable when correction_r = '1' and status_correction = '0' else '0';
 
   --------------------------------------------------------------------------------------------------------------------
   -- Virtex-6
@@ -230,7 +242,7 @@ begin
         status_correction     => status_correction,
         status_classification => status_classification,
         status_injection      => status_injection,
-        status_essential      => status_essential,
+        status_essential      => open, -- feature disabled
         status_uncorrectable  => status_uncorrectable,
 
         monitor_txdata        => open,
@@ -321,7 +333,7 @@ begin
         status_correction     => status_correction,
         status_classification => status_classification,
         status_injection      => status_injection,
-        status_essential      => status_essential,
+        status_essential      => open, -- feature disabled
         status_uncorrectable  => status_uncorrectable,
 
         monitor_txdata        => open,
