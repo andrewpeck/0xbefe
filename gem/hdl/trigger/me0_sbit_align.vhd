@@ -6,7 +6,7 @@ use work.common_pkg.all;
 use work.gem_pkg.all;
 use work.cluster_pkg.all;
 
-entity me0_sbit_allign is
+entity me0_sbit_align is
     generic(
         g_NUM_OF_VFATs : integer := 24;
         g_NUM_ELINKs   : integer := 8;
@@ -23,9 +23,9 @@ entity me0_sbit_allign is
         vfat_sbits_i        : in t_std64_array(g_NUM_OF_VFATs -1 downto 0);
         vfat_sbits_o        : out t_std64_array(g_NUM_OF_VFATs -1 downto 0)
     );
-end entity me0_sbit_allign;
+end entity me0_sbit_align;
 
-architecture me0_sbit_allign_arch of me0_sbit_allign is
+architecture me0_sbit_align_arch of me0_sbit_align is
 
 begin
     
@@ -76,4 +76,4 @@ begin
 
 
 
-end architecture me0_sbit_allign_arch;
+end architecture me0_sbit_align_arch;
