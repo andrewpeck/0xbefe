@@ -39,6 +39,7 @@ entity link_rx_trigger_ge11_4g is
         sbit_overflow_o     : out std_logic;
         bc0_marker_o        : out std_logic;
         
+        crc_err_o           : out std_logic;
         missed_comma_err_o  : out std_logic;
         not_in_table_err_o  : out std_logic;
         fifo_ovf_o          : out std_logic;
@@ -50,6 +51,25 @@ entity link_rx_trigger_ge11_4g is
 end link_rx_trigger_ge11_4g;
 
 architecture Behavioral of link_rx_trigger_ge11_4g is    
+
+    -- components
+    component lfsr is
+        generic (
+            LFSR_WIDTH        : integer := 31;
+            LFSR_POLY         : unsigned(LFSR_WIDTH-1 downto 0) := "00" & x"10000001";
+            LFSR_CONFIG       : string  := "FIBONACCI";
+            LFSR_FEED_FORWARD : integer := 0;
+            REVERSE           : integer := 0;
+            DATA_WIDTH        : integer := 8;
+            STYLE             : string  := "AUTO"
+        );
+        port (
+            data_in   : in std_logic_vector(DATA_WIDTH-1 downto 0);
+            state_in  : in std_logic_vector(LFSR_WIDTH-1 downto 0);
+            data_out  : out std_logic_vector(DATA_WIDTH-1 downto 0);
+            state_out : out std_logic_vector(LFSR_WIDTH-1 downto 0)
+        );
+    end component;
 
     -- trigger links will send a K-char every 5 clocks to mark a BX start, and every BX it will cycle through 4 different K-chars: 0x1C, 0xF7, 0xFB, 0xFD
     -- in case there is an overflow in that particular BX, the K-char for this BX will be 0xFE
@@ -89,16 +109,23 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal fifo_unf             : std_logic;
 
     -- multi-link alignment
-
     constant LINK_ALIGNING_TIMEOUT : integer := 2; -- do not delay this link by more than 2 BX
 
     signal link_aligned         : std_logic := '0';
     signal link_aligning        : integer range 0 to LINK_ALIGNING_TIMEOUT := 0;
 
+    -- CRC
+    signal crc_in       : std_logic_vector(15 downto 0);
+    signal crc_calc     : std_logic_vector(7 downto 0);
+    signal crc_calc_r   : std_logic_vector(7 downto 0);
+    signal crc_calc_200 : std_logic_vector(7 downto 0);
+    signal crc_calc_40  : std_logic_vector(7 downto 0);
+
     -- frame decoding
     signal frame_counter        : integer range 0 to FRAME_MARKERS'length - 1;
     signal frame_counter_valid  : std_logic := '0'; -- this is set on reset, and deasserted when the first frame marker comes and a valid initial value is assigned to the frame_counter
     signal missed_comma_err     : std_logic := '0'; -- asserted if a comma character is not found when FSM is in COMMA state
+    signal crc_err              : std_logic := '0'; -- asserted if there is a crc error
     signal sbit_overflow        : std_logic := '0'; -- asserted when an overflow K-char is detected at the BX boundary (0xFC)
     signal bc0_marker           : std_logic := '0';
     signal not_in_table_err     : std_logic := '0';  
@@ -109,16 +136,6 @@ architecture Behavioral of link_rx_trigger_ge11_4g is
     signal sbit_cluster3        : t_sbit_cluster;
 
 begin  
-
---    sbit_cluster0_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster1_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster2_o     <= NULL_SBIT_CLUSTER;
---    sbit_cluster3_o     <= NULL_SBIT_CLUSTER;
---    sbit_overflow_o     <= '0';
---    missed_comma_err_o  <= '1';
---    not_in_table_err_o  <= '0';
---    fifo_ovf_o <= '0';
---    fifo_unf_o <= '0';
 
     --== Input and output registers ==--
 
@@ -149,6 +166,7 @@ begin
                 sbit_overflow_o    <= sbit_overflow;
                 bc0_marker_o       <= bc0_marker;
                 missed_comma_err_o <= missed_comma_err;
+                crc_err_o          <= crc_err;
                 not_in_table_err_o <= not_in_table_err;           
             end if;
         end process;
@@ -163,7 +181,8 @@ begin
         sbit_overflow_o    <= sbit_overflow;
         bc0_marker_o       <= bc0_marker;
         missed_comma_err_o <= missed_comma_err;
-        not_in_table_err_o <= not_in_table_err;           
+        crc_err_o          <= crc_err;
+        not_in_table_err_o <= not_in_table_err;
     end generate;
 
     --== Glue the words from a single BX together ==--
@@ -221,7 +240,24 @@ begin
             end if;
         end if;
     end process;
-    
+
+    i_crc_trig_link : lfsr
+        generic map (
+            LFSR_WIDTH => 8,
+            LFSR_POLY  => x"07",
+            LFSR_CONFIG => "GALOIS",
+            DATA_WIDTH => 16
+        )
+        port map(
+            state_in  => crc_calc_r,
+            data_in   => crc_in,
+            state_out => crc_calc,
+            data_out  => open
+        );
+
+    -- replace CRC with 0's
+    crc_in <= rx_data.rxdata when state /= DATA_3 else (x"00" & rx_data.rxdata(7 downto 0));
+
     -- glue the words
     -- this implementation just spells out each word, could use an index, but this is probably easier to synthesize (to be checked)
     process(rx_usrclk_i)
@@ -230,26 +266,34 @@ begin
             if reset_200 = '1' then
                 frame_200(15 downto 0) <= rx_data.rxdata;
                 frame_200(84 downto 16) <= (others => '0');
+                crc_calc_r <= x"ff";
                 fifo_wr_en <= '0';
             else
+
                 case state is
                     when COMMA =>
-                        frame_200(15 downto 0) <= rx_data.rxdata;
+                        frame_200(15 downto 0)  <= rx_data.rxdata;
                         frame_200(81 downto 80) <= rx_data.rxcharisk;
                         frame_200(83 downto 82) <= rx_data.rxchariscomma;
                         frame_200(84) <= '0' when rx_data.rxnotintable = "00" else '1';
+                        crc_calc_r <= crc_calc;
                         fifo_wr_en <= '0';
                     when DATA_0 =>
                         frame_200(31 downto 16) <= rx_data.rxdata;
+                        crc_calc_r <= crc_calc;
                         fifo_wr_en <= '0';
                     when DATA_1 =>
                         frame_200(47 downto 32) <= rx_data.rxdata;
+                        crc_calc_r <= crc_calc;
                         fifo_wr_en <= '0';
                     when DATA_2 =>
                         frame_200(63 downto 48) <= rx_data.rxdata;
+                        crc_calc_r <= crc_calc;
                         fifo_wr_en <= '0';
                     when DATA_3 =>
+                        crc_calc_200 <= crc_calc;
                         frame_200(79 downto 64) <= rx_data.rxdata;
+                        crc_calc_r <= x"ff";
                         fifo_wr_en <= '1';
                     when others =>
                         frame_200(15 downto 0) <= rx_data.rxdata;
@@ -270,31 +314,32 @@ begin
         generic map(
             FIFO_MEMORY_TYPE    => "auto",
             FIFO_WRITE_DEPTH    => 16,
-            WRITE_DATA_WIDTH    => 85,
+            WRITE_DATA_WIDTH    => 93,
             READ_MODE           => "fwft",
             FIFO_READ_LATENCY   => 0,
             FULL_RESET_VALUE    => 0,
             USE_ADV_FEATURES    => "0101", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
-            READ_DATA_WIDTH     => 85,
+            READ_DATA_WIDTH     => 93,
             CDC_SYNC_STAGES     => 2,
             DOUT_RESET_VALUE    => "0"
         )
         port map(
-            sleep         => '0',
-            rst           => reset_200,
-            wr_clk        => rx_usrclk_i,
-            wr_en         => fifo_wr_en and not fifo_wr_rst_busy,
-            wr_rst_busy   => fifo_wr_rst_busy,
-            din           => frame_200,
-            overflow      => fifo_ovf_200,
-            rd_clk        => ttc_clk_40_i,
-            rd_rst_busy   => fifo_rd_rst_busy,
-            rd_en         => fifo_rd_en,
-            dout          => frame_40,
-            underflow     => fifo_unf,
-            empty         => fifo_empty,
-            injectsbiterr => '0',
-            injectdbiterr => '0'
+            sleep              => '0',
+            rst                => reset_200,
+            wr_clk             => rx_usrclk_i,
+            wr_en              => fifo_wr_en and not fifo_wr_rst_busy,
+            wr_rst_busy        => fifo_wr_rst_busy,
+            din                => crc_calc_200 & frame_200,
+            overflow           => fifo_ovf_200,
+            rd_clk             => ttc_clk_40_i,
+            rd_rst_busy        => fifo_rd_rst_busy,
+            rd_en              => fifo_rd_en,
+            dout(84 downto 0)  => frame_40,
+            dout(92 downto 85) => crc_calc_40,
+            underflow          => fifo_unf,
+            empty              => fifo_empty,
+            injectsbiterr      => '0',
+            injectdbiterr      => '0'
         );    
     
     fifo_valid <= not fifo_empty;
@@ -375,10 +420,11 @@ begin
     begin
         if rising_edge(ttc_clk_40_i) then
             if check_errors_40 = '0' then
-                missed_comma_err <= '0'; 
-                sbit_overflow <= '0';
+                missed_comma_err <= '0';
+                crc_err          <= '0';
+                sbit_overflow    <= '0';
                 not_in_table_err <= '0';
-                bc0_marker <= '0';                   
+                bc0_marker       <= '0';
             else
                 not_in_table_err <= frame_40(84);
                 
@@ -394,12 +440,21 @@ begin
                     bc0_marker <= '0';
                 end if;
 
-                if (frame_40(7 downto 0) /= FRAME_MARKERS(frame_counter)) and (frame_40(7 downto 0) /= OVERFLOW_FRAME_MARKER) and (frame_40(7 downto 0) /= BC0_FRAME_MARKER) and (frame_40(7 downto 0) /= RESYNC_FRAME_MARKER) then
+                if (frame_40(7 downto 0) /= FRAME_MARKERS(frame_counter)) and
+                   (frame_40(7 downto 0) /= OVERFLOW_FRAME_MARKER) and
+                   (frame_40(7 downto 0) /= BC0_FRAME_MARKER) and
+                   (frame_40(7 downto 0) /= RESYNC_FRAME_MARKER) then
                     missed_comma_err <= '1';
                 else
                     missed_comma_err <= '0';
                 end if;
-                
+
+                if (frame_40 (79 downto 72) /= crc_calc_40) then
+                    crc_err <= '1';
+                else
+                    crc_err <= '0';
+                end if;
+
             end if;
         end if;
     end process;
@@ -421,7 +476,7 @@ begin
                 sbit_cluster2.address <= frame_40(46 downto 36);
                 sbit_cluster2.size    <= frame_40(49 downto 47);
                 sbit_cluster3.address <= frame_40(60 downto 50);
-                sbit_cluster3.size    <= frame_40(63 downto 61);                
+                sbit_cluster3.size    <= frame_40(63 downto 61);
             end if;
         end if;
     end process;

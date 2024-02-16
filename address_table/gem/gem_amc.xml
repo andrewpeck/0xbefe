@@ -104,6 +104,16 @@
           description="This counter is incremented whenever the BC0 marker value doesn't match between the two trigger links (GE1/1 only)"
           fw_signal="bc0_misalign_cnt(${OH_IDX})"
           sw_val_good="self == 0"/>
+    <node id="LINK0_CRC_ERR_CNT" address="0x3" mask="0x0000ffff" permission="r"
+          description="Count the number of CRC errors received on link 0 (this indicates an instable communication)"
+          fw_signal="crc_error_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
+          sw_monitor_warn_min_threshold="1"/>
+    <node id="LINK1_CRC_ERR_CNT" address="0x3" mask="0xffff0000" permission="r"
+          description="Count the number of CRC errors received on link 1 (this indicates an instable communication)"
+          fw_signal="crc_error_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
+          sw_monitor_warn_min_threshold="1"/>
     <node id="CLUSTER_COUNT_${CS_IDX}_RATE" address="0x10" permission="r"
           description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
           fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
