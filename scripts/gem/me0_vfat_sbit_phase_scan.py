@@ -7,7 +7,7 @@ import argparse
 import random
 import json
 from common.utils import get_befe_scripts_dir
-from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
+from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, vfat_channel_mask
 
 config_boss_filename_v1 = ""
 config_sub_filename_v1 = ""
@@ -243,7 +243,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                             s_bit_matches[sbit] += 1
                     # End of S-bit loop for this channel
 
-                    if s_bit_channel_mapping[vfat][elink][channel] == -9999:
+                    masked_channel = 0
+                    if oh_select in vfat_channel_mask:
+                        if vfat in vfat_channel_mask[oh_select]:
+                            if channel in vfat_channel_mask[oh_select][vfat]:
+                                masked_channel = 1
+
+                    if not masked_channel and s_bit_channel_mapping[vfat][elink][channel] == -9999:
                         errs[vfat][elink][phase] += 1
 
                     # Disabling the pulsing channels
