@@ -131,8 +131,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DAC"% (oh_select, vfat)), cal_dac)
 
+        threshold_orig[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
         if threshold != -9999:
-            threshold_orig[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
             print("Setting threshold = %d (DAC)"%threshold)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
         for i in range(128):
