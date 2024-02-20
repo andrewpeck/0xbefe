@@ -95,9 +95,7 @@ def init_gem_frontend():
                 # Only do this for boss lpGBT
                 if gbt%2 != 0:  
                     continue
-                #if gbt_ready == 1:
-                #    continue
-                #me0_lpgbt_reset(oh, gbt, gbt_ver)
+                me0_lpgbt_reset(oh, gbt, gbt_ver)
         sleep(2)
         print (Colors.GREEN + "Reset boss lpGBTs DONE" + Colors.ENDC)
 
