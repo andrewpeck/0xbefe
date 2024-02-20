@@ -308,25 +308,6 @@ def init_gem_frontend():
                         '''
         print (Colors.GREEN + "Configure boss lpGBTs DONE" + Colors.ENDC)
 
-        # Toggle UL data type to avoid unlocking of boss lpGBT UL data
-        for oh in range(max_ohs):
-            for gbt in range(num_gbts):
-                if gbt%2 != 0:  
-                    continue
-                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                writeGbtRegAddrs(0x128, 0x05) # Set UL data source to 5.12 Gbps Clock
-                sleep(0.1)
-        sleep(2)
-        for oh in range(max_ohs):
-            for gbt in range(num_gbts):
-                if gbt%2 != 0:  
-                    continue
-                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                writeGbtRegAddrs(0x128, 0x00) # Set UL data source back to data
-                sleep(0.1)
-        sleep(2)
-        print (Colors.GREEN + "Reset sub lpGBTs DONE" + Colors.ENDC)
-
         # Reset sub lpGBTs
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
@@ -387,6 +368,21 @@ def init_gem_frontend():
                         break
                     continue
         print (Colors.GREEN + "Configure sub lpGBTs DONE" + Colors.ENDC)
+
+        # Toggle UL data type to avoid unlocking of lpGBT UL data
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                writeGbtRegAddrs(0x128, 0x05) # Set UL data source to 5.12 Gbps Clock
+                sleep(0.1)
+        sleep(2)
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                writeGbtRegAddrs(0x128, 0x00) # Set UL data source back to data
+                sleep(0.1)
+        sleep(2)
+        print (Colors.GREEN + "Toggle UL data source for lpGBTs DONE" + Colors.ENDC)
 
         # Configure vfat phase
         for oh in range(max_ohs):
