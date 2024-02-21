@@ -463,7 +463,7 @@ begin
     process(ttc_clk_40_i)
     begin
         if rising_edge(ttc_clk_40_i) then
-            if reset_40 = '1' or fifo_valid = '0' then
+            if reset_40 = '1' or fifo_valid = '0' or (frame_40 (79 downto 72) /= crc_calc_40) then
                 sbit_cluster0 <= NULL_SBIT_CLUSTER;
                 sbit_cluster1 <= NULL_SBIT_CLUSTER;
                 sbit_cluster2 <= NULL_SBIT_CLUSTER;
