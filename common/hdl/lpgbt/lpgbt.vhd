@@ -78,11 +78,16 @@ end lpgbt;
 
 architecture lpgbt_arch of lpgbt is
 
+    signal reset            :  std_logic;
+    signal reset_tx         :  std_logic;
+    signal reset_rx         :  std_logic;
+    signal cnt_reset        :  std_logic;
+
     --------- TX datapath ---------
     signal tx_dp_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal tx_dp_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
-    signal tx_data_arr              : t_lpgbt_tx_frame_array(g_NUM_LINKS - 1 downto 0);
-    signal tx_prbs_data             : std_logic_vector(31 downto 0);
+    signal tx_data_arr      : t_lpgbt_tx_frame_array(g_NUM_LINKS - 1 downto 0);
+    signal tx_prbs_data     : std_logic_vector(31 downto 0);
     signal tx_frames        : t_std64_array(g_NUM_LINKS - 1 downto 0);
 
     --------- TX gearbox ---------
@@ -99,7 +104,7 @@ architecture lpgbt_arch of lpgbt is
     signal rx_mgt_data_sync : t_std33_array(g_NUM_LINKS - 1 downto 0); -- top bit is header flag, and lower 32 bits is mgt data
     signal rx_mgt_clk_sync  : std_logic_vector(g_NUM_LINKS - 1 downto 0);
 
-    --------- TX gearbox ---------
+    --------- RX gearbox ---------
     signal rx_gb_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_gb_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_gb_out_data   : t_std256_array(g_NUM_LINKS - 1 downto 0);
@@ -109,8 +114,8 @@ architecture lpgbt_arch of lpgbt is
     signal rx_dp_ready      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
     signal rx_corr_flags    : t_std234_array(g_NUM_LINKS - 1 downto 0);
     signal rx_corr_flag     : std_logic_vector(g_NUM_LINKS - 1 downto 0);
-    signal rx_corr_cnt              : t_std16_array(g_NUM_LINKS - 1 downto 0);
-    signal rx_data_arr              : t_lpgbt_rx_frame_array(g_NUM_LINKS - 1 downto 0);
+    signal rx_corr_cnt      : t_std16_array(g_NUM_LINKS - 1 downto 0);
+    signal rx_data_arr      : t_lpgbt_rx_frame_array(g_NUM_LINKS - 1 downto 0);
 
     --------- RX frame aligner ---------
     signal rx_fa_reset      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
@@ -132,6 +137,11 @@ begin
     --                         LpGBT TX                           --
     --============================================================--
 
+    reset     <= reset_i     when rising_edge(rx_frame_clk_i);
+    reset_tx  <= reset_tx_i  when rising_edge(tx_frame_clk_i);
+    reset_rx  <= reset_rx_i  when rising_edge(rx_frame_clk_i);
+    cnt_reset <= cnt_reset_i when rising_edge(rx_frame_clk_i);
+
     g_gbt_tx_link : for i in 0 to g_NUM_LINKS - 1 generate
 
         tx_data_arr(i) <= tx_data_arr_i(i) when prbs_mode_en_i = '0' else (tx_data => tx_prbs_data, tx_ec_data => tx_data_arr_i(i).tx_ec_data, tx_ic_data => tx_data_arr_i(i).tx_ic_data);
@@ -139,7 +149,7 @@ begin
         gen_skip_even_tx : if (not g_SKIP_ODD_TX) or (i mod 2 = 0) generate
 
             --------- Resets ---------
-            tx_gb_reset(i) <= (not (mgt_status_arr_i(i).tx_reset_done and mgt_status_arr_i(i).tx_pll_locked)) or reset_tx_i;
+            tx_gb_reset(i) <= (not (mgt_status_arr_i(i).tx_reset_done and mgt_status_arr_i(i).tx_pll_locked)) or reset_tx;
             tx_dp_reset(i) <= not tx_gb_ready(i);
 
             --------- Status ---------
@@ -148,7 +158,7 @@ begin
 
             i_tx_not_ready_latch : entity work.latch
                 port map(
-                    reset_i => reset_i or cnt_reset_i,
+                    reset_i => reset or cnt_reset,
                     clk_i   => tx_frame_clk_i,
                     input_i => not (tx_gb_ready(i) and tx_dp_ready(i)),
                     latch_o => link_status_arr_o(i).gbt_tx_had_not_ready
@@ -226,7 +236,7 @@ begin
 
         begin
 
-            rx_sync_reset(i) <= reset_i or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
+            rx_sync_reset(i) <= reset or not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked and rx_header_locked(i)); -- TODO: consider resetting this on other conditions too e.g. overflow
             rx_mgt_clk_sync(i) <= rx_word_common_clk_i;
 
             i_rx_sync_fifo : entity work.gearbox
@@ -250,7 +260,7 @@ begin
 
             i_gbt_rx_sync_ovf_latch : entity work.latch
                 port map(
-                    reset_i => reset_i or cnt_reset_i,
+                    reset_i => reset or cnt_reset,
                     clk_i   => rx_word_clk_arr_i(i),
                     input_i => rx_sync_ovf(i),
                     latch_o => link_status_arr_o(i).gbt_rx_sync_status.had_ovf
@@ -258,7 +268,7 @@ begin
 
             i_gbt_rx_sync_unf_latch : entity work.latch
                 port map(
-                    reset_i => reset_i or cnt_reset_i,
+                    reset_i => reset or cnt_reset,
                     clk_i   => rx_word_common_clk_i,
                     input_i => rx_sync_unf(i),
                     latch_o => had_unf
@@ -288,7 +298,7 @@ begin
     g_gbt_rx_link : for i in 0 to g_NUM_LINKS - 1 generate
 
         --------- Resets ---------
-        rx_fa_reset(i) <= (not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked)) or reset_rx_i;
+        rx_fa_reset(i) <= (not (mgt_status_arr_i(i).rx_reset_done and mgt_status_arr_i(i).rx_pll_locked)) or reset_rx;
         rx_gb_reset(i) <= not (rx_header_locked(i) and rx_sync_valid(i));
         rx_dp_reset(i) <= not rx_gb_ready(i);
 
@@ -305,7 +315,7 @@ begin
                 G_N_STAGES => 3
             )
             port map(
-                reset_i       => reset_i or cnt_reset_i,
+                reset_i       => reset or cnt_reset,
                 input_clk_i   => rx_word_clk_arr_i(i),
                 oneshot_clk_i => rx_frame_clk_i,
                 input_i       => rx_slide(i),
@@ -319,14 +329,14 @@ begin
             )
             port map(
                 ref_clk_i => rx_frame_clk_i,
-                reset_i   => reset_i or cnt_reset_i,
+                reset_i   => reset or cnt_reset,
                 en_i      => rx_slide_frameclk(i),
                 count_o   => rx_slide_cnt(i)
             );
 
         i_rx_not_ready_latch : entity work.latch
             port map(
-                reset_i => reset_i or cnt_reset_i,
+                reset_i => reset or cnt_reset,
                 clk_i   => rx_frame_clk_i,
                 input_i => not (rx_gb_ready(i) and rx_dp_ready(i)),
                 latch_o => link_status_arr_o(i).gbt_rx_had_not_ready
@@ -334,7 +344,7 @@ begin
 
         i_rx_header_unlock_latch : entity work.latch
             port map(
-                reset_i => reset_i or cnt_reset_i,
+                reset_i => reset or cnt_reset,
                 clk_i   => rx_word_clk_arr_i(i),
                 input_i => not rx_header_locked(i),
                 latch_o => link_status_arr_o(i).gbt_rx_header_had_unlock
@@ -407,7 +417,7 @@ begin
                 )
                 port map(
                     ref_clk_i => rx_frame_clk_i,
-                    reset_i   => reset_i or cnt_reset_i,
+                    reset_i   => reset or cnt_reset,
                     en_i      => rx_corr_flag(i),
                     count_o   => rx_corr_cnt(i)
                 );
@@ -481,7 +491,7 @@ begin
                     NBITS       => 32
                 )
                 port map(
-                    RST      => reset_i or reset_rx_i,
+                    RST      => reset or reset_rx,
                     CLK      => rx_frame_clk_i,
                     DATA_IN  => rx_prbs_data,
                     EN       => '1',
@@ -501,7 +511,7 @@ begin
             )
             port map(
                 ref_clk_i => rx_frame_clk_i,
-                reset_i   => reset_i or reset_rx_i or cnt_reset_i,
+                reset_i   => reset or reset_rx or cnt_reset,
                 en_i      => rx_prbs_err(i),
                 count_o   => rx_prbs_err_cnt(i)
             );
@@ -523,7 +533,7 @@ begin
             NBITS       => 32
         )
         port map(
-            RST      => reset_i or reset_tx_i,
+            RST      => reset or reset_tx,
             CLK      => tx_frame_clk_i,
             DATA_IN  => x"00000000",
             EN       => '1',
