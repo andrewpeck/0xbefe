@@ -152,6 +152,10 @@ class Mgt:
     def set_eyescan_reset(self, value):
         write_reg("BEFE.MGTS.MGT%d.CTRL.EYESCAN_RESET" % (self.idx), value)
 
+    def set_low_power_mode(self, value):
+        if self.txrx.name.lower() == "rx":
+            write_reg("BEFE.MGTS.MGT%d.CTRL.RX_LOW_POWER_MODE" % (self.idx), value)
+
 class Link:
     idx = None
     tx_mgt = None
@@ -192,6 +196,10 @@ class Link:
     def reset_rx(self):
         if self.rx_mgt is not None:
             self.rx_mgt.reset()
+
+    def set_low_power_mode_rx(self, value):
+        if self.rx_mgt is not None:
+            self.rx_mgt.set_low_power_mode(value)
 
     def get_mgt(self, txrx):
         if txrx == MgtTxRx.TX:
@@ -420,6 +428,19 @@ def befe_config_links(loopback_test=False):
         link.reset_rx()
 
     return links
+
+def befe_toggle_dfe_lpm():
+    gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
+    if gem_station !=0:
+        return
+    links = befe_get_all_links()
+    for link in links:
+        link.set_low_power_mode_rx(0)
+        link.reset_rx()
+        sleep(0.01)
+        link.set_low_power_mode_rx(1)
+        link.reset_rx()
+        sleep(0.01)
 
 def befe_get_fw_info():
     fw_flavor = read_reg("BEFE.SYSTEM.RELEASE.FW_FLAVOR")
