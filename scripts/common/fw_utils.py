@@ -2,6 +2,7 @@ from common.rw_reg import *
 from common.utils import *
 import tableformatter as tf
 from enum import Enum
+from time import sleep
 
 try:
     imp.find_module('colorama')
