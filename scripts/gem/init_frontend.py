@@ -367,6 +367,7 @@ def init_gem_frontend():
                     continue
         print (Colors.GREEN + "Configure sub lpGBTs DONE" + Colors.ENDC)
 
+        '''
         # Toggle UL data type to avoid unlocking of lpGBT UL data
         for oh in range(max_ohs):
             for gbt in range(num_gbts):
@@ -381,6 +382,12 @@ def init_gem_frontend():
                 sleep(0.1)
         sleep(2)
         print (Colors.GREEN + "Toggle UL data source for lpGBTs DONE" + Colors.ENDC)
+        '''
+
+        # Toggle between DFE and LPM mode
+        befe_toggle_dfe_lpm()
+        sleep(2)
+        print (Colors.GREEN + "Toggle between DFE and LPM mode DONE" + Colors.ENDC)
 
         # Configure vfat phase
         for oh in range(max_ohs):
