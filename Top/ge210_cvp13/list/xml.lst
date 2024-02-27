@@ -1,5 +1,2 @@
-address_table/gem/generated/ge21_cvp13/gem_amc.xml
-address_table/befe/ttc.xml
-address_table/befe/mgts_generic.xml
-address_table/befe/system.xml
-address_table/befe/promless_bram.xml
+address_table/gem/generated/ge210_cvp13_flavor_ge21/gem_amc.xml
+address_table/gem/generated/ge210_cvp13_flavor_me0/gem_amc.xml
