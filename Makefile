@@ -38,13 +38,13 @@ $(CREATE_LIST):
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
 	@echo Creating Project $(patsubst create_%,%,$@)                                       $(COLORIZE)
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/CreateProject.sh $(patsubst create_%,%,$@)                                   $(COLORIZE)
+	@time Hog/Do CREATE $(patsubst create_%,%,$@)                                          $(COLORIZE)
 
 $(IMPL_ONLY_LIST):
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
 	@echo Launching Hog Workflow $(patsubst impl_only_%,%,$@) with njobs = $(NJOBS)        $(COLORIZE)
 	@echo -------------------------------------------------------------------------------- $(COLORIZE)
-	@time Hog/LaunchWorkflow.sh $(patsubst impl_only_%,%,$@) -njobs $(NJOBS)               $(COLORIZE)
+	@time Hog/Do WORKFLOW $(patsubst impl_only_%,%,$@) -njobs $(NJOBS)                     $(COLORIZE)
 
 $(IMPL_LIST):
 	@make $(patsubst impl_%,create_%,$@)

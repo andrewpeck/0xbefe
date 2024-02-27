@@ -10,8 +10,8 @@ backend and frontend electronics.
 ├── README.md
 ├── doc           ; documentation
 ├── regtools      ; XML to VHDL register tool
-├── Hog           ; HOG build system (submodule)
-├── Top           ; directory for HOG projects
+├── Hog           ; Hog build system (submodule)
+├── Top           ; directory for Hog projects
 ├── address_table ; xml address tables
 │   ├── befe      ;; common address tables (ttc etc.)
 │   ├── csc       ;; CSC specific address tables
@@ -39,11 +39,11 @@ backend and frontend electronics.
 
 ## Building the firmware
 
-This firmware is using the HOG framework as a build system:
- - HOG Documentation: http://hog-user-docs.web.cern.ch
- - HOG Source Code: https://gitlab.cern.ch/hog/Hog
+This firmware is using the Hog framework as a build system:
+ - Hog Documentation: http://hog-user-docs.web.cern.ch
+ - Hog Source Code: https://gitlab.cern.ch/hog/Hog
 
-HOG allows for multiple projects to happily coexist within a single repository,
+Hog allows for multiple projects to happily coexist within a single repository,
 allowing sharing of source code between OH + GEM backend + CSC FED, as well as
 managing the deployment to the numerous hardware platforms that are supported.
 
@@ -51,19 +51,18 @@ In general, the process to build firmware from a fresh checkout consists of:
 
 ``` sh
 # shortcut to initialize git submodules
-make init 
-# creates a Vivado / ISE project 
+make init
+# creates a Vivado / ISE project
 make create_<project_name>
 # Launch synthesis + implementation + bitstream generation
 make impl_<project_name>
 
 # Alternatively the above can be achieved by:
-# creates a Vivado / ISE project 
-Hog/CreateProject.sh <project name> 
-# Launches synthesis + implementation 
-Hog/LaunchWorkflow.sh <project name> 
+# creates a Vivado / ISE project
+Hog/Do CREATE <project name>
+# Launches synthesis + implementation
+Hog/Do [-recreate] WORKFLOW <project name>
 ```
 
-The available projects can be seen as directories in the `Top/` folder. HOG will
-also report a list of projects if you type `Hog/CreateProject.sh` without a
-project name.
+The available projects can be seen as directories in the `Top/` folder. Hog will
+also report a list of projects if you type `Hog/Do LIST`.
