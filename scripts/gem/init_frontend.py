@@ -383,11 +383,18 @@ def init_gem_frontend():
         sleep(2)
         print (Colors.GREEN + "Toggle UL data source for lpGBTs DONE" + Colors.ENDC)
         '''
-
+        
+        '''
         # Toggle between DFE and LPM mode
         befe_toggle_dfe_lpm()
         sleep(2)
         print (Colors.GREEN + "Toggle between DFE and LPM mode DONE" + Colors.ENDC)
+        '''
+
+        # Reset RX Reset
+        befe_reset_rx_links()
+        sleep(2)
+        print (Colors.GREEN + "Reset RX links DONE" + Colors.ENDC)
 
         # Configure vfat phase
         for oh in range(max_ohs):
