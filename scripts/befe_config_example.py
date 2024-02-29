@@ -152,7 +152,7 @@ CONFIG_ME0_VFAT_SBIT_BITSLIP = BEFE_SCRIPTS_DIR + "/resources/me0_oh*_vfat_sbit_
 
 # VFAT HDLC addresses
 CONFIG_ME0_VFAT_HDLC_ADDRESSES = [4, 3, 10, 9, 1, 3, 7, 9, 1, 5, 7, 11, 4, 5, 10, 11, 2, 6, 8, 12, 2, 6, 8, 12] # replace with zeros if your setup has VFAT hybrids that don't support addressing
-# GBT version - 0 for ME0 OH-v1 and 1 for ME0 OH-v2 (0 for GE1/1 and GE2/1)
+# GBT version - 0 for ME0 OH-v1 and 1 for ME0 OH-v2 (0 for GE1/1 or GE2/1)
 CONFIG_ME0_GBT_VER = {
     0: [1, 1, 1, 1, 1, 1, 1, 1], # lpGBT ver for 8 GBTs for OH0
     1: [1, 1, 1, 1, 1, 1, 1, 1], # lpGBT ver for 8 GBTs for OH1
