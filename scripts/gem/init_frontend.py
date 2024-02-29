@@ -24,14 +24,6 @@ def me0_lpgbt_reset(oh, gbt, gbt_ver):
         writeGbtRegAddrs(0x13F, 0x80)
     sleep(0.1)
 
-    if gbt_ver == 0:
-        writeGbtRegAddrs(0x130, 0x00)
-        writeGbtRegAddrs(0x12F, 0x00)
-    elif gbt_ver == 1:
-        writeGbtRegAddrs(0x140, 0x00)
-        writeGbtRegAddrs(0x13F, 0x00)
-    sleep(0.1)
-
 def me0_sub_lpgbt_reset(oh, gbt):
     selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
     writeGbtRegAddrs(0x055, 0x22) # Set GPIOs to high 
