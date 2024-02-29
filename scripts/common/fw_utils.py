@@ -430,6 +430,11 @@ def befe_config_links(loopback_test=False):
 
     return links
 
+def befe_reset_rx_links():
+    links = befe_get_all_links()
+    for link in links:
+        link.reset_rx()
+
 def befe_toggle_dfe_lpm():
     gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
     if gem_station !=0:
