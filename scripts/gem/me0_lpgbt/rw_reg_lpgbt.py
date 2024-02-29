@@ -264,8 +264,8 @@ def select_ic_link(ohIdx, gbtIdx):
     if system=="backend":
         ohIdx = int(ohIdx)
         gbtIdx = int(gbtIdx)
-        if ohIdx not in range(0,2) or gbtIdx not in range(0,8):
-            print (Colors.RED + "ERROR: Invalid ohIdx or gbtIdx" + Colors.ENDC)
+        if gbtIdx not in range(0,8):
+            print (Colors.RED + "ERROR: Invalid gbtIdx" + Colors.ENDC)
             rw_terminate()
         linkIdx = ohIdx * 8 + gbtIdx
         gem_utils.write_backend_reg(NODE_IC_GBT_LINK_SELECT, linkIdx)
@@ -290,8 +290,8 @@ def select_ic_link(ohIdx, gbtIdx):
 def get_oh_ver(ohIdx, gbtIdx):
     ohIdx = int(ohIdx)
     gbtIdx = int(gbtIdx)
-    if ohIdx not in range(0,2) or gbtIdx not in range(0,8):
-        print (Colors.RED + "ERROR: Invalid ohIdx or gbtIdx" + Colors.ENDC)
+    if gbtIdx not in range(0,8):
+        print (Colors.RED + "ERROR: Invalid gbtIdx" + Colors.ENDC)
         rw_terminate()
     gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
     oh_ver = -9999
