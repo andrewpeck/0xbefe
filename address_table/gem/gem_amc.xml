@@ -904,10 +904,10 @@
                        data for the last event (mostly for debugging). Units = clock
                        cycles @ DAQ clock frequency (currently using 40.08MHz TTC clock)"
           fw_signal="std_logic_vector(last_dav_timer)"/>
-    <node id="L1A_FIFO_DATA_CNT"  address="0x37"  mask="0x00001fff" permission="r"
+    <node id="L1A_FIFO_DATA_CNT"  address="0x37"  mask="0x00003fff" permission="r"
           description="Current number of words in the L1A FIFO (current depth is 8192)"
           fw_signal="l1afifo_data_cnt"/>
-    <node id="DAQ_FIFO_DATA_CNT"  address="0x37"  mask="0x1fff0000" permission="r"
+    <node id="DAQ_FIFO_DATA_CNT"  address="0x37"  mask="0x3fff0000" permission="r"
           description="Current number of words in the DAQ output FIFO (current depth is 8192)"
           fw_signal="daqfifo_data_cnt"/>
     <node id="L1A_FIFO_NEAR_FULL_CNT"  address="0x38"  mask="0x0000ffff" permission="r"
@@ -1109,10 +1109,10 @@
             sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_good="self &lt;= read_reg('BEFE.GEM.DAQ.STATUS.L1AID') &lt; self + 100"
             sw_val_warn="read_reg('BEFE.GEM.DAQ.STATUS.L1AID') >= self + 100"/>
-      <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00000fff" permission="r"
+      <node id="INPUT_FIFO_DATA_CNT"  address="0x4"  mask="0x00001fff" permission="r"
             description="Current number of words in the Input FIFO (current depth is 4096)"
             fw_signal="chamber_infifos(${OH_IDX}).data_cnt"/>
-      <node id="EVT_FIFO_DATA_CNT"  address="0x4"  mask="0x0fff0000" permission="r"
+      <node id="EVT_FIFO_DATA_CNT"  address="0x4"  mask="0x1fff0000" permission="r"
             description="Current number of words in the Event FIFO (current depth is 4096)"
             fw_signal="chamber_evtfifos(${OH_IDX}).data_cnt"/>
       <node id="INPUT_FIFO_NEAR_FULL_CNT"  address="0x5"  mask="0x0000ffff" permission="r"

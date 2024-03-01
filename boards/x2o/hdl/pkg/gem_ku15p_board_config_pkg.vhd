@@ -45,27 +45,27 @@ package board_config_package is
     constant CFG_DAQ_EVTFIFO_DEPTH          : integer := 4096;
     constant CFG_DAQ_EVTFIFO_PROG_FULL_SET  : integer := 3072;
     constant CFG_DAQ_EVTFIFO_PROG_FULL_RESET: integer := 2047;
-    constant CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH : integer := 12;
+    constant CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH : integer := 13;
     
     constant CFG_DAQ_INFIFO_DEPTH           : integer := 4096;
     constant CFG_DAQ_INFIFO_PROG_FULL_SET   : integer := 3072;
     constant CFG_DAQ_INFIFO_PROG_FULL_RESET : integer := 2047;
-    constant CFG_DAQ_INFIFO_DATA_CNT_WIDTH  : integer := 12;
+    constant CFG_DAQ_INFIFO_DATA_CNT_WIDTH  : integer := 13;
 
     constant CFG_DAQ_OUTPUT_DEPTH           : integer := 8192;
     constant CFG_DAQ_OUTPUT_PROG_FULL_SET   : integer := 4045;
     constant CFG_DAQ_OUTPUT_PROG_FULL_RESET : integer := 1365;
-    constant CFG_DAQ_OUTPUT_DATA_CNT_WIDTH  : integer := 13;
+    constant CFG_DAQ_OUTPUT_DATA_CNT_WIDTH  : integer := 14;
 
     constant CFG_DAQ_L1AFIFO_DEPTH          : integer := 8192;
     constant CFG_DAQ_L1AFIFO_PROG_FULL_SET  : integer := 6144;
     constant CFG_DAQ_L1AFIFO_PROG_FULL_RESET: integer := 4096;
-    constant CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH : integer := 13;
+    constant CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH : integer := 14;
 
     constant CFG_DAQ_SPYFIFO_DEPTH          : integer := 32768;
     constant CFG_DAQ_SPYFIFO_PROG_FULL_SET  : integer := 24576;
     constant CFG_DAQ_SPYFIFO_PROG_FULL_RESET: integer := 16384;
-    constant CFG_DAQ_SPYFIFO_DATA_CNT_WIDTH : integer := 17;
+    constant CFG_DAQ_SPYFIFO_DATA_CNT_WIDTH : integer := 16;
 
     constant CFG_DAQ_LASTEVT_FIFO_DEPTH     : integer := 4096;
 
@@ -73,7 +73,7 @@ package board_config_package is
 
     constant CFG_SPY_10GBE                     : boolean := false; -- true = 10 GbE; false = 1 GbE
     constant CFG_SPY_PACKETFIFO_DEPTH          : integer := 8192; -- buffer almost 8 maximum size packets (2 headers words, 1023 payload words, 1 trailer word)
-    constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 13;
+    constant CFG_SPY_PACKETFIFO_DATA_CNT_WIDTH : integer := 14;
 
     ------------ DEBUG FLAGS ------------
     constant CFG_DEBUG_GBT                  : boolean := true; -- if set to true, an ILA will be instantiated which allows probing any GBT link
