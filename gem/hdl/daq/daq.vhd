@@ -1435,12 +1435,10 @@ begin
                         if (e_dav_mask(e_input_idx) = '1') then
                             -- move to the next state
                             daq_state <= x"4";
-
-                        -- no data on this input - skip to event trailer
+                        -- no data on the last input
                         else
-
+                            -- skip to event trailer
                             daq_state <= x"7";
-
                         end if;
 
                     end if;
@@ -1582,8 +1580,8 @@ begin
                         daq_event_write_en <= '1';
                         e_word_count <= e_word_count + 1;
 
-                        -- if we have data for the next input then read the infifo and go to chamber data sending
-                        if (e_dav_mask(e_input_idx + 1) = '1') then
+                        -- if we have data for the next in-range input, go to chamber data sending
+                        if ((e_input_idx < g_NUM_OF_OHs - 1) and (e_dav_mask(e_input_idx + 1) = '1')) then
                             daq_state <= x"4";
                         else -- if next input doesn't have data we can only get here if we're at the last input, so move to the event trailer
                             daq_state <= x"7";
