@@ -61,7 +61,7 @@ if __name__ == "__main__":
                     output = ssh_stdout.readlines()
                     print(output)
                     for line in output:
-                        if "ERROR" in ssh_stdout:
+                        if "ERROR" in line:
                             print("ERROR in configuring BOSS GBT")
                             sys.exit()
                     sleep(2)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                     output = ssh_stdout.readlines()
                     print(output)
                     for line in output:
-                        if "ERROR" in ssh_stdout:
+                        if "ERROR" in line:
                             print("ERROR in configuring SUB GBT")
                             sys.exit()
                     sleep(2)
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                     output = ssh_stdout.readlines()
                     print(output)
                     for line in output:
-                        if "ERROR" in ssh_stdout:
+                        if "ERROR" in line:
                             print("ERROR in i2c BOSS GBT")
                             sys.exit()
                     sleep(2)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                     output = ssh_stdout.readlines()
                     print(output)
                     for line in output:
-                        if "ERROR" in ssh_stdout:
+                        if "ERROR" in line:
                             print("ERROR in i2c SUB GBT")
                             sys.exit()
                     sleep(2)
