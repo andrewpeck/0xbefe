@@ -625,11 +625,13 @@ if __name__ == "__main__":
         logfile.write("\n######################################################\n\n")
 
         ssh.close()
-
-    current_ranges = {'2V5':0.3,'1V2':0.7}
+    
+    current_nominal_1v2 = 0.426
+    current_nominal_2v5 = 0.066
+    current_ranges = {'2V5':[0.9*current_nominal_2v5, 1.1*current_nominal_2v5],'1V2':[0.9*current_nominal_1v2, 1.1*current_nominal_1v2]}
     for queso,oh_sn in queso_dict.items():
-        for v,i_max in current_ranges.items():
-            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_max or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
+        for v,i_range in current_ranges.items():
+            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] < i_range[0] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_range[1] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
                 if not test_failed:
                     print(Colors.RED + "\nReading Currents Failed" + Colors.ENDC)
                     logfile.write("\nReading Currents Failed\n")
