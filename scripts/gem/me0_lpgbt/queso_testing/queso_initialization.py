@@ -54,10 +54,12 @@ pi_list["7"] =  "169.254.8.226"
 pi_list["8"] =  "169.254.57.247"
 
 scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+queso_dir = scripts_gem_dir + '/me0_lpgbt/queso_testing'
+input_fn = queso_dir + '/resources/input_queso.txt'
 
 if __name__ == "__main__":
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="Queso initialization procedure")
+    parser = argparse.ArgumentParser(description=f"Queso initialization procedure\nInput file taken from \'{input_fn}\'")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-p", "--power_on", action="store_true", dest="power_on", help = 'power_on = only power on regulators without running test scripts')
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help = 'turn_off = only power off regulators without running test scripts')
@@ -72,7 +74,6 @@ if __name__ == "__main__":
     if not power_only:
         results_oh_sn = {}
 
-    input_fn = scripts_gem_dir + '/me0_lpgbt/queso_testing/resources/input_queso.txt'
     input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
@@ -201,7 +202,7 @@ if __name__ == "__main__":
         print("")
         sys.exit()
 
-    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+    resultDir = queso_dir + '/results'
     dataDir = resultDir+"/%s_tests"%test_type # directory name if test_type variable exists    
     try:
         os.makedirs(dataDir) # create directory for data
@@ -422,8 +423,8 @@ if __name__ == "__main__":
     print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
     logfile.write("Initialization\n\n")
     logfile.close()
-    os.system("python3 init_frontend.py")
-    os.system("python3 status_frontend.py >> %s"%log_fn)
+    os.system(f"python3 {scripts_gem_dir}/init_frontend.py")
+    os.system(f"python3 {scripts_gem_dir}/status_frontend.py >> {log_fn}")
     logfile = open(log_fn,"a")
     list_of_files = glob.glob(scripts_gem_dir + "/results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -483,7 +484,7 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         gbtid_list = oh_gbt_vfat_map[ohid]["GBT"]
         for gbtid in gbtid_list:
-            os.system("python3 me0_lpgbt/queso_testing/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d >> %s"%(ohid, gbtid,log_fn))
+            os.system("python3 %s/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d >> %s"%(queso_dir,ohid, gbtid,log_fn))
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -497,7 +498,7 @@ if __name__ == "__main__":
     logfile.close()
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(ohid, vfat_list_str))
+        os.system("python3 %s/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(queso_dir,ohid, vfat_list_str))
         list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))

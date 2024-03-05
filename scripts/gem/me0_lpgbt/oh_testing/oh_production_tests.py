@@ -20,6 +20,8 @@ from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 #   8       1       6, 7    6, 7, 14, 15, 22, 23
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+oh_testing_dir = scripts_gem_dir + '/me0_lpgbt/oh_testing'
+input_fn = oh_testing_dir + '/resources/input_geb.txt'
 
 geb_oh_map = {}
 for slot in range(1,9):
@@ -33,8 +35,6 @@ for slot in range(1,9):
 NULL = -9999
 
 if __name__ == "__main__":
-    input_fn = scripts_gem_dir + '/me0_lpgbt/oh_testing/resources/input_geb.txt'
-
     geb_dict         = {}
     input_oh_dict    = {}
     input_vtrxp_dict = {}
@@ -98,19 +98,18 @@ if __name__ == "__main__":
 
         oh_ver_dict[slot] = [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
-    resultDir = scripts_gem_dir + "/me0_lpgbt/oh_testing/results"
-
+    resultDir = oh_testing_dir + "/results"
     try:
         dataDir = resultDir + "/%s_tests"%test_type
     except NameError:
         print(Colors.YELLOW + 'Must include test type in input file as "# TEST_TYPE: <test_type>"' + Colors.ENDC)
         sys.exit()
-
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
 
+    # Make data dir for OH batch
     dataDir += "/OH_SNs_"+"_".join(oh_sn_list)
     try:
         os.makedirs(dataDir) # create directory for ohid under test

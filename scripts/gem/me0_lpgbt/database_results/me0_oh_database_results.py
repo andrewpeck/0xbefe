@@ -8,6 +8,13 @@ from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
+input_fn = dbDir + '/resources/input_db.txt'
+
+quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
+gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
+
+NULL = -9999
 
 def get_json_data(fn):
     with open(fn,'r') as fp:
@@ -86,70 +93,69 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
     del data_out["ROOT"]['DATA_SET']['DATA']['SERIAL_NUMBER']
     return data_out
 
-def main():
-    parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
-    parser.add_argument("-o", "--oh_sns", action="store", nargs="+", dest="oh_sns", help="OH_SNS = list of OH SERIAL NUMBERS matching a test batch of up to 8 OHs.")
-    parser.add_argument("-vxp", "--vtrxp_sns", action="store", nargs="+", dest="vtrxp_sns", help="VTRXP_SNS = list of VTRx+ SERIAL NUMBERS for indexing.")
-    parser.add_argument("-t", "--test_type", action="store", dest="test_type", help="TEST_TYPE = name of test batch; valid entries: [pre_production, pre_series, production, acceptance]")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=f"Generate XML database files for OptoHybrid Production Tests\nInput file taken from \'{input_fn}\'")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="VERBOSE = print combined results output when saving to xml")
     args = parser.parse_args()
 
-    # Check for valid args
-    if not (args.oh_sns and args.vtrxp_sns):
-        if not args.oh_sns:
-            print(Colors.RED + 'Missing OH SERIAL NUMBERS.' + Colors.ENDC)
-        if not args.vtrxp_sns:
-            print(Colors.RED + 'Missing VTRxPlus SERIAL NUMBERS.' + Colors.ENDC)
-        print(Colors.RED + 'Must provide both OH SERIAL NUMBER and VTRx+ SERIAL NUMBER arguments.' + Colors.ENDC)
-        sys.exit()
-    elif len(args.oh_sns) > 8:
-        print(Colors.RED + 'Program can only take up to 8 OH SERIAL NUMBERS. List should match 1 QUESO TESTING and 2 OH TESTING directories exactly' + Colors.ENDC)
-        sys.exit()
-    elif len(args.oh_sns)!= len(args.vtrxp_sns):
-        print(Colors.RED + 'Must provide a list of VTRxPlus SERIAL NUMBERs ordered according to the OHs on which they are installed.' + Colors.ENDC)
-
-    # Check for test type
-    if not args.test_type or (args.test_type not in ['pre_production','pre_series','production','acceptance']):
-        print(Colors.RED + 'Must provide TEST TYPE! Acceptable values: [\'pre_production\',\'pre_series\',\'production\',\'acceptance\']' + Colors.ENDC)
-        sys.exit()
-
-    # Check valid serial numbers for batch
-    for oh_sn in args.oh_sns:
-        try:
-            if args.test_type=='pre_production':
-                if int(oh_sn) not in range(1,1000):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1-1000 for pre-production."%oh_sn + Colors.ENDC)
+    oh_sn_list = []
+    vtrxp_sn_list = []
+    with open(input_fn,"r") as input_file:
+        for line in input_file.readlines():
+            if "#" in line:
+                if "TEST_TYPE" in line:
+                    test_type = line.split()[2]
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
+                        sys.exit()
+                continue
+            slot = line.split()[0]
+            oh_sn = line.split()[1]
+            vtrxp_sn = line.split()[2]
+            if oh_sn != str(NULL):
+                if test_type in ["prototype", "pre_production"]:
+                    if int(oh_sn) not in range(1,1001):
+                        print(Colors.YELLOW + "Valid %s OH serial number between 1 and 1000"%test_type.replace('_','-') + Colors.ENDC)
+                        options = input('Do you want to continue anyway? (y/n) >> ')
+                        if options.lower() in 'yes':
+                            pass
+                        else:
+                            sys.exit()
+                elif test_type == 'pre_series':
+                    if int(oh_sn) not in range(1001, 1025):
+                        print(Colors.YELLOW + "Valid %s OH serial number between 1001 and 1024"%test_type.replace('_','-') + Colors.ENDC)
+                        options = input('Do you want to continue anyway? (y/n) >> ')
+                        if options.lower() in 'yes':
+                            pass
+                        else:
+                            sys.exit()
+                elif test_type in ["production", "long_production", "acceptance"]:
+                    if int(oh_sn) not in range(1025, 2019):
+                        print(Colors.YELLOW + "Valid %s OH serial number between 1025 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                        options = input('Do you want to continue anyway? (y/n) >> ')
+                        if options.lower() in 'yes':
+                            pass
+                        else:
+                            sys.exit()
+                elif test_type=="debug":
+                    if int(oh_sn) not in range(1, 2019):
+                        print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                        sys.exit()
+                if int(slot) > 4:
+                    print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
                     sys.exit()
-            elif args.test_type=='pre_series':
-                if int(oh_sn) not in range(1001,1025):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1020 for pre-series."%oh_sn + Colors.ENDC)
+                oh_sn_list.append(oh_sn)
+                if vtrxp_sn!=str(NULL):
+                    if int(vtrxp_sn) not in range(1,1000000):
+                        print(Colors.RED + "Invalid VTRx+ SERIAL NUMBER entered: %s. Must be a 6-digit number."%vtrxp_sn + Colors.ENDC)
+                        sys.exit()
+                    vtrxp_sn_list.append(vtrxp_sn)
+                else:
+                    print(Colors.RED + 'Missing VTRxPlus SERIAL NUMBER for OH %s'%oh_sn + Colors.ENDC)
                     sys.exit()
-            elif args.test_type in ['production','acceptance']:
-                if int(oh_sn) not in range(1025,2019):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1021-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
-                    sys.exit()
-        except ValueError:
-            print(Colors.RED + "OH SERIAL NUMBERS must be an integer. '%s' is an invalid entry."%oh_sn + Colors.ENDC)
-            sys.exit()
-    oh_sn_list = args.oh_sns
 
-    for vtrxp_sn in args.vtrxp_sns:
-        try:
-            if int(vtrxp_sn) not in range(1,1000000):
-                print(Colors.RED + "Invalid VTRx+ SERIAL NUMBER entered: %s. Must be a 6-digit number."%vtrxp_sn + Colors.ENDC)
-                sys.exit()
-        except ValueError:
-            print(Colors.RED + "VTRx+ SERIAL NUMBER must be an integer. 's' is an invalid entry."%vtrxp_sn + Colors.ENDC)
-            sys.exit()
-    vtrxp_sn_list = args.vtrxp_sns
-
-    global scripts_gem_dir
-    dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
-    inputDir = dbDir + '/input/' + args.test_type + '_tests'
-    resultDir = dbDir + '/results/' + args.test_type + '_tests'
-
-    quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
-    gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
+    inputDir = dbDir + '/input/' + test_type + '_tests'
+    resultDir = dbDir + '/results/' + test_type + '_tests'
 
     if len(oh_sn_list) > 4:
         # Create list for both oh directories
@@ -160,16 +166,16 @@ def main():
         oh_sn_str = '_'.join(oh_sn_list)
     
     # Check if data directories exist
-    if args.test_type!='acceptance':
-        queso_data_dir = quesoDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
+    if test_type!='acceptance':
+        queso_data_dir = quesoDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str)
         if not os.path.exists(queso_data_dir):
             print(Colors.RED + 'QUESO results data directory: %s not found. Please ensure correct list of OH SERIAL NUMBERS and order.'%queso_data_dir + Colors.ENDC)
             sys.exit()
         queso_init_fn = queso_data_dir + 'queso_initialization_results.json'
         queso_bert_fn = queso_data_dir + 'queso_elink_bert_results.json'
     if len(oh_sn_list) > 4:
-        geb_data2_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str2)
-        geb_data1_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str1)
+        geb_data2_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str2)
+        geb_data1_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str1)
         if not os.path.exists(geb_data1_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data1_dir + Colors.ENDC)
             sys.exit()
@@ -181,7 +187,7 @@ def main():
         vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
         vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
     else:
-        geb_data_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(args.test_type,oh_sn_str)
+        geb_data_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str)
         if not os.path.exists(geb_data_dir):
             print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
             sys.exit()
@@ -195,9 +201,11 @@ def main():
 
     # Check if directories exist
     if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
-        print(Colors.YELLOW + 'Could not find data directories for /OH_SNs_%s. Run generate_input.py to generate necessary input files and data directories.'%oh_sn_str + Colors.ENDC)
-        sys.exit()
-    
+        print(Colors.YELLOW + 'Could not find data directories for /OH_SNs_%s. Running generate_input.py to generate necessary input files and data directories.'%oh_sn_str + Colors.ENDC)
+        os.system(f'python3 {dbDir}/generate_input.py')
+        if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
+            print(Colors.RED + 'Still could not find data directories for /OH_SNs_%s.' + Colors.ENDC)
+            sys.exit()
     # Get input data
     input_dataset = get_input_data(inputDataDir)
     # check for input data
@@ -215,7 +223,7 @@ def main():
     # -- Begin creating datasets --
 
     oh_dataset = []
-    if args.test_type!='acceptance':
+    if test_type!='acceptance':
         # Load and check queso data
         queso_data_found = [False for _ in range(len(oh_sn_list))]
         try:
@@ -358,5 +366,3 @@ def main():
         with open(results_fn,'w') as results_file:
             xmltodict.unparse(vtrxp_data,results_file,pretty=True,indent='  ')
 
-if __name__ == '__main__':
-    main()

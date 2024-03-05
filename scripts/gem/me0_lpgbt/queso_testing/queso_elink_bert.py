@@ -10,9 +10,10 @@ from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
-
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-
+queso_dir = scripts_gem_dir + "/me0_lpgbt/queso_testing"
+resultDir = queso_dir + '/results'
+input_fn = queso_dir + '/resources/input_queso.txt'
 
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
@@ -39,7 +40,7 @@ def init_lpgbt_fec_error_counter(oh_ver):
         rw_reg_lpgbt.mpoke(0x1C9, 0x0)
 
 def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, batch = None):
-    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+    global resultDir
     if batch is None:
         dataDir = resultDir + "/bert_results"
     else:
@@ -500,7 +501,6 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     resultsfile.close()
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="QUESO BERT")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
@@ -529,7 +529,6 @@ if __name__ == "__main__":
     oh_gbt_vfat_map = {}
     queso_dict = {}
 
-    input_fn = scripts_gem_dir + '/me0_lpgbt/queso_testing/resources/input_queso.txt'
     input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
