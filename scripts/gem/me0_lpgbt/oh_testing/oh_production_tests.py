@@ -19,6 +19,8 @@ from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 #   7       1       4, 5    4, 5, 12, 13, 20, 21
 #   8       1       6, 7    6, 7, 14, 15, 22, 23
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 geb_oh_map = {}
 for slot in range(1,9):
     o = 2*((slot - 1)%4)
@@ -31,18 +33,12 @@ for slot in range(1,9):
 NULL = -9999
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
-    args = parser.parse_args()
-
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
+    input_fn = scripts_gem_dir + '/me0_lpgbt/oh_testing/resources/input_geb.txt'
 
     geb_dict         = {}
     input_oh_dict    = {}
     input_vtrxp_dict = {}
-    input_file = open(args.input_file)
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
@@ -102,7 +98,6 @@ if __name__ == "__main__":
 
         oh_ver_dict[slot] = [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/me0_lpgbt/oh_testing/results"
 
     try:
@@ -2117,7 +2112,7 @@ if __name__ == "__main__":
     logfile.write("Step 12: DAQ SCurve\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)

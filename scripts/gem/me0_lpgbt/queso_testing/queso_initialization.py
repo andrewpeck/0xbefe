@@ -7,16 +7,6 @@ from common.utils import get_befe_scripts_dir
 from common.rw_reg import *
 import datetime
 
-class Colors:
-    WHITE   = "\033[97m"
-    CYAN    = "\033[96m"
-    MAGENTA = "\033[95m"
-    BLUE    = "\033[94m"
-    YELLOW  = "\033[93m"
-    GREEN   = "\033[92m"
-    RED     = "\033[91m"
-    ENDC    = "\033[0m"
-
 # QUESO to OH mapping
 queso_oh_map = {}
 queso_oh_map["1"] = {}
@@ -63,18 +53,16 @@ pi_list["6"] =  "169.254.200.178"
 pi_list["7"] =  "169.254.8.226"
 pi_list["8"] =  "169.254.57.247"
 
+scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-p", "--power_on", action="store_true", dest="power_on", help = 'power_on = only power on regulators without running test scripts')
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help = 'turn_off = only power off regulators without running test scripts')
     args = parser.parse_args()
 
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
     # set power only flag
     if args.power_on and args.turn_off:
         print(Colors.YELLOW + '"power_on" and "turn_off" both true, only use one power argument' + Colors.ENDC)
@@ -83,7 +71,9 @@ if __name__ == "__main__":
     queso_dict = {}
     if not power_only:
         results_oh_sn = {}
-    input_file = open(args.input_file)
+
+    input_fn = scripts_gem_dir + '/me0_lpgbt/queso_testing/resources/input_queso.txt'
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
@@ -211,7 +201,6 @@ if __name__ == "__main__":
         print("")
         sys.exit()
 
-    scripts_gem_dir = get_befe_scripts_dir() + "/gem"
     resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
     dataDir = resultDir+"/%s_tests"%test_type # directory name if test_type variable exists    
     try:

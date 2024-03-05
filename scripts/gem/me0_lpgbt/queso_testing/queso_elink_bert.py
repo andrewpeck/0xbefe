@@ -10,6 +10,10 @@ from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
+
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
+
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
     if oh_ver == 1:
@@ -35,7 +39,6 @@ def init_lpgbt_fec_error_counter(oh_ver):
         rw_reg_lpgbt.mpoke(0x1C9, 0x0)
 
 def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, batch = None):
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
     if batch is None:
         dataDir = resultDir + "/bert_results"
@@ -505,7 +508,6 @@ if __name__ == "__main__":
     #parser.add_argument("-o", "--ohs", action="store", nargs="+", dest="ohs", help="ohs = list of OH numbers (0-1)")
     #parser.add_argument("-n", "--oh_ser_nrs", action="store", nargs="+", dest="oh_ser_nrs", help="oh_ser_nrs = list of OH serial numbers")
     #parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
@@ -524,12 +526,11 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
     oh_gbt_vfat_map = {}
     queso_dict = {}
-    input_file = open(args.input_file)
+
+    input_fn = scripts_gem_dir + '/me0_lpgbt/queso_testing/resources/input_queso.txt'
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:

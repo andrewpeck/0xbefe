@@ -8,12 +8,6 @@ from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.rw_reg_lpgbt import Colors
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
-inputDir = dbDir + '/input'
-resultDir = dbDir + '/results'
-
-quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
-gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
 
 def get_json_data(fn):
     with open(fn,'r') as fp:
@@ -113,11 +107,12 @@ def main():
         sys.exit()
     elif len(args.oh_sns)!= len(args.vtrxp_sns):
         print(Colors.RED + 'Must provide a list of VTRxPlus SERIAL NUMBERs ordered according to the OHs on which they are installed.' + Colors.ENDC)
-    
-    if args.test_type not in ["pre_production", "pre_series", "production", "acceptance"]:
-        print(Colors.YELLOW + 'Must provide valid test type: pre_production, pre_series, production, acceptance' + Colors.ENDC)
+
+    # Check for test type
+    if not args.test_type or (args.test_type not in ['pre_production','pre_series','production','acceptance']):
+        print(Colors.RED + 'Must provide TEST TYPE! Acceptable values: [\'pre_production\',\'pre_series\',\'production\',\'acceptance\']' + Colors.ENDC)
         sys.exit()
-    
+
     # Check valid serial numbers for batch
     for oh_sn in args.oh_sns:
         try:
@@ -127,11 +122,11 @@ def main():
                     sys.exit()
             elif args.test_type=='pre_series':
                 if int(oh_sn) not in range(1001,1025):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1024 for pre-series."%oh_sn + Colors.ENDC)
+                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-1020 for pre-series."%oh_sn + Colors.ENDC)
                     sys.exit()
             elif args.test_type in ['production','acceptance']:
-                if int(oh_sn) not in range(1001,2019):
-                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1001-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
+                if int(oh_sn) not in range(1025,2019):
+                    print(Colors.RED + "Invalid OH SERIAL NUMBER entered: %s. Must be in range 1021-2018 for %s."%(oh_sn,args.test_type) + Colors.ENDC)
                     sys.exit()
         except ValueError:
             print(Colors.RED + "OH SERIAL NUMBERS must be an integer. '%s' is an invalid entry."%oh_sn + Colors.ENDC)
@@ -147,6 +142,14 @@ def main():
             print(Colors.RED + "VTRx+ SERIAL NUMBER must be an integer. 's' is an invalid entry."%vtrxp_sn + Colors.ENDC)
             sys.exit()
     vtrxp_sn_list = args.vtrxp_sns
+
+    global scripts_gem_dir
+    dbDir = scripts_gem_dir + '/me0_lpgbt/database_results'
+    inputDir = dbDir + '/input/' + args.test_type + '_tests'
+    resultDir = dbDir + '/results/' + args.test_type + '_tests'
+
+    quesoDir = scripts_gem_dir + '/me0_lpgbt/queso_testing/results'
+    gebDir = scripts_gem_dir + '/me0_lpgbt/oh_testing/results'
 
     if len(oh_sn_list) > 4:
         # Create list for both oh directories
@@ -186,13 +189,13 @@ def main():
         vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
 
     # input data directory
-    inputDataDir = inputDir + '/%s_tests/OH_SNs_%s'%(args.test_type, oh_sn_str)
+    inputDataDir = inputDir + '/OH_SNs_%s'%oh_sn_str
     # output data directory
-    dataDir = resultDir + '/%s_tests/OH_SNs_%s'%(args.test_type, oh_sn_str)
+    dataDir = resultDir + '/OH_SNs_%s'%oh_sn_str
 
     # Check if directories exist
     if not os.path.exists(inputDataDir) or not os.path.exists(dataDir):
-        print(Colors.YELLOW + 'Could not find data directories for OH_SNs_%s. Run generate_input.py to generate necessary input files and data directories.'%oh_sn_str + Colors.ENDC)
+        print(Colors.YELLOW + 'Could not find data directories for /OH_SNs_%s. Run generate_input.py to generate necessary input files and data directories.'%oh_sn_str + Colors.ENDC)
         sys.exit()
     
     # Get input data
@@ -218,7 +221,7 @@ def main():
         try:
             queso_init_data = get_json_data(queso_init_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'QUESO INITIALIZATION RESULTS file not found.')
+            print(Colors.RED + 'QUESO INITIALIZATION RESULTS file not found.' + Colors.ENDC)
             sys.exit()
         for i,oh_sn in enumerate(oh_sn_list):
             for j,data in enumerate(queso_init_data):
@@ -235,7 +238,7 @@ def main():
                     if type(data[variable]) == list:
                         data[variable] = str(data[variable])
         except FileNotFoundError:
-            print(Colors.RED + 'QUESO ELINK BERT RESULTS file not found.')
+            print(Colors.RED + 'QUESO ELINK BERT RESULTS file not found.' + Colors.ENDC)
             sys.exit()
         for i,oh_sn in enumerate(oh_sn_list):
             for j,data in enumerate(queso_bert_data):
@@ -256,36 +259,36 @@ def main():
         try:
             geb_data = get_json_data(geb_data1_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file 1 not found.')
+            print(Colors.RED + 'GEB RESULTS file 1 not found.' + Colors.ENDC)
             sys.exit()
 
         try:
             geb_data += get_json_data(geb_data2_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file 2 not found.')
+            print(Colors.RED + 'GEB RESULTS file 2 not found.' + Colors.ENDC)
             sys.exit()
 
         try:
             vtrxp_dataset = get_json_data(vtrxp_data1_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.')
+            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
             sys.exit()
 
         try:
             vtrxp_dataset += get_json_data(vtrxp_data2_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.')
+            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
             sys.exit()
     else:
         try:
             geb_data = get_json_data(geb_data_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file not found.')
+            print(Colors.RED + 'GEB RESULTS file not found.' + Colors.ENDC)
             sys.exit()
         try:
             vtrxp_dataset = get_json_data(vtrxp_data_fn)
         except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file not found.')
+            print(Colors.RED + 'VTRx+ RESULTS file not found.' + Colors.ENDC)
             sys.exit()
 
     # Check for missing data and that oh serial numbers and vtrxp serial numbers match

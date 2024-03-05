@@ -3,8 +3,7 @@ from glob import glob
 import json
 import xmltodict
 import argparse
-from common.utils import get_befe_scripts_dir
-from gem.me0_lpgbt.rw_reg_lpgbt import Colors
+from common.utils import get_befe_scripts_dir,Colors
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Generate Input Files for OptoHybrid Production Tests")
@@ -27,9 +26,46 @@ if __name__=='__main__':
         os.makedirs(resultDir) # create batch directory for input files
     except FileExistsError: # skip if already exists
         pass
+    
+    input_fn = scripts_gem_dir + 'me0_lpgbt/database_results/resources/input_db.txt'
+    input_file = open(input_fn)
+    oh_dict = {}
+    vtrxp_dict = {}
+    for line in input_file.readlines():
+        if "#" in line:
+            if "TEST_TYPE" in line:
+                test_type = line.split()[2]
+                if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
+                    print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
+                    sys.exit()
+            continue
+        slot = line.split()[0]
+        oh_sn = line.split()[1]
+        vtrxp_sn = line.split()[2]
+        if oh_sn != str(NULL):
+            if test_type in ["prototype", "pre_production"]:
+                if int(oh_sn) not in range(1,1001):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1 and 1000"%test_type.replace('_','-') + Colors.ENDC)
+                    sys.exit()
+            elif test_type == 'pre_series':
+                if int(oh_sn) not in range(1001, 1025):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1001 and 1024"%test_type.replace('_','-') + Colors.ENDC)
+                    sys.exit()
 
-    oh_sn_input = input('\nEnter OH SERIAL NUMBER(s): ')
-    oh_sn_list = oh_sn_input.split()
+            elif test_type in ["production", "long_production", "acceptance"]:
+                if int(oh_sn) not in range(1025, 2019):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1025 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                    sys.exit()
+            elif test_type=="debug":
+                if int(oh_sn) not in range(1, 2019):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                    sys.exit()
+            if int(slot) > 4:
+                print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
+                sys.exit()
+            oh_dict[slot] = oh_sn
+            vtrxp_dict[slot] = vtrxp_sn
+    input_file.close()
 
     for oh_sn in oh_sn_list:
         try:
@@ -406,13 +442,13 @@ if __name__=='__main__':
 
             with open(json_filename,'w') as jsonfile:
                 json.dump(data,jsonfile,indent=2)
-        # -- end of batch --
 
-        # Register oh's,vtrxp's xml file
-        oh_xml_fn = data_OHSNs_Dir + '/ME0_OH_components.xml'
-        vtrxp_xml_fn = data_OHSNs_Dir + '/ME0_VTRxPlus_components.xml'
+            # Register oh's,vtrxp's xml file
+            oh_xml_fn = data_OHSNs_Dir + '/ME0_OH_components.xml'
+            vtrxp_xml_fn = data_OHSNs_Dir + '/ME0_VTRxPlus_components.xml'
 
-        with open(oh_xml_fn,'w') as xmlfile:
-            xmltodict.unparse(reg_oh_data,xmlfile,pretty=True,indent='  ')
-        with open(vtrxp_xml_fn,'w') as xmlfile:
-            xmltodict.unparse(reg_vtrxp_data,xmlfile,pretty=True,indent='  ')
+            with open(oh_xml_fn,'w') as xmlfile:
+                xmltodict.unparse(reg_oh_data,xmlfile,pretty=True,indent='  ')
+            with open(vtrxp_xml_fn,'w') as xmlfile:
+                xmltodict.unparse(reg_vtrxp_data,xmlfile,pretty=True,indent='  ')
+            # -- End of batch --
