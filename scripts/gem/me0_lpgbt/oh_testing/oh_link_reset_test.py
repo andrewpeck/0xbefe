@@ -205,7 +205,7 @@ def main(system, oh_select, gbt_list, niter):
                 print (Colors.YELLOW + "  Link WAS NOT READY" + Colors.ENDC)
                 n_error_backend_was_not_ready_boss[gbt] += 1
             else:
-                print (Colors.GREEN + "  No FEC Errors" + Colors.ENDC)
+                print (Colors.GREEN + "  LINK WAS READY" + Colors.ENDC)
 
         # Sub
         for gbt in gbt_list["sub"]:
@@ -287,7 +287,7 @@ def main(system, oh_select, gbt_list, niter):
                 print (Colors.YELLOW + "  Link WAS NOT READY" + Colors.ENDC)
                 n_error_backend_was_not_ready_sub[gbt] += 1
             else:
-                print (Colors.GREEN + "  No FEC Errors" + Colors.ENDC)
+                print (Colors.GREEN + "  LINK WAS READY" + Colors.ENDC)
 
         print ("")
 
