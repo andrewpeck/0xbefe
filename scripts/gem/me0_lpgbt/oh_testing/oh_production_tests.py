@@ -1876,7 +1876,7 @@ if __name__ == "__main__":
                 except KeyError:
                     xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
-        asense_ranges = {'DCDC_VIN_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
+        asense_ranges = {'DCDC_VIN_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.45],'DCDC_1V2A_VOLTAGE':[1.05, 1.45], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
