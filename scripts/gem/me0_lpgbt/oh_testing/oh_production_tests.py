@@ -435,11 +435,11 @@ if __name__ == "__main__":
             eye_result_file=open(latest_file)
             result = eye_result_file.readlines()[0]
             eye_result_file.close()
-            print(result)
+            print(result+"\n")
             logfile.write(result+"\n")
             xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = float(result.split()[5])
             # uplink eye scan for boss gbt for current OH
-            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d"%gbt + Colors.ENDC)
+            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt)
             os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt)
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
@@ -454,7 +454,7 @@ if __name__ == "__main__":
             logfile.write(result+"\n")
             xml_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = float(result.split()[-1])
             # uplink eye scan for sub gbt for current OH
-            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d"%gbt_sub + Colors.ENDC)
+            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt_sub + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt_sub)
             os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt_sub)
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
