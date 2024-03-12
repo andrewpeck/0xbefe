@@ -270,7 +270,7 @@ if __name__=='__main__':
             else:
                 link_rst_testing = 0
                 link_rst_testing_pass = 0
-        
+        '''
         if multiple_ohs:
             if i==0 or not one_for_all:
                 uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
@@ -319,7 +319,7 @@ if __name__=='__main__':
                         print('Must enter a float for open eye fraction.')
             else:
                 open_eye_fraction_M = open_eye_fraction_S = -9999
-    
+        '''
         if multiple_ohs:
             if i==0 or not one_for_all:
                 vis_inspection = input('Did this board (OH %s) pass visual inspection with no shorts? (y/n) '%oh_sn)
@@ -408,8 +408,8 @@ if __name__=='__main__':
         data['OH']['DATA'][0]['LINK_RESET_TESTING_PASS'] = link_rst_testing_pass
         data['OH']['DATA'][0]['VISUAL_INSPECTION_NO_SHORTS'] = vis_inspection
         data['OH']['DATA'][0]['PASSED_ALL_TESTS'] = passed_all_tests
-        data['OH']['DATA'][0]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_M
-        data['OH']['DATA'][0]['LPGBT_S_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_S
+        #data['OH']['DATA'][0]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_M
+        #data['OH']['DATA'][0]['LPGBT_S_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_S
         data['OH']['DATA'][1]['SHIPPING_BOX'] = shipping_box
         data['OH']['DATA'][1]['BOARD_LOCATION'] = board_location
         data['OH']['DATA'][1]['BOARD_STATE'] = board_state

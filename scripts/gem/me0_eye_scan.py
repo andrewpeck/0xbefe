@@ -114,7 +114,7 @@ def main(system, oh_ver, cap, r0, r1, r2, r3, count, boss):
         os.makedirs(me0Dir) # create directory for ME0 lpGBT data
     except FileExistsError: # skip if directory already exists
         pass
-    dataDir = me0Dir + "/lpgbt_eye_scan_results"
+    dataDir = me0Dir + "/lpgbt_downlink_eye_scan_results"
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
