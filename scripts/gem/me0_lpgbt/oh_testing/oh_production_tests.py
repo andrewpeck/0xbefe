@@ -412,11 +412,11 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
    
     # Step 3 - Up&Downlink eye diagrams
-    print(Colors.BLUE + "Step 3: Up&ownlink Eye Diagram\n" + Colors.ENDC)
-    logfile.write("Step 3: Up&Downlink Eye Diagram\n\n")
+    print(Colors.BLUE + "Step 3: Downlink & Uplink Eye Diagram\n" + Colors.ENDC)
+    logfile.write("Step 3: Downlink & Uplink Eye Diagram\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance", "debug"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             gbt = geb_oh_map[slot]["GBT"][0]
             gbt_sub = geb_oh_map[slot]["GBT"][1]
@@ -513,12 +513,12 @@ if __name__ == "__main__":
             else:
                 print('Valid entries: y, yes, n, no')
     else:
-        print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping downlink eye diagram for %s tests\n"%test_type.replace("_","-"))
+        print(Colors.BLUE + "Skipping downlink and uplink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping downlink and uplink eye diagram for %s tests\n"%test_type.replace("_","-"))
         time.sleep(0.1)
 
-    print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
+    print (Colors.GREEN + "\nStep 3: Downlink & Uplink Eye Diagram Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 3: Downlink & Uplink Eye Diagram Complete\n\n")
 
     time.sleep(0.1)
     print ("#####################################################################################################################################\n")
