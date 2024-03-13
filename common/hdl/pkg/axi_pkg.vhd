@@ -133,6 +133,15 @@ package axi_pkg is
         tkeep   : std_logic_vector(15 downto 0);
     end record;
 
+    type t_axi_h2c_stream is record
+        tdata       : std_logic_vector(63 downto 0);
+        tlast       : std_logic;
+        tvalid      : std_logic;
+        qid         : std_logic_vector(10 downto 0);
+        mty         : std_logic_vector(5 downto 0);
+        zero_byte   : std_logic;
+    end record;
+
     constant AXI_FULL_512_MISO_NULL : t_axi_full_512_s2m := (awready => '0', wready => '0', bresp => "10", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "10", rvalid => '0', bid => (others => '0'), rid => (others => '0'), rlast => '1');
     constant AXI_FULL_64_MISO_NULL : t_axi_full_64_s2m := (awready => '0', wready => '0', bresp => "10", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "10", rvalid => '0', bid => (others => '0'), rid => (others => '0'), rlast => '1');
 

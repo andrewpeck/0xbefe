@@ -93,10 +93,17 @@ architecture sca_controller_arch of sca_controller is
     type top_state_t is (SCA_RESET, SCA_CONFIGURE, IDLE, SET_HARD_RESET, UNSET_HARD_RESET, USER_COMMAND, JTAG_SHIFT, JTAG_SET_LENGTH, JTAG_GO, ERROR);
     type transaction_state_t is (INIT, IDLE, WAIT_FOR_TX, WAIT_FOR_REPLY, WAIT_FOR_SCA_RESET, CLOSE_TRANSACTION);
 
+    constant CNT_EN_DELAY         : unsigned(15 downto 0) := x"1bd8"; -- delay after reset (in clk80 cycles) after which the counters are started
     constant TRANS_TIMEOUT        : unsigned(15 downto 0) := x"fa00"; -- transaction timeout (64000 clock cycles = 800us, this is required with some margin for ADC readout which takes 670us)
     constant TRANS_MAX_RETRIES    : unsigned(2 downto 0) := "101"; -- transaction retry count (max 5 retries)
 
     -------------- signals -------------- 
+
+    -- reset
+    signal reset80              : std_logic := '0';
+    signal reset40              : std_logic := '0';
+    signal cnt_en               : std_logic := '0'; -- this is set high after some delay after reset, which starts the counters
+    signal cnt_en_timer         : unsigned(15 downto 0) := (others => '0');
 
     -- top fsm signals
     signal top_state            : top_state_t;
@@ -182,7 +189,7 @@ begin
     
     i_sca_rx : entity work.sca_rx
         port map(
-            reset_i           => reset_i or (not gbt_rx_ready_i) or (not sd_rx_valid),
+            reset_i           => reset80 or (not gbt_rx_ready_i) or (not sd_rx_valid),
             clk_80_i          => clk_80_i,
             sd_rx_i           => sd_rx,
             ready_o           => rx_ready,
@@ -201,7 +208,7 @@ begin
     
     i_sca_tx : entity work.sca_tx
         port map(
-            reset_i           => reset_i,
+            reset_i           => reset80,
             clk_80_i          => clk_80_i,
             sd_tx_o           => sd_tx,
             transaction_id_i  => tx_transaction_id,
@@ -219,7 +226,7 @@ begin
     process(clk_80_i)
     begin
         if (rising_edge(clk_80_i)) then
-            if (reset_i = '1') then
+            if (reset80 = '1') then
                 top_state <= SCA_RESET;
                 sca_reset_req <= '0';
                 sca_config_idx <= 0;
@@ -421,7 +428,7 @@ begin
     process(clk_80_i)
     begin
         if (rising_edge(clk_80_i)) then
-            if (reset_i = '1') then
+            if (reset80 = '1') then
                 trans_state <= INIT;
                 tx_transaction_id <= x"01";
                 trans_done <= '0';
@@ -560,7 +567,7 @@ begin
     process(gbt_clk_40_i)
     begin
         if (rising_edge(gbt_clk_40_i)) then
-            if ((reset_i = '1') or (jtag_enabled_i = '0')) then
+            if ((reset40 = '1') or (jtag_enabled_i = '0')) then
                 jtag_shift_tdo_pos <= 0;
                 jtag_shift_tms_pos <= 0;
                 jtag_shift_tdi_pos <= 0;
@@ -654,7 +661,7 @@ begin
             g_OUTPUT_DATA_WIDTH => 1
         )
         port map(
-            reset_i   => reset_i,
+            reset_i   => reset40,
             wr_clk_i  => gbt_clk_40_i,
             rd_clk_i  => clk_80_i,
             din_i     => gbt_rx_sca_elink_i,
@@ -670,7 +677,7 @@ begin
             g_OUTPUT_DATA_WIDTH => 2
         )
         port map(
-            reset_i  => reset_i,
+            reset_i  => reset80,
             wr_clk_i => clk_80_i,
             rd_clk_i => gbt_clk_40_i,
             din_i(0) => sd_tx,
@@ -678,6 +685,26 @@ begin
             dout_o   => gbt_tx_sca_elink_o,
             valid_o  => open
         );
+
+    --========= Counter enable =========--
+    
+    process(clk_80_i)
+    begin
+        if rising_edge(clk_80_i) then
+            if reset80 = '1' then
+                cnt_en <= '0';
+                cnt_en_timer <= (others => '0'); 
+            else
+                if cnt_en_timer = CNT_EN_DELAY then
+                    cnt_en <= '1';
+                    cnt_en_timer <= cnt_en_timer;
+                else
+                    cnt_en <= '0';
+                    cnt_en_timer <= cnt_en_timer + 1;
+                end if;
+            end if;
+        end if;
+    end process;
 
     --========= Error counters =========--
 
@@ -688,8 +715,8 @@ begin
         )
         port map(
             ref_clk_i => clk_80_i,
-            reset_i   => reset_i,
-            en_i      => trans_timeout_err,
+            reset_i   => reset80,
+            en_i      => trans_timeout_err and cnt_en,
             count_o   => trans_timeout_cnt
         );
 
@@ -700,14 +727,14 @@ begin
         )
         port map(
             ref_clk_i => clk_80_i,
-            reset_i   => reset_i,
-            en_i      => trans_error,
+            reset_i   => reset80,
+            en_i      => trans_error and cnt_en,
             count_o   => trans_fail_cnt
         );
 
     i_rx_not_ready_pulse : entity work.oneshot
         port map(
-            reset_i   => reset_i,
+            reset_i   => reset80,
             clk_i     => clk_80_i,
             input_i   => not rx_ready,
             oneshot_o => rx_not_ready_pulse
@@ -720,8 +747,8 @@ begin
         )
         port map(
             ref_clk_i => clk_80_i,
-            reset_i   => reset_i,
-            en_i      => rx_not_ready_pulse,
+            reset_i   => reset80,
+            en_i      => rx_not_ready_pulse and cnt_en,
             count_o   => not_ready_cnt_o
         );
 
@@ -733,13 +760,35 @@ begin
         )
         port map(
             clk_i          => clk_80_i,
-            rst_i          => reset_i,
+            rst_i          => reset80,
             pulse_length_i => "100",
             pulse_i        => user_reply_valid,
             pulse_o        => user_reply_valid_o
         );
 
     --========= Synchronizers to cross from clk40 to clk80 =========--
+
+    i_reset_sync_clk_80:
+    entity work.synch
+        generic map(
+            N_STAGES => 4
+        )
+        port map(
+            async_i => reset_i,
+            clk_i   => clk_80_i,
+            sync_o  => reset80
+        );
+
+    i_reset_sync_clk_40:
+    entity work.synch
+        generic map(
+            N_STAGES => 2
+        )
+        port map(
+            async_i => reset_i,
+            clk_i   => gbt_clk_40_i,
+            sync_o  => reset40
+        );
 
     i_hard_reset_i_sync_clk_80: 
     entity work.synch
@@ -804,7 +853,7 @@ begin
         i_sca_ila : ila_sca
             port map(
                 clk     => clk_80_i,
-                probe0  => reset_i,
+                probe0  => reset80,
                 probe1  => std_logic_vector(to_unsigned(top_state_t'pos(top_state), 4)),
                 probe2  => std_logic_vector(to_unsigned(transaction_state_t'pos(trans_state), 3)),
                 probe3  => sca_reset_req,

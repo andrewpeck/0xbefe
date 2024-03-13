@@ -1,1 +1,1 @@
-../update-project.tcl
+../pre-creation-default.tcl

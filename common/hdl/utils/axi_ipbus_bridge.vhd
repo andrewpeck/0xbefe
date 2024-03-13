@@ -30,7 +30,8 @@ entity axi_ipbus_bridge is
         g_USR_BLOCK_SEL_BIT_BOT : integer := 24; -- bottom address bit used for user block selection
         g_DEBUG                 : boolean := false;
         g_IPB_CLK_ASYNC         : boolean := false;
-        g_IPB_TIMEOUT           : integer -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
+        g_IPB_TIMEOUT           : integer; -- number of axi_aclk_i cycles to wait for IPB response, should be set to approx 60us to cover the VFAT timeout, and maybe even better to above 800us to cover the SCA ADC read timeout
+        g_REPORT_AXI_ERRORS     : boolean := true -- if this is set to true, AXI bus error is reported on failed transactions, if it's set to false, AXI transactions are always reported as successful 
     );
     port (
         -- AXI4-Lite interface
@@ -118,6 +119,9 @@ architecture arch_imp of axi_ipbus_bridge is
     signal axi_word_araddr          : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
     signal axi_word_awaddr          : std_logic_vector(31 downto 0); -- word address (as opposed to byte address), in other words, this is shifted right by 2 bits
 
+    signal axi_resp_addr_err        : std_logic_vector(1 downto 0) := "11"; -- used as a constant depending on the value of g_REPORT_AXI_ERRORS
+    signal axi_resp_bus_err         : std_logic_vector(1 downto 0) := "10"; -- used as a constant depending on the value of g_REPORT_AXI_ERRORS
+
     type t_axi_ipb_state is (IDLE, WRITE, READ, WAIT_FOR_WRITE_ACK, WAIT_FOR_READ_ACK, AXI_READ_HANDSHAKE, AXI_WRITE_HANDSHAKE);
     
     signal ipb_reset                : std_logic;
@@ -172,6 +176,16 @@ begin
     ipb_usr_miso_ipbclk <= ipb_usr_miso_i;  
     ipb_sys_mosi_o <= ipb_sys_mosi_ipbclk;
     ipb_sys_miso_ipbclk <= ipb_sys_miso_i;  
+
+    g_axi_report_err : if g_REPORT_AXI_ERRORS generate
+        axi_resp_addr_err <= "11";
+        axi_resp_bus_err <= "10";
+    end generate;
+
+    g_axi_report_no_err : if not g_REPORT_AXI_ERRORS generate
+        axi_resp_addr_err <= "00";
+        axi_resp_bus_err <= "00";
+    end generate;
 
       -- main FSM
     process(axi_aclk_i)
@@ -266,7 +280,7 @@ begin
                             ipb_sys_mosi    <= (others => IPB_M2S_NULL);
                             ipb_state       <= AXI_READ_HANDSHAKE;
                             ipb_timer       <= (others => '0');
-                            axil_s2m        <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "11", rvalid => '1'); -- DECERR: decode error response
+                            axil_s2m        <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => axi_resp_addr_err, rvalid => '1'); -- DECERR: decode error response
                             trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_ADDR_ERR;
                         end if;
     
@@ -282,7 +296,7 @@ begin
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_sys_miso(ipb_sys_slv_select).ipb_rdata, rresp => axi_resp_bus_err, rvalid => '1'); -- SLVERR: slave error response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
 
@@ -295,7 +309,7 @@ begin
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "00", rvalid => '1'); -- OKAY response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => ipb_usr_miso(ipb_usr_slv_select).ipb_rdata, rresp => axi_resp_bus_err, rvalid => '1'); -- SLVERR: slave error response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
@@ -303,7 +317,7 @@ begin
                         elsif (ipb_timer > to_unsigned(g_IPB_TIMEOUT, 24)) then
                             ipb_state <= AXI_READ_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => "10", rvalid => '1'); -- SLVERR: slave error response
+                            axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '0', arready => '0', rdata => (others => '0'), rresp => axi_resp_bus_err, rvalid => '1'); -- SLVERR: slave error response
                             ipb_usr_mosi <= (others => IPB_M2S_NULL);
                             ipb_sys_mosi <= (others => IPB_M2S_NULL);
                             trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_TIMEOUT;
@@ -343,7 +357,7 @@ begin
                             ipb_sys_mosi    <= (others => IPB_M2S_NULL);
                             ipb_state       <= AXI_WRITE_HANDSHAKE;
                             ipb_timer       <= (others => '0');
-                            axil_s2m        <= (awready => '0', wready => '0', bresp => "11", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- DECERR: decode error response
+                            axil_s2m        <= (awready => '0', wready => '0', bresp => axi_resp_addr_err, bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- DECERR: decode error response
                             trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_ADDR_ERR;
                         end if;
     
@@ -359,7 +373,7 @@ begin
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => axi_resp_bus_err, bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
@@ -372,7 +386,7 @@ begin
                                 axil_s2m  <= (awready => '0', wready => '0', bresp => "00", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- OKAY response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_GOOD;
                             else
-                                axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
+                                axil_s2m  <= (awready => '0', wready => '0', bresp => axi_resp_bus_err, bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
                                 trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_IPB_ERR;
                             end if;
     
@@ -380,7 +394,7 @@ begin
                         elsif (ipb_timer > to_unsigned(g_IPB_TIMEOUT, 24)) then
                             ipb_state <= AXI_WRITE_HANDSHAKE;
                             ipb_timer <= (others => '0');
-                            axil_s2m  <= (awready => '0', wready => '0', bresp => "10", bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
+                            axil_s2m  <= (awready => '0', wready => '0', bresp => axi_resp_bus_err, bvalid => '1', arready => '0', rdata => (others => '0'), rresp => "00", rvalid => '0'); -- SLVERR: slave error response
                             ipb_usr_mosi <= (others => IPB_M2S_NULL);
                             ipb_sys_mosi <= (others => IPB_M2S_NULL);
                             trans_status_arr(to_integer(usr_block_select)) <= TRANS_STATUS_AXI_TIMEOUT;

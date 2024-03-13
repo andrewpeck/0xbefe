@@ -21,10 +21,12 @@ use work.cluster_pkg.all;
 
 entity sbit_me0 is
     generic(
-        g_NUM_OF_OHs         : integer;
-        g_NUM_VFATS_PER_OH   : integer;
-        g_IPB_CLK_PERIOD_NS  : integer;
-        g_DEBUG              : boolean
+        g_NUM_OF_OHs           : integer;
+        g_NUM_VFATS_PER_OH     : integer;
+        g_ENABLE_RAW_SBIT_TEST : boolean := true;  -- if true, the raw S-bit testing features will be instanciated
+        g_DISABLE_CLUSTERS     : boolean := false; -- if true, the S-bit clusterization algorithm will not be instanciated
+        g_IPB_CLK_PERIOD_NS    : integer;
+        g_DEBUG                : boolean
     );
     port(
         -- reset
@@ -109,9 +111,9 @@ architecture sbit_me0_arch of sbit_me0 is
     signal vfat_sbit_delay_arr   : t_oh_vfat_mapping_arr(g_NUM_OF_OHs - 1 downto 0);
 
     -- trigger signals
-    signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking (before maoping & allignment)
-    signal vfat_sbits_alligned  : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after mapping & phase allign
-    signal vfat_trigger_arr     : t_std24_array(g_NUM_OF_OHs - 1 downto 0); -- trigger per vfat (or of all unmasked sbits)
+    signal vfat_sbits_arr       : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after masking (before mapping & alignment)
+    signal vfat_sbits_aligned   : t_vfat3_sbits_arr(g_NUM_OF_OHs - 1 downto 0); -- sbits after mapping & phase alignment
+    signal vfat_trigger_arr     : t_std24_array(g_NUM_OF_OHs - 1 downto 0);     -- trigger per vfat (or of all unmasked sbits)
     signal vfat_sbits_or_arr    : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
 
     -- probe signal for raw sbits --
@@ -124,15 +126,10 @@ architecture sbit_me0_arch of sbit_me0 is
     -- clk freq
     constant  g_CLK_FREQUENCY : std_logic_vector(31 downto 0) := C_TTC_CLK_FREQUENCY_SLV;
 
-
-    -- signals for raw sbit registers    
-    signal sbit_test_reset         : std_logic := '0';
-
-    signal test_sbit0xe_presum       : t_std32_array(7 downto 0);
+    -- constol & status signals for raw S-bit testing features
+    signal sbit_test_reset           : std_logic := '0';
     signal test_sbit0xe_count_me0    : std_logic_vector(31 downto 0);
-    signal vfat3_sbit0xe_test        : std_logic_vector(7 downto 0);
     signal test_sbit0xs_count_me0    : std_logic_vector(31 downto 0);
-    signal vfat3_sbit0xs_test        : std_logic;
     signal test_sel_oh_sbit_me0      : std_logic_vector(31 downto 0);
     signal test_sel_vfat_sbit_me0    : std_logic_vector(31 downto 0);
     signal test_sel_elink_sbit_me0   : std_logic_vector(31 downto 0);
@@ -228,16 +225,16 @@ begin
             for oh in 0 to g_NUM_OF_OHs - 1 loop
                 for vfat in 0 to 23 loop
                     vfat_sbits_arr(oh)(vfat) <= vfat3_sbits_arr_i(oh)(vfat) and not vfat_sbit_mask_arr(oh)(vfat);
-                    vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_alligned(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
-                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_alligned(oh)(vfat));
+                    vfat_trigger_arr(oh)(vfat) <= or_reduce(vfat_sbits_aligned(oh)(vfat)); -- note that this will be 1 clock late compared to the vfat_sbits_arr (!) not a problem if used only in the counters, so will keep it like this for now to have relaxed timing
+                    vfat_sbits_or_arr(oh)(vfat) <= or_reduce(vfat_sbits_aligned(oh)(vfat));
                 end loop;
             end loop;
         end if;
     end process;
 
-    -- apply me0 sbit phase allignment & mapping
-    g_oh_allign : for OH in 0 to g_NUM_OF_OHs - 1 generate
-        i_sbit_allign: entity work.me0_sbit_allign
+    -- apply me0 sbit phase alignment & mapping
+    g_oh_align : for OH in 0 to g_NUM_OF_OHs - 1 generate
+        i_sbit_align: entity work.me0_sbit_align
             generic map(
                 g_NUM_OF_VFATs => g_NUM_VFATS_PER_OH,
                 g_NUM_ELINKs   => g_NUM_ELINKs,
@@ -252,7 +249,7 @@ begin
                 vfat_delay_arr_i   =>  vfat_sbit_delay_arr(OH),
                 
                 vfat_sbits_i       =>  vfat_sbits_arr(OH),
-                vfat_sbits_o       =>  vfat_sbits_alligned(OH) 
+                vfat_sbits_o       =>  vfat_sbits_aligned(OH)
             );
     
     end generate;
@@ -317,12 +314,53 @@ begin
 
     end generate;
 
-    --== COUNT of summed sbits on selectable elink ==--
-    -- assigned array of sbits for selected vfat (x) and elink (e)
-    vfat3_sbit0xe_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8));
+    --== Raw S-bit testing features ==--
 
-    elink_i: for i in 0 to 7 generate
-        me0_sbit0xe_count : entity work.counter
+    g_raw_sbit_test : if not g_ENABLE_RAW_SBIT_TEST generate
+
+        -- per eLink
+        signal vfat3_sbit0xe_test_oh   : t_std64_array(23 downto 0);
+        signal vfat3_sbit0xe_test_vfat : std_logic_vector(63 downto 0);
+        signal vfat3_sbit0xe_test      : std_logic_vector(7 downto 0);
+        signal test_sbit0xe_presum     : t_std32_array(7 downto 0);
+
+        -- per S-bit
+        signal vfat3_sbit0xs_test_oh   : t_std64_array(23 downto 0);
+        signal vfat3_sbit0xs_test_vfat : std_logic_vector(63 downto 0);
+        signal vfat3_sbit0xs_test      : std_logic;
+
+    begin
+
+        --== COUNT of summed sbits on selectable elink ==--
+        -- assigned array of sbits for selected vfat (x) and elink (e)
+        vfat3_sbit0xe_test_oh   <= vfat_sbits_aligned(to_integer(unsigned(test_sel_oh_sbit_me0))) when rising_edge(ttc_clk_i.clk_40);
+        vfat3_sbit0xe_test_vfat <= vfat3_sbit0xe_test_oh(to_integer(unsigned(test_sel_vfat_sbit_me0))) when rising_edge(ttc_clk_i.clk_40);
+        vfat3_sbit0xe_test      <= vfat3_sbit0xe_test_vfat((((to_integer(unsigned(test_sel_elink_sbit_me0 )) + 1) * 8) - 1) downto (to_integer(unsigned(test_sel_elink_sbit_me0)) * 8)) when rising_edge(ttc_clk_i.clk_40);
+
+        elink_i: for i in 0 to 7 generate
+            me0_sbit0xe_count : entity work.counter
+                generic map(
+                    g_COUNTER_WIDTH  => 32,
+                    g_ALLOW_ROLLOVER => false
+                )
+                port map(
+                    ref_clk_i => ttc_clk_i.clk_40,
+                    reset_i   => sbit_test_reset,
+                    en_i      => vfat3_sbit0xe_test(i),
+                    count_o   => test_sbit0xe_presum(i)
+                );
+        end generate;
+
+        -- assigned sum of all sbit counts on a selected vfat (x) and elink (e)
+        test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
+
+        --== COUNTER for selectable sbit ==--
+        -- assigned sbit of selected vfat (x) and sbit (s)
+        vfat3_sbit0xs_test_oh   <= vfat_sbits_aligned(to_integer(unsigned(test_sel_oh_sbit_me0))) when rising_edge(ttc_clk_i.clk_40);
+        vfat3_sbit0xs_test_vfat <= vfat3_sbit0xs_test_oh(to_integer(unsigned(test_sel_vfat_sbit_me0))) when rising_edge(ttc_clk_i.clk_40);
+        vfat3_sbit0xs_test      <= vfat3_sbit0xs_test_vfat(to_integer(unsigned(test_sel_sbit_me0))) when rising_edge(ttc_clk_i.clk_40);
+
+        me0_sbit0xs_count : entity work.counter
             generic map(
                 g_COUNTER_WIDTH  => 32,
                 g_ALLOW_ROLLOVER => false
@@ -330,30 +368,11 @@ begin
             port map(
                 ref_clk_i => ttc_clk_i.clk_40,
                 reset_i   => sbit_test_reset,
-                en_i      => vfat3_sbit0xe_test(i),
-                count_o   => test_sbit0xe_presum(i)
+                en_i      => vfat3_sbit0xs_test,
+                count_o   => test_sbit0xs_count_me0
             );
+
     end generate;
-
-    -- assigned sum of all sbit counts on a selected vfat (x) and elink (e)
-    test_sbit0xe_count_me0 <= std_logic_vector(unsigned(test_sbit0xe_presum(0)) + unsigned(test_sbit0xe_presum(1)) + unsigned(test_sbit0xe_presum(2)) + unsigned(test_sbit0xe_presum(3)) + unsigned(test_sbit0xe_presum(4)) + unsigned(test_sbit0xe_presum(5)) + unsigned(test_sbit0xe_presum(6)) + unsigned(test_sbit0xe_presum(7)));
-
-    --== COUNTER for selectable sbit ==--
-    -- assigned sbit of selected vfat (x) and sbit (s)
-    vfat3_sbit0xs_test <= vfat_sbits_alligned(to_integer(unsigned(test_sel_oh_sbit_me0)))(to_integer(unsigned(test_sel_vfat_sbit_me0)))(to_integer(unsigned(test_sel_sbit_me0)));
-
-    me0_sbit0xs_count : entity work.counter
-        generic map(
-            g_COUNTER_WIDTH  => 32,
-            g_ALLOW_ROLLOVER => false
-        )
-        port map(
-            ref_clk_i => ttc_clk_i.clk_40,
-            reset_i   => sbit_test_reset,
-            en_i      => vfat3_sbit0xs_test,
-            count_o   => test_sbit0xs_count_me0
-        );
-
 
     ------------------------------------------------------
     -- sbit injection signal mapping and process
@@ -433,7 +452,7 @@ begin
     -- Clusterizer/sbit injection
     ---------------------------------------------------------------------------------            
 
-    cluster_packer_me0 : if (true) generate
+    cluster_packer_me0 : if not g_DISABLE_CLUSTERS generate
     begin
         each_oh: for oh in 0 to g_NUM_OF_OHs - 1 generate
             signal vfat_sbits_type_change : sbits_array_t(23 downto 0);
@@ -480,7 +499,7 @@ begin
                 each_sbit: for sbit in 0 to 63 generate
                     -- MUX injected or real sbits and map to correct dt for cluster
                     -- map onto self (t_vfat3_sbits_arr to sbits_array_t)
-                    vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1') else vfat_sbits_alligned(oh)(vfat)(sbit);
+                    vfat_sbits_type_change(vfat)(sbit) <= sbit_inj_data_arr(oh)(vfat)(sbit) when (sbit_inj_fifo_rd_en = '1') else vfat_sbits_aligned(oh)(vfat)(sbit);
                 end generate;
             end generate;
             
@@ -512,29 +531,29 @@ begin
                 valid_o                => open
                 );
        
-    --------------------------------------------------------------------------------
-    -- Cluster mapping to ports
-    --------------------------------------------------------------------------------
-        cluster_loop : for I in 0 to 7 generate
+            --------------------------------------------------------------------------------
+            -- Cluster mapping to ports
+            --------------------------------------------------------------------------------
+            cluster_loop : for I in 0 to 7 generate
+                process (ttc_clk_i.clk_40)
+                begin
+                    if (rising_edge(ttc_clk_i.clk_40)) then
+                        --me0_clusters_probe_raw <= me0_clusters;
 
-        process (ttc_clk_i.clk_40)
-        begin
-            if (rising_edge(ttc_clk_i.clk_40)) then
-                --me0_clusters_probe_raw <= me0_clusters;
+                        if (me0_clusters(I).vpf = '1') then
+                            me0_clusters_o(oh)(I).address <= me0_clusters(I).prt & me0_clusters(I).adr(7 downto 0);
+                            me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;
+                        else
+                            me0_clusters_o(oh)(I) <= NULL_SBIT_CLUSTER;
+                        end if;
+                        me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I);
 
-                if (me0_clusters(I).vpf = '1') then
-                    me0_clusters_o(oh)(I).address <= me0_clusters(I).prt & me0_clusters(I).adr(7 downto 0);
-                    me0_clusters_o(oh)(I).size    <= me0_clusters(I).cnt;
-                else
-                    me0_clusters_o(oh)(I) <= NULL_SBIT_CLUSTER;
-                end if;
-                me0_clusters_probe(oh)(I) <= me0_clusters_o(oh)(I);
+                    end if;
+                end process;
+            end generate;
 
-            end if;
-        end process;
-        end generate;
-        end generate;
-    end generate;
+        end generate; -- each_oh loop
+    end generate; -- cluster_packer_me0 generate
 
     --===============================================================================================
     -- this section is generated by <gem_amc_repo_root>/scripts/generate_registers.py (do not edit) 

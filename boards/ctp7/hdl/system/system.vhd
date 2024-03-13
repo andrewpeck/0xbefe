@@ -175,7 +175,7 @@ architecture system_arch of system is
       ipb_axi_wready    : in STD_LOGIC_VECTOR ( 0 to 0 );
       ipb_axi_wstrb     : out STD_LOGIC_VECTOR ( 3 downto 0 );
       ipb_axi_wvalid    : out STD_LOGIC_VECTOR ( 0 to 0 );
-      
+
       gem_loader_en     : in  std_logic;
       gem_loader_clk    : in  std_logic;
       gem_loader_ready  : out std_logic;
@@ -185,9 +185,20 @@ architecture system_arch of system is
       gem_loader_last   : out std_logic;
       gem_loader_error  : out std_logic;
       gem_loader_size   : out std_logic_vector(31 downto 0)
-      
+
   );
   end component v7_bd;
+
+  function get_mgt_data_reg_stages(gem_station : integer) return integer is
+  begin
+      if gem_station = 0 then
+          return 4;
+      else
+          return 0;
+      end if;
+  end function;
+
+  constant MGT_DATA_REG_STAGES : integer := get_mgt_data_reg_stages(g_GEM_STATION);
 
 --============================================================================
 --                                                         Signal declarations
@@ -494,7 +505,8 @@ begin
       g_STABLE_CLOCK_PERIOD    => 20,
       g_NUM_OF_GTH_GTs         => g_NUM_OF_GTH_GTs,
       g_NUM_OF_GTH_COMMONs     => g_NUM_OF_GTH_COMMONs,
-      g_GT_SIM_GTRESET_SPEEDUP => "FALSE"
+      g_GT_SIM_GTRESET_SPEEDUP => "FALSE",
+      g_DATA_REG_STAGES        => MGT_DATA_REG_STAGES
 
       )
     port map (

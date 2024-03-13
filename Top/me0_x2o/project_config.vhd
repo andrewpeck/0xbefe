@@ -15,6 +15,7 @@ package project_config is
 
     constant CFG_NUM_GEM_BLOCKS         : integer := 1; -- total number of GEM blocks to instanciate
     type t_int_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of integer;
+    type t_bool_per_gem is array (0 to CFG_NUM_GEM_BLOCKS - 1) of boolean;
     type t_oh_trig_link_type_arr is array (0 to CFG_NUM_GEM_BLOCKS - 1) of t_oh_trig_link_type;
 
     --================================--
@@ -29,14 +30,14 @@ package project_config is
     constant CFG_GBT_WIDEBUS            : t_int_per_gem := (others => 0);  -- 0 means use standard mode, 1 means use widebus (set to 1 for GE2/1 OH version 2+)
 
     constant CFG_OH_TRIG_LINK_TYPE      : t_oh_trig_link_type_arr := (others => OH_TRIG_LINK_TYPE_NONE); -- type of trigger link to use, the 3.2G and 4.0G are applicable to GE11, and GBT type is only applicable to GE21
-    constant CFG_USE_TRIG_TX_LINKS      : boolean := false; -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
-    constant CFG_NUM_TRIG_TX            : integer := 8; -- number of trigger transmitters used to connect to EMTF
+    constant CFG_USE_TRIG_TX_LINKS      : t_bool_per_gem := (others => false); -- if true, then trigger transmitters will be instantiated (used to connect to EMTF)
+    constant CFG_NUM_TRIG_TX            : t_int_per_gem := (others => 8); -- number of trigger transmitters used to connect to EMTF
 
     --========================--
     --== Link configuration ==--
     --========================--
 
-    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => false);
+    constant CFG_USE_SPY_LINK_TX : t_spy_link_enable_arr := (others => true);
     constant CFG_USE_SPY_LINK_RX : t_spy_link_enable_arr := (others => false);
     constant CFG_SPY_LINK : t_spy_link_config := (0 => 8, others => TXRX_NULL);
 
@@ -68,10 +69,10 @@ package project_config is
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 74
         (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 0, refclk0_idx => 18, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 75
         ----------------------------- quad 225 (SLR 1) -----------------------------                                         
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 76
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 77
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 78
-        (mgt_type => CFG_MGT_TYPE_NULL, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 79
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_10GBE_156  , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 76
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 77
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 78
+        (mgt_type => CFG_MGT_10GBE, qpll_inst_type => QPLL_NULL       , qpll_idx => 4, refclk0_idx => 19, refclk1_idx => 10, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 79
         ----------------------------- quad 226 (SLR 1) -----------------------------
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_LPGBT      , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 80
         (mgt_type => CFG_MGT_LPGBT, qpll_inst_type => QPLL_NULL       , qpll_idx => 8, refclk0_idx => 20, refclk1_idx => 11, is_master => false, chbond_master => 0, ibert_inst => false), -- MGT 81

@@ -262,7 +262,7 @@ def gbt_command(oh_idx, gbt_idx, command, command_args):
 
     elif command == 'destroy':
         subheading('Destroying configuration of OH%d GBT%d' % (ohSelect, gbtSelect))
-        destroyConfig()
+        destroyConfig(ohSelect, gbtSelect)
 
     else:
         print_red("Unrecognized command '%s'" % command)
@@ -450,7 +450,7 @@ def getBestPhase(err_list):
         elif max(lower_edge_width, width, upper_edge_width) == upper_edge_width:
             center = bad_phases[-1] + 4
             width = upper_edge_width
-        else:                   
+        else:
             if width%2 != 0:
                 center = int((lower_edge + upper_edge)/2)
             else:
@@ -568,7 +568,7 @@ def downloadConfig(ohIdx, gbtIdx, filename):
     f.close()
     return ret
 
-def destroyConfig():
+def destroyConfig(ohIdx, gbtIdx):
     gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
     gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]
 

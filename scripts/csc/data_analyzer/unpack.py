@@ -979,7 +979,7 @@ def main():
 
                 idx += 1
 
-            print("Read event #%d ending at byte %d" % (idx, f.tell()))
+            print("Read event #%d ending at byte %d (word %d)" % (idx, f.tell(), f.tell()/8))
 
         f.close()
 
@@ -1007,7 +1007,7 @@ def main():
     #     an.analyzeVfatBxMatching(events)
 
 def ask_to_print_event(event, evt_num, pos_in_file, filename):
-    print_cyan("Event #%d (ending at byte %d in file %s)" % (evt_num, pos_in_file, filename))
+    print_cyan("Event #%d (ending at byte %d / word %d in file %s)" % (evt_num, pos_in_file, pos_in_file / 8, filename))
     print("Print the whole event? (y/n)")
     yn = input()
     if (yn == "y"):
