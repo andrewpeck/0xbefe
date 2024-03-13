@@ -7,7 +7,7 @@ import argparse
 import random
 import json
 from common.utils import get_befe_scripts_dir
-from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
+from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, vfat_channel_mask
 
 config_boss_filename_v1 = ""
 config_sub_filename_v1 = ""
@@ -28,7 +28,7 @@ def getConfig (filename):
     f.close()
     return reg_map
 
-def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, min_error_limit, n_allowed_missing_hits, bestphase_list):
+def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phases, l1a_bxgap, set_cal_mode, cal_dac, threshold, min_error_limit, n_allowed_missing_hits, bestphase_list):
     print ("%s VFAT S-Bit Phase Scan\n"%gem)
 
     if bestphase_list!={}:
@@ -98,6 +98,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
     else:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_CALPULSE_TO_L1A_GAP"), 2)
 
+    threshold_orig = {}
+
     # Configure all VFATs
     for vfat in vfat_list:
         gbt, gbt_select, elink_daq, gpio = gem_utils.me0_vfat_to_gbt_elink_gpio(vfat)
@@ -128,6 +130,11 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
             gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DAC"% (oh_select, vfat)), cal_dac)
+
+        threshold_orig[vfat] = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
+        if threshold != -9999:
+            print("Setting threshold = %d (DAC)"%threshold)
+            gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
         for i in range(128):
             enableVfatchannel(vfat, oh_select, i, 1, 0) # mask all channels and disable calpulsing
 
@@ -236,7 +243,13 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
                             s_bit_matches[sbit] += 1
                     # End of S-bit loop for this channel
 
-                    if s_bit_channel_mapping[vfat][elink][channel] == -9999:
+                    masked_channel = 0
+                    if oh_select in vfat_channel_mask:
+                        if vfat in vfat_channel_mask[oh_select]:
+                            if channel in vfat_channel_mask[oh_select][vfat]:
+                                masked_channel = 1
+
+                    if not masked_channel and s_bit_channel_mapping[vfat][elink][channel] == -9999:
                         errs[vfat][elink][phase] += 1
 
                     # Disabling the pulsing channels
@@ -255,14 +268,16 @@ def vfat_sbit(gem, system, oh_select, vfat_list, nl1a, calpulse_only, align_phas
         print ("")
         # End of VFAT loop
     # End of Phase loop
+
     if calpulse_only:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE_CALPULSE_ONLY"), 0)
     else:
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 0)
-
+        
     # Unconfigure all VFATs
     for vfat in vfat_list:
         print("Unconfiguring VFAT %d" % (vfat))
+        gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
         configureVfat(0, vfat, oh_select, 0)
         sleep(0.1)
 
@@ -478,7 +493,8 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--align_phases", action="store_true", dest="align_phases", help="align_phases = whether to align phases of all elinks")
     parser.add_argument("-b", "--bxgap", action="store", dest="bxgap", default="20", help="bxgap = Nr. of BX between two L1As (default = 20 i.e. 0.5 us)")
     parser.add_argument("-m", "--min", action="store", dest="min", default = "4", help="min = Upper limit of the minimum number of errors allowed")
-    parser.add_argument("-x", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
+    parser.add_argument("-y", "--n_miss", action="store", dest="n_miss", default = "5", help="n_miss = Max nr. of missing hits allowed")
+    parser.add_argument("-x", "--threshold", action="store", dest="threshold", help="threshold = the CFG_THR_ARM_DAC value (default=configured value of VFAT)")
     parser.add_argument("-r", "--use_dac_scan_results", action="store_true", dest="use_dac_scan_results", help="use_dac_scan_results = to use previous DAC scan results for configuration")
     parser.add_argument("-u", "--use_channel_trimming", action="store", dest="use_channel_trimming", help="use_channel_trimming = to use latest trimming results for either options - daq or sbit (default = None)")
     parser.add_argument("-p", "--bestphase", action="store", dest="bestphase", help="bestphase = Best value of the elinkRX phase (in hex), calculated from phase scan by default")
@@ -555,6 +571,13 @@ if __name__ == "__main__":
     set_cal_mode = "current"
     cal_dac = 150 # should be 50 for voltage pulse mode
 
+    threshold = -9999
+    if args.threshold is not None:
+        threshold = int(args.threshold)
+        if threshold not in range(0,256):
+            print (Colors.YELLOW + "Threshold has to 8 bits (0-255)" + Colors.ENDC)
+            sys.exit()
+
     # Initialization 
     rw_initialize(args.gem, args.system)
     initialize_vfat_config(args.gem, int(args.ohid), args.use_dac_scan_results, args.use_channel_trimming)
@@ -585,7 +608,7 @@ if __name__ == "__main__":
 
     # Running Phase Scan
     try:
-        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, int(args.min), int(args.n_miss), bestphase_list)
+        vfat_sbit(args.gem, args.system, int(args.ohid), vfat_list, int(args.nl1a), args.calpulse_only, args.align_phases, int(args.bxgap), set_cal_mode, cal_dac, threshold, int(args.min), int(args.n_miss), bestphase_list)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

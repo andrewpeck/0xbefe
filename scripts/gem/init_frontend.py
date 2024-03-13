@@ -8,6 +8,43 @@ from gem.gem_utils import *
 import time
 from os import path
 
+def me0_lpgbt_reset(oh, gbt, gbt_ver):
+    selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+    # Set this register to the magic number to be able to force the PUSM state
+    if gbt_ver == 0:
+        writeGbtRegAddrs(0x130, 0xA3)
+    elif gbt_ver == 1:
+        writeGbtRegAddrs(0x140, 0xA3)
+    sleep(0.1)
+
+    # Set the FSM to state 0 (ARESET)
+    if gbt_ver == 0:
+        writeGbtRegAddrs(0x12F, 0x80)
+    elif gbt_ver == 1:
+        writeGbtRegAddrs(0x13F, 0x80)
+    sleep(0.1)
+
+def me0_sub_lpgbt_reset(oh, gbt):
+    selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs to high 
+    sleep(0.1)
+    writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
+    writeGbtRegAddrs(0x055, 0x20) # Set GPIO low - resets sub lpGBT
+    sleep(0.1)
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIO back high 
+    sleep(0.1)
+
+def me0_vtrxp_reset(oh, gbt):
+    selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIOs to high 
+    sleep(0.1)
+    writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
+    writeGbtRegAddrs(0x055, 0x02) # Set GPIO low - resets VTRx+
+    sleep(0.1)
+    writeGbtRegAddrs(0x055, 0x22) # Set GPIO back high 
+    sleep(0.1)
+
+
 def init_gem_frontend():
 
     gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
@@ -45,28 +82,16 @@ def init_gem_frontend():
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
                 gbt_ver = gbt_ver_list[gbt]
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
 
                 # Only do this for boss lpGBT
                 if gbt%2 != 0:  
                     continue
-
-                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                # Set this register to the magic number to be able to force the PUSM state
-                if gbt_ver == 0:
-                    writeGbtRegAddrs(0x130, 0xA3)
-                elif gbt_ver == 1:
-                    writeGbtRegAddrs(0x140, 0xA3)
-                sleep(0.1)
-
-                # Set the FSM to state 0 (ARESET)
-                if gbt_ver == 0:
-                    writeGbtRegAddrs(0x12F, 0x80)
-                elif gbt_ver == 1:
-                    writeGbtRegAddrs(0x13F, 0x80)
-                sleep(0.1)
+                me0_lpgbt_reset(oh, gbt, gbt_ver)
         sleep(2)
+        print (Colors.GREEN + "Reset boss lpGBTs DONE" + Colors.ENDC)
 
-        # Reset VTRx+ and sub lpGBTs (from boss lpGBT using GPIO) separately for OH-v2
+        # Reset VTRx+ (from boss lpGBT using GPIO) separately for OH-v2
         for oh in range(max_ohs):
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
             for gbt in range(num_gbts):
@@ -77,14 +102,9 @@ def init_gem_frontend():
                 # Only do this for boss lpGBT
                 if gbt%2 != 0:
                     continue
-
-                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
-                writeGbtRegAddrs(0x053, 0xFF) # Configure GPIO as output
-                writeGbtRegAddrs(0x055, 0x00) # Set GPIOs low - resets VTRx+ and sub lpGBT
-                sleep(0.1)
-                writeGbtRegAddrs(0x055, 0x22) # Set GPIOs back high
-                sleep(0.1)
+                me0_vtrxp_reset(oh, gbt)
         sleep(2)
+        print (Colors.GREEN + "Reset VTRx+ DONE" + Colors.ENDC)
 
         # Do some lpGBT read operations from sub lpGBT in OH-v1s to get the EC working
         for oh in range(max_ohs):
@@ -102,11 +122,15 @@ def init_gem_frontend():
                 else:
                     continue
 
-        # Configure lpGBTs and vfat phase
+        # Configure boss lpGBTs
+        skip_config = {}
         for oh in range(max_ohs):
+            skip_config[oh] = {}
             gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
 
             for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
                 gbt_ver = gbt_ver_list[gbt]
                 oh_ver = -9999
                 if gbt_ver == 0:
@@ -116,7 +140,9 @@ def init_gem_frontend():
                 gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
                 if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
                     print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    skip_config[oh][gbt] = 1
                     continue
+                skip_config[oh][gbt] = 0
 
                 # Configure lpGBT
                 gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
@@ -125,10 +151,9 @@ def init_gem_frontend():
                 if not path.exists(gbt_config):
                     printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
                 gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
-
+                sleep(0.1)
+                
                 # Enable TX channels of VTRx+
-                if gbt%2 != 0: # VTRx+ communication is with boss lpGBT
-                    continue
                 selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
 
                 nbytes_write = 2
@@ -138,9 +163,13 @@ def init_gem_frontend():
 
                 vtrx_i2c_addr = 0x50 # VTRx+ I2C address
 
-                reg_addr = 0x00 # Register address on VTRx+ for enabliing TX channels 
+                enable_reg_addr = 0x00 # Register address on VTRx+ for enabling TX channels 
                 check_reg_addr = 0x01 # Register address on the VTRx+ to check for old vs new
-                data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
+                enable_data = 0x03 # Data to write to register 0x00 to enable boss and sub lpGBT TX 0x03 = 0000 0011
+                #bias_boss_reg_addr = 0x06 # Register address for VTRx+ boss channel bias
+                #bias_sub_reg_addr = 0x03 # Register address for VTRx+ sub channel bias
+                #bias_boss_data = 0x70 # Data for VTRx+ boss channel bias (default 0x30)
+                #bias_sub_data = 0x70 # Data for VTRx+ sub channel bias (default 0x30)
                 
                 old_vtrx = 0
                 if oh_ver == 1: 
@@ -176,8 +205,8 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x100, control_register_data) # I2CM2 data - for control register
                         writeGbtRegAddrs(0x104, 0x0) # Write to I2CM2 control register
                         sleep(0.01) 
-                        writeGbtRegAddrs(0x100, reg_addr) # I2CM2 data - register address to write to on VTRx+
-                        writeGbtRegAddrs(0x101, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x100, enable_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x101, enable_data) # I2CM2 data to write to register on VTRx+
                         writeGbtRegAddrs(0x104, 0x8)  # I2CM2 data stored locally for write command
                         sleep(0.01)
                         writeGbtRegAddrs(0x0FF, vtrx_i2c_addr) # Set I2C address for VTRx+
@@ -190,39 +219,39 @@ def init_gem_frontend():
                         sleep(0.01)
                 elif oh_ver == 2:
                     # Assuming OHv2 never connected to an old VTRx+
-
+                    '''
                     # Read first to check if old VTRx+
-                    #writeGbtRegAddrs(0x110, control_register_data_check)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x110, check_reg_addr)
-                    #writeGbtRegAddrs(0x114, 0x8)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
-                    #writeGbtRegAddrs(0x114, 0xC)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x110, control_register_data_check)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-                    #writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
-                    #writeGbtRegAddrs(0x114, 0xD)
-                    #sleep(0.01)
-                    #vtrx_data = readGbtRegAddrs(0x1AD)
-                    #if vtrx_data == 0x01:
-                    #    old_vtrx = 1
-                    #writeGbtRegAddrs(0x110, 0x0)
-                    #writeGbtRegAddrs(0x111, 0x0)
-                    #writeGbtRegAddrs(0x10F, 0x0)
-                    #writeGbtRegAddrs(0x114, 0x0)
-                    #sleep(0.01)
-
+                    writeGbtRegAddrs(0x110, control_register_data_check)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, check_reg_addr)
+                    writeGbtRegAddrs(0x114, 0x8)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
+                    writeGbtRegAddrs(0x114, 0xC)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x110, control_register_data_check)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    writeGbtRegAddrs(0x10F, vtrx_i2c_addr)
+                    writeGbtRegAddrs(0x114, 0xD)
+                    sleep(0.01)
+                    vtrx_data = readGbtRegAddrs(0x1AD)
+                    if vtrx_data == 0x01:
+                        old_vtrx = 1
+                    writeGbtRegAddrs(0x110, 0x0)
+                    writeGbtRegAddrs(0x111, 0x0)
+                    writeGbtRegAddrs(0x10F, 0x0)
+                    writeGbtRegAddrs(0x114, 0x0)
+                    sleep(0.01)
+                    '''
                     # Write
                     if not old_vtrx: # Need to enable TX channel of VTRx+ only for new VTRx+
                         writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
                         writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
                         sleep(0.01)
-                        writeGbtRegAddrs(0x110, reg_addr) # I2CM2 data - register address to write to on VTRx+
-                        writeGbtRegAddrs(0x111, data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x110, enable_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, enable_data) # I2CM2 data to write to register on VTRx+
                         writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
                         sleep(0.01)
                         writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
@@ -234,10 +263,135 @@ def init_gem_frontend():
                         writeGbtRegAddrs(0x114, 0x0)
                         sleep(0.01)
 
-                # Sleep after configuring boss for OH_v2 if not fused or configured by I2C
-                if gbt%2 == 0 and oh_ver == 2 and not gbt_ready:
-                    sleep(2.5)
-            
+                        '''
+                        writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, bias_boss_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, bias_boss_data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x114, 0xC) # I2CM2 send write command to VTRx+
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, 0x0)
+                        writeGbtRegAddrs(0x111, 0x0)
+                        writeGbtRegAddrs(0x10F, 0x0)
+                        writeGbtRegAddrs(0x114, 0x0)
+                        sleep(0.01)
+
+                        writeGbtRegAddrs(0x110, control_register_data) # I2CM2 data - for control register
+                        writeGbtRegAddrs(0x114, 0x0) # Write to I2CM2 control register
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, bias_sub_reg_addr) # I2CM2 data - register address to write to on VTRx+
+                        writeGbtRegAddrs(0x111, bias_sub_data) # I2CM2 data to write to register on VTRx+
+                        writeGbtRegAddrs(0x114, 0x8) # I2CM2 data stored locally for write command
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x10F, vtrx_i2c_addr) # Set I2C address for VTRx+
+                        writeGbtRegAddrs(0x114, 0xC) # I2CM2 send write command to VTRx+
+                        sleep(0.01)
+                        writeGbtRegAddrs(0x110, 0x0)
+                        writeGbtRegAddrs(0x111, 0x0)
+                        writeGbtRegAddrs(0x10F, 0x0)
+                        writeGbtRegAddrs(0x114, 0x0)
+                        sleep(0.01)
+                        '''
+        print (Colors.GREEN + "Configure boss lpGBTs DONE" + Colors.ENDC)
+
+        # Reset sub lpGBTs
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
+            for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
+                timeout = 2.5
+                t0 = time.time()
+                while not skip_config[oh][gbt] and read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                    if (time.time()-t0)>timeout:
+                        break
+                    continue
+                gbt_ver = gbt_ver_list[gbt]
+                if gbt_ver == 0: 
+                    me0_lpgbt_reset(oh, gbt+1, gbt_ver_list[gbt+1]) # reset using registers on sub
+                else: 
+                    me0_sub_lpgbt_reset(oh, gbt) # GPIO reset
+        sleep(2)
+        print (Colors.GREEN + "Reset sub lpGBTs DONE" + Colors.ENDC)
+
+        # Configure sub lpGBTs
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
+            for gbt in range(num_gbts):
+                if gbt%2 == 0:  
+                    continue
+                gbt_ver = gbt_ver_list[gbt]
+                oh_ver = -9999
+                if gbt_ver == 0:
+                    oh_ver = 1
+                elif gbt_ver == 1:
+                    oh_ver = 2
+                gbt_ready = read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) # Check if GBT is READY
+                if oh_ver == 1 and gbt_ready == 0: # OH-v1 can only be configured if its in a READY state
+                    print("Skipping configuration of OH%d GBT%d, because it is not ready" % (oh, gbt))
+                    skip_config[oh][gbt] = 1
+                    continue
+                skip_config[oh][gbt] = 0
+
+                # Configure lpGBT
+                gbt_config = get_config("CONFIG_ME0_OH_GBT_CONFIGS")[gbt%2][oh] 
+                gbt_config = gbt_config.split("_ohv*")[0] + "_ohv%d"%oh_ver  + gbt_config.split("_ohv*")[1] # Get the correct lpGBT config file
+                print("Configuring OH%d GBT%d with %s config" % (oh, gbt, gbt_config))
+                if not path.exists(gbt_config):
+                    printRed("GBT config file %s does not exist. Please create a symlink there, or edit the CONFIG_ME0_OH_GBT*_CONFIGS constant in your befe_config.py file" % gbt_config)
+                gbt_command(oh, gbt, "config", [gbt_config]) # configure lpGBT
+                sleep(0.1)
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                if gbt%2 != 0:  
+                    continue
+                timeout = 2.5
+                t0 = time.time()
+                while not skip_config[oh][gbt] and read_reg("BEFE.GEM.OH_LINKS.OH%d.GBT%d_READY" % (oh, gbt)) == 0:
+                    if (time.time()-t0)>timeout:
+                        break
+                    continue
+        print (Colors.GREEN + "Configure sub lpGBTs DONE" + Colors.ENDC)
+
+        '''
+        # Toggle UL data type to avoid unlocking of lpGBT UL data
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                writeGbtRegAddrs(0x128, 0x05) # Set UL data source to 5.12 Gbps Clock
+                sleep(0.1)
+        sleep(2)
+        for oh in range(max_ohs):
+            for gbt in range(num_gbts):
+                selectGbt(oh, gbt) # Select link, I2C address for this specific OH and GBT
+                writeGbtRegAddrs(0x128, 0x00) # Set UL data source back to data
+                sleep(0.1)
+        sleep(2)
+        print (Colors.GREEN + "Toggle UL data source for lpGBTs DONE" + Colors.ENDC)
+        '''
+        
+        '''
+        # Toggle between DFE and LPM mode
+        befe_toggle_dfe_lpm()
+        sleep(2)
+        print (Colors.GREEN + "Toggle between DFE and LPM mode DONE" + Colors.ENDC)
+        '''
+
+        # Reset RX Reset
+        befe_reset_rx_links()
+        sleep(2)
+        print (Colors.GREEN + "Reset RX links DONE" + Colors.ENDC)
+
+        # Configure vfat phase
+        for oh in range(max_ohs):
+            gbt_ver_list = get_config("CONFIG_ME0_GBT_VER")[oh] # Get GBT version list for this OH from befe_config
+
             # Read in me0 DAQ phase scan results
             bestphase_list = {}
             phase_scan_filename = get_config("CONFIG_ME0_VFAT_PHASE_SCAN")
@@ -363,7 +517,7 @@ def init_gem_frontend():
                     for elink in range(0,8):
                         set_bitslip = bitslip_list_sbit[vfat][elink]
                         write_reg("BEFE.GEM.SBIT_ME0.OH%d_BITSLIP.VFAT%d.ELINK%d_MAP"%(oh,vfat,elink), set_bitslip)
-
+        print (Colors.GREEN + "Setting DAQ and Sbit Elink Phases DONE" + Colors.ENDC)
 
     print("\nSetting VFAT HDLC addresses")
     vfats_per_oh = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.NUM_VFATS_PER_OH")

@@ -4,6 +4,7 @@ import gem.gem_utils as gem_utils
 from time import sleep
 import sys, os
 import argparse
+import paramiko
 
 def main(system, oh_select, gbt_list, relay_number_list, niter):
 
@@ -15,22 +16,9 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
     if not connect_status:
         print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
         rw_terminate()
-
+    '''
     # Get first list of registers to compare
-    print ("Turning off power, then on and getting initial list of registers and turning off power")
-
-    for relay_number in relay_number_list:
-        set_status = relay_object.relay_set(relay_number, 0)
-        if not set_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
-        read_status = relay_object.relay_read(relay_number)
-        if not read_status:
-            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-            rw_terminate()
-        sleep (0.5)
-    sleep(10)
-
+    print ("Turning on power and getting initial list of registers and turning off power")
     for relay_number in relay_number_list:
         set_status = relay_object.relay_set(relay_number, 1)
         if not set_status:
@@ -42,7 +30,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             rw_terminate()
         sleep (0.5)
     sleep(10)
-
+    
     # Configure lpGBTs
     os.system("python3 init_frontend.py")
     sleep(1)
@@ -108,13 +96,43 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         n_error_pusm_ready_sub[gbt] = 0
         n_error_mode_sub[gbt] = 0
         n_error_reg_list_sub[gbt] = 0
+    '''
+    # cheesecake parameters
+    router_ip = "169.254.181.119"
+    router_username = "pi"
+    router_password = "queso"
+    ssh = paramiko.SSHClient()
+
+    # Load SSH host keys
+    ssh.load_system_host_keys()
+
+    # Add SSH host key automatically if needed
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # Connect to router using username/password authentication
+    ssh.connect(router_ip, 
+                username=router_username, 
+                password=router_password,
+                look_for_keys=False)
 
     print ("Begin powercycle iteration\n")
     # Power cycle interations
     for n in range(0,niter):
         print ("Iteration: %d\n"%(n+1))
 
-        # Turn on relay
+        # Turn off and on relay
+        for relay_number in relay_number_list:
+            set_status = relay_object.relay_set(relay_number, 0)
+            if not set_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            read_status = relay_object.relay_read(relay_number)
+            if not read_status:
+                print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+                rw_terminate()
+            sleep(0.5)
+        sleep(10)
+
         for relay_number in relay_number_list:
             set_status = relay_object.relay_set(relay_number, 1)
             if not set_status:
@@ -127,6 +145,33 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
             sleep(0.5)
         sleep(10)
 
+        # -----------------need cheesecake connection from here----------------------
+        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/;"
+        ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 0 -r 0x00 -d 0x01"    
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
+        output = ssh_stdout.readlines()
+        print (output)
+        for line in output:
+            if "ERROR" in line:
+                print("I2C connection ERROR Boss GBT! Exit the Test")
+                rw_terminate()
+        sleep(2)
+       
+        ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/;" 
+        ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 1 -r 0x00 -d 0x01"    
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
+        output = ssh_stdout.readlines()
+        print (output)
+        for line in output:
+            if "ERROR" in line:
+                print("I2C connection ERROR Sub GBT! Exit the Test")
+                rw_terminate()
+        
+        print("I2C connection successful, continue...")
+        sleep(2)
+        # -----------------no longer need cheesecake connection from here----------------------
+
+        '''
         # Configure lpGBTs
         os.system("python3 init_frontend.py")
         sleep(1)
@@ -247,7 +292,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
                 if val != reg_list_sub[gbt][reg]:
                     n_error_reg_list_sub[gbt] += 1
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
-
+        '''
         print ("")
         # Turn off relay
         for relay_number in relay_number_list:
@@ -264,7 +309,9 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
 
     print ("\nEnd of powercycle iteration")
     print ("Number of iterations: %d\n"%niter)
+    ssh.close()
 
+    '''
     # Results
     print ("Result For lpGBTs: \n")
     for gbt in gbt_list["boss"]:
@@ -353,7 +400,7 @@ def main(system, oh_select, gbt_list, relay_number_list, niter):
         print (str_n_error_mode_sub)
         print (str_n_error_pusm_ready_sub)
         print (str_n_error_reg_list_sub)
-
+    '''
     print ("")
 
 if __name__ == "__main__":

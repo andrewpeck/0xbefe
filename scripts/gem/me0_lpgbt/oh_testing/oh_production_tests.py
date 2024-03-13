@@ -19,6 +19,10 @@ from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 #   7       1       4, 5    4, 5, 12, 13, 20, 21
 #   8       1       6, 7    6, 7, 14, 15, 22, 23
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+oh_testing_dir = scripts_gem_dir + '/me0_lpgbt/oh_testing'
+input_fn = oh_testing_dir + '/resources/input_geb.txt'
+
 geb_oh_map = {}
 for slot in range(1,9):
     o = 2*((slot - 1)%4)
@@ -31,18 +35,10 @@ for slot in range(1,9):
 NULL = -9999
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="OptoHybrid Production Tests")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH and VTRx+ serial numbers for slots")
-    args = parser.parse_args()
-
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
-
     geb_dict         = {}
     input_oh_dict    = {}
     input_vtrxp_dict = {}
-    input_file = open(args.input_file)
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
@@ -102,25 +98,23 @@ if __name__ == "__main__":
 
         oh_ver_dict[slot] = [get_oh_ver(oh,gbt) for gbt in oh_gbt_vfat_map[oh]["GBT"]]
     
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scripts_gem_dir + "/me0_lpgbt/oh_testing/results"
-
+    resultDir = oh_testing_dir + "/results"
     try:
         dataDir = resultDir + "/%s_tests"%test_type
     except NameError:
         print(Colors.YELLOW + 'Must include test type in input file as "# TEST_TYPE: <test_type>"' + Colors.ENDC)
         sys.exit()
-
     try:
         os.makedirs(dataDir) # create directory for data
     except FileExistsError: # skip if directory already exists
         pass
 
+    # Make data dir for OH batch
     dataDir += "/OH_SNs_"+"_".join(oh_sn_list)
     try:
         os.makedirs(dataDir) # create directory for ohid under test
     except FileExistsError: # skip if directory already exists
-        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%dataDir + Colors.ENDC)
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%dataDir + Colors.ENDC)
         if dir_overwrite.lower() in ['y','yes']:
             pass  
         else:
@@ -417,31 +411,66 @@ if __name__ == "__main__":
     print("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
-    # Step 3 - Downlink eye diagrams
-    print(Colors.BLUE + "Step 3: Downlink Eye Diagram\n" + Colors.ENDC)
-    logfile.write("Step 3: Downlink Eye Diagram\n\n")
+    # Step 3 - Downlink & Uplink eye diagrams
+    print(Colors.BLUE + "Step 3: Downlink & Uplink Eye Diagram\n" + Colors.ENDC)
+    logfile.write("Step 3: Downlink & Uplink Eye Diagram\n\n")
     time.sleep(0.1)
 
     if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for slot,oh_sn in geb_dict.items():
             gbt = geb_oh_map[slot]["GBT"][0]
-            print (Colors.BLUE + "Running Eye diagram for slot %s BOSS lpGBT"%slot + Colors.ENDC)
-            logfile.write("Running Eye diagram for slot %s BOSS lpGBT\n"%slot)
+            gbt_sub = geb_oh_map[slot]["GBT"][1]
+
+            # downlink eye scan for boss gbt for current OH
+            print (Colors.BLUE + "Running Downlink Eye diagram for slot %s BOSS lpGBT"%slot + Colors.ENDC)
+            logfile.write("Running Downlink Eye diagram for slot %s BOSS lpGBT\n"%slot)
             os.system("python3 me0_eye_scan.py -s backend -q ME0 -o %d -g %d > out.txt"%(geb_oh_map[slot]["OH"],gbt))
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.txt")
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_downlink_eye_scan_results/eye_data*.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("python3 plotting_scripts/me0_eye_scan_plot.py -f %s -s > out.txt"%latest_file)
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*.pdf")
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_downlink_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("cp %s %s/downlink_optical_eye_boss_OH%s.pdf"%(latest_file, dataDir, oh_sn))
-            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_eye_scan_results/eye_data*out.txt")
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_downlink_eye_scan_results/eye_data*out.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            eye_result_file=open(latest_file)
+            result = eye_result_file.readlines()[0]
+            eye_result_file.close()
+            print(result+"\n")
+            logfile.write(result+"\n")
+            xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = float(result.split()[5])
+
+            # uplink eye scan for boss gbt for current OH
+            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt + Colors.ENDC)
+            logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt)
+            os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt)
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/uplink_optical_eye_OH%s_GBT%s.pdf"%(latest_file, dataDir, oh_sn, gbt))
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*out.txt")
             latest_file = max(list_of_files, key=os.path.getctime)
             eye_result_file=open(latest_file)
             result = eye_result_file.readlines()[0]
             eye_result_file.close()
             print(result)
             logfile.write(result+"\n")
-            xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = float(result.split()[5])
+            xml_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = float(result.split()[-1])
+
+            # uplink eye scan for sub gbt for current OH
+            print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt_sub + Colors.ENDC)
+            logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt_sub)
+            os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt_sub)
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            os.system("cp %s %s/uplink_optical_eye_OH%s_GBT%s.pdf"%(latest_file, dataDir, oh_sn, gbt_sub))
+            list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*out.txt")
+            latest_file = max(list_of_files, key=os.path.getctime)
+            eye_result_file=open(latest_file)
+            result = eye_result_file.readlines()[0]
+            eye_result_file.close()
+            print(result)
+            logfile.write(result+"\n")
+            xml_results[oh_sn]['LPGBT_S_UPLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_S_UPLINK_EYE_DIAGRAM'] = float(result.split()[-1])
         for slot,oh_sn in geb_dict.items():
             if xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] < 0.5:
                 if not test_failed:
@@ -450,6 +479,20 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT\n'%oh_sn)
+            if xml_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] < 0.45:
+                if not test_failed:
+                    print (Colors.RED + "\nStep 3: BOSS Uplink Eye Diagram Failed" + Colors.ENDC)
+                    logfile.write("\nStep 3: BOSS Uplink Eye Diagram Failed\n")
+                    test_failed = True
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s BOSS lpGBT\n'%oh_sn)
+            if xml_results[oh_sn]['LPGBT_S_UPLINK_EYE_DIAGRAM'] < 0.45:
+                if not test_failed:
+                    print (Colors.RED + "\nStep 3: SUB Uplink Eye Diagram Failed" + Colors.ENDC)
+                    logfile.write("\nStep 3: SUB Uplink Eye Diagram Failed\n")
+                    test_failed = True
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s SUB lpGBT'%oh_sn + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s SUB lpGBT\n'%oh_sn)
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -473,12 +516,12 @@ if __name__ == "__main__":
             else:
                 print('Valid entries: y, yes, n, no')
     else:
-        print(Colors.BLUE + "Skipping downlink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
-        logfile.write("Skipping downlink eye diagram for %s tests\n"%test_type.replace("_","-"))
+        print(Colors.BLUE + "Skipping downlink and uplink eye diagram for %s tests"%test_type.replace("_","-") + Colors.ENDC)
+        logfile.write("Skipping downlink and uplink eye diagram for %s tests\n"%test_type.replace("_","-"))
         time.sleep(0.1)
 
-    print (Colors.GREEN + "\nStep 3: Downlink Eye Diagram Complete\n" + Colors.ENDC)
-    logfile.write("\nStep 3: Downlink Eye Diagram Complete\n\n")
+    print (Colors.GREEN + "\nStep 3: Downlink & Uplink Eye Diagram Complete\n" + Colors.ENDC)
+    logfile.write("\nStep 3: Downlink & Uplink Eye Diagram Complete\n\n")
 
     time.sleep(0.1)
     print ("#####################################################################################################################################\n")
@@ -1882,7 +1925,7 @@ if __name__ == "__main__":
                 except KeyError:
                     xml_results[oh_sn]['DCDC_2V5_TEMP'] = NULL
 
-        asense_ranges = {'DCDC_VIN_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.40],'DCDC_1V2A_VOLTAGE':[1.05, 1.40], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
+        asense_ranges = {'DCDC_VIN_VOLTAGE':[6.5, 9.5], 'DCDC_1V2D_VOLTAGE':[1.05, 1.45],'DCDC_1V2A_VOLTAGE':[1.05, 1.45], 'DCDC_1V2D_CURRENT':[0, 3],'DCDC_1V2A_CURRENT':[0, 3],'DCDC_2V5_CURRENT':[0, 0.5],'DCDC_2V5_TEMP':[0, 35],'DCDC_1V2D_TEMP':[0, 35],'DCDC_1V2A_TEMP':[0, 35]}
         for oh_sn in xml_results:
             for key,limit in asense_ranges.items():
                 try:
@@ -2117,7 +2160,7 @@ if __name__ == "__main__":
     logfile.write("Step 12: DAQ SCurve\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
