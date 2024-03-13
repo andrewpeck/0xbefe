@@ -411,7 +411,7 @@ if __name__ == "__main__":
     print("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
    
-    # Step 3 - Up&Downlink eye diagrams
+    # Step 3 - Downlink & Uplink eye diagrams
     print(Colors.BLUE + "Step 3: Downlink & Uplink Eye Diagram\n" + Colors.ENDC)
     logfile.write("Step 3: Downlink & Uplink Eye Diagram\n\n")
     time.sleep(0.1)
@@ -420,6 +420,7 @@ if __name__ == "__main__":
         for slot,oh_sn in geb_dict.items():
             gbt = geb_oh_map[slot]["GBT"][0]
             gbt_sub = geb_oh_map[slot]["GBT"][1]
+
             # downlink eye scan for boss gbt for current OH
             print (Colors.BLUE + "Running Downlink Eye diagram for slot %s BOSS lpGBT"%slot + Colors.ENDC)
             logfile.write("Running Downlink Eye diagram for slot %s BOSS lpGBT\n"%slot)
@@ -438,6 +439,7 @@ if __name__ == "__main__":
             print(result+"\n")
             logfile.write(result+"\n")
             xml_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_DOWNLINK_EYE_DIAGRAM'] = float(result.split()[5])
+
             # uplink eye scan for boss gbt for current OH
             print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt)
@@ -453,6 +455,7 @@ if __name__ == "__main__":
             print(result)
             logfile.write(result+"\n")
             xml_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = full_results[oh_sn]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = float(result.split()[-1])
+
             # uplink eye scan for sub gbt for current OH
             print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt_sub + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt_sub)
