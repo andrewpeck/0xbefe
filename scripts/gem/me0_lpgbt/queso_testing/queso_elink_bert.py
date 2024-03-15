@@ -33,13 +33,13 @@ def init_lpgbt_fec_error_counter(oh_ver):
         rw_reg_lpgbt.mpoke(0x1C8, 0x0)
         rw_reg_lpgbt.mpoke(0x1C9, 0x0)
 
-def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, batch = None):
+def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, test_type = None):
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
-    if batch is None:
+    if test_type is None:
         dataDir = resultDir + "/bert_results"
     else:
-        dataDir = resultDir + "/%s_tests"%batch
+        dataDir = resultDir + "/%s_tests"%test_type
     try:
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
@@ -59,9 +59,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_elink_bert_results.json"
 
-    print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
+    print (Colors.BLUE + "\nTests started for Batch: %s\n"%test_type + Colors.ENDC)
     print ("")
-    logfile.write("\nTests started for Batch: %s\n\n"%batch)
+    logfile.write("\nTests started for Batch: %s\n\n"%test_type)
 
     print ("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
@@ -528,18 +528,18 @@ if __name__ == "__main__":
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
-                batch = line.split()[2]
-                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
+                test_type = line.split()[2]
+                if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
                     sys.exit()
             continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
-            if batch == "pre_production" and int(oh_sn) not in range(1, 1001):
+            if test_type == "pre_production" and int(oh_sn) not in range(1, 1001):
                 print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
                 sys.exit()
-            elif batch in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
+            elif test_type in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
                 print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
                 sys.exit()
             queso_dict[queso_nr] = oh_sn
@@ -572,7 +572,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl), args.loopback, batch=batch)
+        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl), args.loopback, test_type=test_type)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

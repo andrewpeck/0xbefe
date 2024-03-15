@@ -492,7 +492,7 @@
           description="reset all test modules"
           fw_write_pulse_signal="reset_local"/>
     <node id="QUESO_RESET" address="0x1" permission="w"
-          description="Resets queso prbs counters"
+          description="Resets queso prbs and crosstalk counters"
           fw_write_pulse_signal="queso_reset"/>
     <node id="QUESO_EN" mask ="0x00000001" address="0x2" permission="w"
           description="enables queso prbs generator"
