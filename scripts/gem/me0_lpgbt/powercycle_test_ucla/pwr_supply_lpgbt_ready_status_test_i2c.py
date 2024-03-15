@@ -23,109 +23,110 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
     pwr.v_sequence = voltages
 
     # Get first list of registers to compare
-    print ("Turning off power, then on and getting initial list of registers and turning off power")
+    # print ("Turning off power, then on and getting initial list of registers and turning off power")
+    print ("Turning off power, then commencing powercycle test")
     # Turn power supply off
     pwr.power_sequence(OFF)
     sleep(1) 
-    # Turn power supply on
-    pwr.power_sequence(ON)
-    # Check value set
-    set_status = pwr.get_voltage() == voltages[-1]
-    if not set_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    # Wait and check if value reached
-    v_read = pwr.get_voltage(read=True)
-    read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
-    timeout = 10
-    while not read_status:
-        timeout -= 1
-        if timeout == 1:
-            break
-        v_read = pwr.get_voltage(read=True)
-        read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
-    if not read_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    else:
-        print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
-    sleep(0.5)
+    # # Turn power supply on
+    # pwr.power_sequence(ON)
+    # # Check value set
+    # set_status = pwr.get_voltage() == voltages[-1]
+    # if not set_status:
+    #     print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+    #     rw_terminate()
+    # # Wait and check if value reached
+    # v_read = pwr.get_voltage(read=True)
+    # read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+    # timeout = 10
+    # while not read_status:
+    #     timeout -= 1
+    #     if timeout == 1:
+    #         break
+    #     v_read = pwr.get_voltage(read=True)
+    #     read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+    # if not read_status:
+    #     print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+    #     rw_terminate()
+    # else:
+    #     print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
+    # sleep(0.5)
 
-    # Configure lpGBTs
-    os.system("python3 init_frontend.py")
-    sleep(1)
+    # # Configure lpGBTs
+    # os.system("python3 init_frontend.py")
+    # sleep(1)
 
-    reg_list_boss = {}
-    reg_list_sub = {}
-    n_rw_reg = 0
-    for gbt in gbt_list["boss"]:
-        reg_list_boss[gbt] = {}
-        oh_ver = get_oh_ver(str(oh_select), str(gbt))
-        if oh_ver == 1:
-            n_rw_reg = (0x13C+1)
-        if oh_ver == 2:
-            n_rw_reg = (0x14F+1)
-        select_ic_link(oh_select, gbt)
-        for reg in range(n_rw_reg):
-            reg_list_boss[gbt][reg] = mpeek(reg)
-    for gbt in gbt_list["sub"]:
-        reg_list_sub[gbt] = {}
-        oh_ver = get_oh_ver(str(oh_select), str(gbt))
-        select_ic_link(oh_select, gbt)
-        if oh_ver == 1:
-            for i in range(0,10):
-                test_read = mpeek(0x00)
-            n_rw_reg = (0x13C+1)
-        if oh_ver == 2:
-            n_rw_reg = (0x14F+1)
-        for reg in range(n_rw_reg):
-            reg_list_sub[gbt][reg] = mpeek(reg)
+    # reg_list_boss = {}
+    # reg_list_sub = {}
+    # n_rw_reg = 0
+    # for gbt in gbt_list["boss"]:
+    #     reg_list_boss[gbt] = {}
+    #     oh_ver = get_oh_ver(str(oh_select), str(gbt))
+    #     if oh_ver == 1:
+    #         n_rw_reg = (0x13C+1)
+    #     if oh_ver == 2:
+    #         n_rw_reg = (0x14F+1)
+    #     select_ic_link(oh_select, gbt)
+    #     for reg in range(n_rw_reg):
+    #         reg_list_boss[gbt][reg] = mpeek(reg)
+    # for gbt in gbt_list["sub"]:
+    #     reg_list_sub[gbt] = {}
+    #     oh_ver = get_oh_ver(str(oh_select), str(gbt))
+    #     select_ic_link(oh_select, gbt)
+    #     if oh_ver == 1:
+    #         for i in range(0,10):
+    #             test_read = mpeek(0x00)
+    #         n_rw_reg = (0x13C+1)
+    #     if oh_ver == 2:
+    #         n_rw_reg = (0x14F+1)
+    #     for reg in range(n_rw_reg):
+    #         reg_list_sub[gbt][reg] = mpeek(reg)
     
-    # Turn power supply off
-    pwr.power_sequence(OFF)
-    # Check value set
-    set_status = pwr.get_voltage() == 0.001
-    if not set_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    # Wait and check if value reached
-    timeout = 10
-    read_status = pwr.get_voltage(read=True) < 0.1
-    while not read_status:
-        timeout -= 1
-        if timeout == 1:
-            break
-        read_status = pwr.get_voltage(read=True) < 0.1
-    if not read_status:
-        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
-        rw_terminate()
-    else:
-        print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
-    sleep(0.5)
+    # # Turn power supply off
+    # pwr.power_sequence(OFF)
+    # # Check value set
+    # set_status = pwr.get_voltage() == 0.001
+    # if not set_status:
+    #     print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+    #     rw_terminate()
+    # # Wait and check if value reached
+    # timeout = 10
+    # read_status = pwr.get_voltage(read=True) < 0.1
+    # while not read_status:
+    #     timeout -= 1
+    #     if timeout == 1:
+    #         break
+    #     read_status = pwr.get_voltage(read=True) < 0.1
+    # if not read_status:
+    #     print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+    #     rw_terminate()
+    # else:
+    #     print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
+    # sleep(0.5)
     
-    n_error_backend_ready_boss = {}
-    n_error_backend_ready_sub = {}
-    n_error_uplink_fec_boss = {}
-    n_error_uplink_fec_sub = {}
-    n_error_pusm_ready_boss = {}
-    n_error_pusm_ready_sub = {}
-    n_error_mode_boss = {}
-    n_error_mode_sub = {}
-    n_error_reg_list_boss = {}
-    n_error_reg_list_sub = {}
+    # n_error_backend_ready_boss = {}
+    # n_error_backend_ready_sub = {}
+    # n_error_uplink_fec_boss = {}
+    # n_error_uplink_fec_sub = {}
+    # n_error_pusm_ready_boss = {}
+    # n_error_pusm_ready_sub = {}
+    # n_error_mode_boss = {}
+    # n_error_mode_sub = {}
+    # n_error_reg_list_boss = {}
+    # n_error_reg_list_sub = {}
 
-    for gbt in gbt_list["boss"]:
-        n_error_backend_ready_boss[gbt] = 0
-        n_error_uplink_fec_boss[gbt] = 0
-        n_error_pusm_ready_boss[gbt] = 0
-        n_error_mode_boss[gbt] = 0
-        n_error_reg_list_boss[gbt] = 0
-    for gbt in gbt_list["sub"]:
-        n_error_backend_ready_sub[gbt] = 0
-        n_error_uplink_fec_sub[gbt] = 0
-        n_error_pusm_ready_sub[gbt] = 0
-        n_error_mode_sub[gbt] = 0
-        n_error_reg_list_sub[gbt] = 0
+    # for gbt in gbt_list["boss"]:
+    #     n_error_backend_ready_boss[gbt] = 0
+    #     n_error_uplink_fec_boss[gbt] = 0
+    #     n_error_pusm_ready_boss[gbt] = 0
+    #     n_error_mode_boss[gbt] = 0
+    #     n_error_reg_list_boss[gbt] = 0
+    # for gbt in gbt_list["sub"]:
+    #     n_error_backend_ready_sub[gbt] = 0
+    #     n_error_uplink_fec_sub[gbt] = 0
+    #     n_error_pusm_ready_sub[gbt] = 0
+    #     n_error_mode_sub[gbt] = 0
+    #     n_error_reg_list_sub[gbt] = 0
     
     # cheesecake parameters
     router_ip = "169.254.181.119"
@@ -145,6 +146,8 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
                 password=router_password,
                 look_for_keys=False)
 
+    n_error_backend_ready_boss = 0
+    n_error_backend_ready_sub  = 0
     print ("Begin powercycle iteration\n")
     # Power cycle interations
     for n in range(0,niter):
@@ -179,24 +182,40 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 0 -r 0x00 -d 0x01"    
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
-        print (output)
+        # print (output)
+        i2c_success = True
         for line in output:
             if "ERROR" in line:
-                print("I2C connection ERROR Boss GBT! Exit the Test")
-                rw_terminate()
+                i2c_success = False
+                n_error_backend_ready_boss += 1
+                print(Colors.RED + "I2C connection ERROR reading BOSS GBT!" + Colors.ENDC)
+                print(Colors.YELLOW + f'BOSS Link Ready Errors: {n_error_backend_ready_boss}' + Colors.ENDC)
+                break # so that it does not count multiple
+                # print("Exit the Test")
+                # rw_terminate()
+        if i2c_success:
+            print(Colors.GREEN + 'BOSS I2C read successful!' + Colors.ENDC)
         sleep(2)
        
         ssh_command = "cd /home/pi/Documents/0xbefe/scripts/; source env.sh me0 cvp13 0; cd gem/;" 
         ssh_command += "python3 me0_lpgbt_rw_register.py -s chc -q ME0 -o 1 -g 1 -r 0x00 -d 0x01"    
         ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(ssh_command)
         output = ssh_stdout.readlines()
-        print (output)
+        # print (output)
+        i2c_success = True
         for line in output:
             if "ERROR" in line:
-                print("I2C connection ERROR Sub GBT! Exit the Test")
-                rw_terminate()
+                i2c_success = False
+                n_error_backend_ready_sub += 1
+                print(Colors.RED + "I2C connection ERROR reading SUB GBT!" + Colors.ENDC)
+                print(Colors.YELLOW + f'SUB Link Ready Errors: {n_error_backend_ready_sub}' + Colors.ENDC)
+                break
+                # print("Exit the Test")
+                # rw_terminate()
+        if i2c_success:
+            print(Colors.GREEN + 'SUB I2C read successful!' + Colors.ENDC)
         
-        print("I2C connection successful, continue...")
+        # print("I2C connection successful, continue...")
         sleep(2)
         # -----------------no longer need cheesecake connection from here----------------------
 
@@ -346,6 +365,8 @@ def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
         sleep(0.5)
 
     print ("\nEnd of powercycle iteration")
+    print(Colors.YELLOW + f'BOSS Link Ready Errors: {n_error_backend_ready_boss}' + Colors.ENDC)
+    print(Colors.YELLOW + f'SUB Link Ready Errors: {n_error_backend_ready_sub}' + Colors.ENDC)
     print ("Number of iterations: %d\n"%niter)
     ssh.close()
 
