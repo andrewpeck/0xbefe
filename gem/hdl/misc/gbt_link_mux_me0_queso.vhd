@@ -294,7 +294,7 @@ begin
         test_vfat3_rx_data_arr_o(i)(113) <= gbt_rx_data_arr_i(i * 8 + 4).rx_data(215 downto 208); -- VFAT12 pair 5 (GBT4 elink 26)
         test_vfat3_rx_data_arr_o(i)(114) <= gbt_rx_data_arr_i(i * 8 + 4).rx_data(175 downto 168); -- VFAT12 pair 6 (GBT4 elink 21)
         test_vfat3_rx_data_arr_o(i)(115) <= gbt_rx_data_arr_i(i * 8 + 4).rx_data(191 downto 184); -- VFAT12 pair 7 (GBT4 elink 23)
-        test_vfat3_rx_data_arr_o(i)(116) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(143 downto 136); -- VFAT13 pair 0 (GBT5 elink 17)
+        test_vfat3_rx_data_arr_o(i)(117) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(143 downto 136); -- VFAT13 pair 0 (GBT5 elink 17)
         test_vfat3_rx_data_arr_o(i)(118) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(159 downto 152); -- VFAT13 pair 1 (GBT5 elink 19)
         test_vfat3_rx_data_arr_o(i)(119) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(119 downto 112); -- VFAT13 pair 2 (GBT5 elink 14)
         test_vfat3_rx_data_arr_o(i)(120) <= gbt_rx_data_arr_i(i * 8 + 5).rx_data(063 downto 056); -- VFAT13 pair 3 (GBT5 elink 07)

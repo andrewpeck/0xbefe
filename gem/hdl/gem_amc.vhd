@@ -1047,7 +1047,6 @@ begin
                 clk_i     => spy_tx_usrclk_i,
                 tx_data_i => spy_tx_data_o
             );
-
     end generate;
 
     g_trig_tx_debug : if g_USE_TRIG_TX_LINKS and CFG_DEBUG_TRIGGER_TX generate
