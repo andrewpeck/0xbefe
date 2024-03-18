@@ -212,7 +212,7 @@ begin
                 queso_data_unmasked_arr_o(i)(113) <= queso_rx_data_arr_i(i)(113) xor x"85"; -- VFAT12 pair 5 (GBT4 elink 26)
                 queso_data_unmasked_arr_o(i)(114) <= queso_rx_data_arr_i(i)(114) xor x"86"; -- VFAT12 pair 6 (GBT4 elink 21)
                 queso_data_unmasked_arr_o(i)(115) <= queso_rx_data_arr_i(i)(115) xor x"87"; -- VFAT12 pair 7 (GBT4 elink 23)
-                queso_data_unmasked_arr_o(i)(117) <= queso_rx_data_arr_i(i)(116) xor x"59"; -- VFAT13 pair 0 (GBT5 elink 17)
+                queso_data_unmasked_arr_o(i)(117) <= queso_rx_data_arr_i(i)(117) xor x"59"; -- VFAT13 pair 0 (GBT5 elink 17)
                 queso_data_unmasked_arr_o(i)(118) <= queso_rx_data_arr_i(i)(118) xor x"5a"; -- VFAT13 pair 1 (GBT5 elink 19)
                 queso_data_unmasked_arr_o(i)(119) <= queso_rx_data_arr_i(i)(119) xor x"5b"; -- VFAT13 pair 2 (GBT5 elink 14)
                 queso_data_unmasked_arr_o(i)(120) <= queso_rx_data_arr_i(i)(120) xor x"5c"; -- VFAT13 pair 3 (GBT5 elink 07)

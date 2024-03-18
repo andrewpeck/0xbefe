@@ -931,9 +931,6 @@ begin
 
                     gbt_ic_tx_data_arr_i  => gbt_ic_tx_data_arr,
                     gbt_ic_rx_data_arr_o  => gbt_ic_rx_data_arr,
-                    vfat3_tx_data_arr_i   => vfat3_tx_data_arr,
-                    vfat3_rx_data_arr_o   => vfat3_rx_data_arr,
-                    vfat3_sbits_arr_o     => me0_vfat3_sbits_arr,
 
                     gbt_ready_arr_o       => gbt_ready_arr,
                     vfat3_gbt_ready_arr_o => vfat3_gbt_ready_arr,

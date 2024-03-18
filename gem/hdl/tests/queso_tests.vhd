@@ -169,7 +169,7 @@ begin
                 process(gbt_frame_clk_i) is
                 begin
                     if (rising_edge(gbt_frame_clk_i)) then
-                        rx_prbs_err_arr(OH*216 + ELINK) <= rx_prbs_err_arr_o(OH*216 + ELINK) when (queso_test_en_i = '1') else (others => '0');
+                        rx_prbs_err_arr(OH*216 + ELINK)  <= rx_prbs_err_arr_o(OH*216 + ELINK) when (queso_test_en_i = '1') else (others => '0');
                     end if;
                 end process;
 
@@ -198,18 +198,21 @@ begin
                         en_i      => or_reduce(elink_rot1_unmasked(OH)(ELINK)),
                         count_o   => crosstalk_cnt_arr(OH)(ELINK)
                     );
-                
-                elink_error_cnt_arr_o(OH)(ELINK) <= rx_err_cnt_arr(OH)(ELINK);
-                crosstalk_cnt_arr_o(OH)(ELINK)   <= crosstalk_cnt_arr(OH)(ELINK);
-
             end generate each_elink;
         end generate each_oh;
+        process (gbt_frame_clk_i)
+        begin
+            if rising_edge(gbt_frame_clk_i) then
+                elink_error_cnt_arr_o <= rx_err_cnt_arr;
+                crosstalk_cnt_arr_o   <= crosstalk_cnt_arr;
+            end if;
+        end process;
 
     --=======QUESO Crawl Counter, no PRBS=======--
     else generate
         --===Generate TX data===--
         -- generator (fanned out to all elinks)
-       i_crawl_gen : entity work.counter
+        i_crawl_gen : entity work.counter
                 generic map(
                     g_COUNTER_WIDTH  => 8,
                     g_ALLOW_ROLLOVER => true
@@ -220,16 +223,40 @@ begin
                     en_i      => '1',
                     count_o   => tx_crawl_data
                 );
-        
-        test_vfat3_tx_data_arr_o <= tx_crawl_data;
+        process (gbt_frame_clk_i)
+        begin
+            if rising_edge(gbt_frame_clk_i) then
+                test_vfat3_tx_data_arr_o <= tx_crawl_data;
+
+                --send raw test data directly to error counting registers(now just displays count)
+                elink_error_cnt_arr_o <= test_vfat3_rx_data_arr_i;
+
+                crosstalk_cnt_arr_o <= crosstalk_cnt_arr;
+            end if;
+        end process;
 
         --===Rx send directly to registers===--
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
             each_elink : for ELINK in 0 to 215 generate
+                process (gbt_frame_clk_i)
+                begin
+                    if rising_edge(gbt_frame_clk_i) then
 
-                --send raw test data directly to error counting registers(now just displays count)
-                elink_error_cnt_arr_o(OH)(ELINK) <= test_vfat3_rx_data_arr_i(OH)(ELINK); 
-
+                    end if;
+                end process;
+                
+                -- instantiate counter for cross-talk check
+                i_crosstalk_cnt : entity work.counter
+                    generic map(
+                        g_COUNTER_WIDTH  => 8,
+                        g_ALLOW_ROLLOVER => false
+                    )
+                    port map(
+                        ref_clk_i => gbt_frame_clk_i,
+                        reset_i   => counter_reset or reset_i,
+                        en_i      => or_reduce(test_vfat3_rx_data_arr_i(OH)(ELINK)),
+                        count_o   => crosstalk_cnt_arr(OH)(ELINK)
+                    );
             end generate each_elink;
         end generate each_oh;
     end generate g_QUESO_PRBS_COUNT_EN;
