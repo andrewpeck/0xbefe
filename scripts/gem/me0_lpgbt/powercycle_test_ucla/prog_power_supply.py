@@ -19,6 +19,7 @@ class PowerSupply:
             )
             # Turn off echo commands and flush serial buffer
             self._ser.write('ECHO OFF\r\n'.encode())
+            self.read_serial(1)
             # Read in values from serial device
             self._ramp_time = self.get_ramp_time(read=True)
             self._output    = self.get_output(read=True)
@@ -42,7 +43,7 @@ class PowerSupply:
 
     def get_ramp_time(self,read=False):
         # Flush serial
-        self.read_serial(0)
+        self.read_serial(0.5)
         if read:
             self._ser.write('RAMP\r\n'.encode())
             ramp = self.read_serial()
@@ -58,7 +59,7 @@ class PowerSupply:
 
     def get_voltage(self,read=False):
         # flush serial
-        self.read_serial(0)
+        self.read_serial(0.5)
         if read:
             # Read voltage value
             self._ser.write('VREAD\r\n'.encode())
@@ -75,7 +76,7 @@ class PowerSupply:
 
     def get_current(self,read=False):
         # Flush serial
-        self.read_serial(0)
+        self.read_serial(0.5)
         if read:
             # Read current value
             self._ser.write('IREAD\r\n'.encode())
@@ -88,14 +89,16 @@ class PowerSupply:
 
     def set_output(self,output:bool):
         if output:
+            print('Turning output ON\n')
             self._ser.write('PWR ON\r\n'.encode())
         else:
+            print('Turning output OFF\n')
             self._ser.write('PWR OFF\r\n'.encode())
         self._output = output
 
     def get_output(self,read=False):
         # Flush serial
-        self.read_serial(0)
+        self.read_serial(0.5)
         if read:
             self._ser.write('PWR\r\n'.encode())
             # Cast to bool
@@ -113,7 +116,7 @@ class PowerSupply:
     def power_sequence(self,power:bool):
         # Power on sequence
         if power:
-            print('Powering ON')
+            print('Powering ON\n')
             # Copy voltage sequence to not alter property
             voltages = self.v_sequence.copy()
             # Check if output is OFF and turn on
@@ -123,9 +126,9 @@ class PowerSupply:
                 time.sleep(1)
             for voltage in voltages:
                 self.set_voltage(voltage)
-                time.sleep((self.get_ramp_time()+100)/1000)
+                time.sleep((self.get_ramp_time()+10)/1000)
         else:
-            print('Powering OFF')
+            print('Powering OFF\n')
             self.set_voltage(0.001)
         
     def close(self):
@@ -142,6 +145,7 @@ def main():
     parser.add_argument('-r','--read',action='store_true',dest='read',help='read = Read and print power supply output at the end of operations.')
     args = parser.parse_args()
 
+    print('\nConfiguring power supply\n')
     pwr = PowerSupply()
 
     # configure power sequence
@@ -214,6 +218,8 @@ def main():
         pwr.close()
         sys.exit()
     
+    print('Config Done\n')
+
     # Run power sequence
     if power!=None:
         pwr.power_sequence(power)
