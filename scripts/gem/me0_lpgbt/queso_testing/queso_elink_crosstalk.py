@@ -1,3 +1,4 @@
+from gem.gem_utils import *
 import paramiko
 from time import time, sleep
 import argparse
@@ -10,7 +11,7 @@ import datetime
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 queso_dir = scripts_gem_dir + "/me0_lpgbt/queso_testing"
-resultDir = queso_dir + '/results'
+results_dir = queso_dir + '/results'
 input_fn = queso_dir + '/resources/input_queso.txt'
 
 # Map vfat number to 
@@ -36,21 +37,22 @@ def ssh_channel_en(fpga,loopback=True,en_all=True,vfat=None,channel=None,verbose
     command = 'queso_channel_en.py'
     # fpga arg
     if type(fpga) is list:
-        command += f" -f {' '.join(fpga)}"
+        command += f" -f {' '.join(map(str,fpga))}"
     else:
         command += f" -f {fpga}"
     # loopback arg
     if loopback:
         command += ' -l'
     # vfat arg
-    if type(vfat) is list:
-        command += f" -v {' '.join(vfat)}"
-    else:
-        command += f" -v {vfat}"
+    if vfat:
+        if type(vfat) is list:
+            command += f" -v {' '.join(map(str,vfat))}"
+        else:
+            command += f" -v {vfat}"
     # channel arg
     if en_all:
         channel = 'all'
-    if channel:
+    if channel is not None:
         command += f" -c {channel}"
     
     global ssh,base_ssh_command
@@ -122,12 +124,17 @@ if __name__ == "__main__":
 
     OH_SN_str = "_".join([oh_sn for oh_sn in queso_dict.values()])
 
-    dataDir = queso_dir + "/crosstalk_results"
+    dataDir = results_dir + "/crosstalk_results"
+    try:
+        os.makedirs(dataDir)
+    except FileExistsError:
+        pass # skip for existing directory
+
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
-    filename = f"{dataDir} + /vfat_elink_crosstalk_data_OH_SNs_{OH_SN_str}_{now}.txt"
-    file_out = open(filename,"w+")
+    filename = f"{dataDir}/vfat_elink_crosstalk_data_OH_SNs_{OH_SN_str}_{now}.txt"
+    file_out = open(filename,"w")
     
     # Counters and backend nodes
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET") # reset counters
@@ -139,17 +146,21 @@ if __name__ == "__main__":
         prbs_err_data = {}
     for queso in queso_dict:
         oh_select = queso_oh_map[queso]['OH']
+        queso_crosstalk_nodes[queso] = {}
         crosstalk_data[queso] = {}
         if args.check_prbs:
+            queso_prbs_nodes[queso] = {}
             prbs_err_data[queso] = {}
         for vfat in queso_oh_map[queso]['VFAT']:
+            queso_crosstalk_nodes[queso][vfat] = {}
             crosstalk_data[queso][vfat] = {}
             if args.check_prbs:
                 prbs_err_data[queso][vfat] = [0 for _ in range(9)]
+                queso_prbs_nodes[queso][vfat] = {}
             for elink in range(9):
                 queso_crosstalk_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.CROSSTALK_COUNT")
                 if args.check_prbs:
-                    queso_crosstalk_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.PRBS_ERR_COUNT")
+                    queso_prbs_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.PRBS_ERR_COUNT")
 
     # Set up ssh
     username = "pi"
@@ -214,14 +225,17 @@ if __name__ == "__main__":
                     crosstalk_counters[queso] = read_backend_counters(queso,queso_crosstalk_nodes)
                     if args.check_prbs:
                         prbs_counters[queso] = read_backend_counters(queso,queso_prbs_nodes)
-
                 # Wait for counter to max out
                 min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
+                if min_max_cnt == 0:
+                    print(Colors.RED + "No data found on any elinks" + Colors.ENDC)
                 while min_max_cnt < MAX_CNT:
                     sleep(0.1)
                     # Check backend counters
-                    crosstalk_counters = read_backend_counters(queso,queso_crosstalk_nodes)
+                    crosstalk_counters[min_queso] = read_backend_counters(min_queso,queso_crosstalk_nodes)
                     min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
+                    if min_max_cnt == 0:
+                        sys.exit()
                 
                 # Get final cnt values
                 crosstalk_counters = read_backend_counters(queso,queso_crosstalk_nodes)
@@ -305,8 +319,8 @@ if __name__ == "__main__":
                     file_out.write(f'  QUESO {queso} OH {queso_dict[queso]} VFAT {vfat_inj:02d} ELINK {elink_inj}:\n')
                     for vfat_read in crosstalk_found[queso][vfat_inj][elink_inj]:
                         elinks_read = crosstalk_found[queso][vfat_inj][elink_inj][vfat_read]
-                        print(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(elinks_read)}")
-                        file_out.write(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(elinks_read)}\n")
+                        print(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(map(str,elinks_read))}")
+                        file_out.write(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(map(str,elinks_read))}\n")
     else:
         print(Colors.GREEN + "No Cross Talk observed between elinks" + Colors.ENDC)
         file_out.write("No Cross Talk observed between elinks\n")
