@@ -1,152 +1,27 @@
 import sys
-import time
-import serial
 import argparse
-
-PORT_NAME = '/dev/ttyACM0'
-BAUDRATE  = 115200
+import time
+from pyHM310T import PowerSupply
 
 ON = True
 OFF = False
 POWER = {'ON':ON,'OFF':OFF}
 
-class PowerSupply:
-    def __init__(self,port=PORT_NAME,baudrate=BAUDRATE):
-        try:
-            self._ser = serial.Serial(
-                port=port,
-                baudrate=baudrate
-            )
-            # Turn off echo commands and flush serial buffer
-            self._ser.write('ECHO OFF\r\n'.encode())
-            self.read_serial(1)
-            # Read in values from serial device
-            self._ramp_time = self.get_ramp_time(read=True)
-            self._output    = self.get_output(read=True)
-            self._voltage   = self.get_voltage(read=True)
-            self._current   = self.get_current(read=True)
-            self._v_sequence = None
-        except serial.SerialException:
-            print(f'Failed to open serial device: {PORT_NAME}')
-            sys.exit()
-
-    @property
-    def v_sequence(self):
-        return self._v_sequence
-    @v_sequence.setter
-    def v_sequence(self,v_list):
-        self._v_sequence = v_list
-
-    def set_ramp_time(self,ramp:int):
-        self._ser.write(f'RAMP {ramp:d}\r\n'.encode())
-        self._ramp_time = ramp
-
-    def get_ramp_time(self,read=False):
-        # Flush serial
-        self.read_serial(0.5)
-        if read:
-            self._ser.write('RAMP\r\n'.encode())
-            ramp = self.read_serial()
-            try:
-                self._ramp_time = int(ramp.split()[0])
-            except TypeError:
-                print('ERROR:couldn\'t cast serial output to int')
-        return self._ramp_time
-        
-    def set_voltage(self,voltage):
-        self._ser.write(f'VSET {voltage}\r\n'.encode())
-        self._voltage = voltage
-
-    def get_voltage(self,read=False):
-        # flush serial
-        self.read_serial(0.5)
-        if read:
-            # Read voltage value
-            self._ser.write('VREAD\r\n'.encode())
-            self._voltage = float(self.read_serial().split()[0])
-        else:
-            # Read set voltage
-            self._ser.write('VSET\r\n'.encode())
-            self._voltage = float(self.read_serial().split()[0])
-        return self._voltage
-
-    def set_current(self,current):
-        self._ser.write(f'ISET {current}\r\n'.encode())
-        self._current = current
-
-    def get_current(self,read=False):
-        # Flush serial
-        self.read_serial(0.5)
-        if read:
-            # Read current value
-            self._ser.write('IREAD\r\n'.encode())
-            self._current = float(self.read_serial().split()[0])
-        else:
-            # Read current limit
-            self._ser.write('ISET\r\n'.encode())
-            self._current = float(self.read_serial().split()[0])
-        return self._current
-
-    def set_output(self,output:bool):
-        if output:
-            print('Turning output ON\n')
-            self._ser.write('PWR ON\r\n'.encode())
-        else:
-            print('Turning output OFF\n')
-            self._ser.write('PWR OFF\r\n'.encode())
-        self._output = output
-
-    def get_output(self,read=False):
-        # Flush serial
-        self.read_serial(0.5)
-        if read:
-            self._ser.write('PWR\r\n'.encode())
-            # Cast to bool
-            self._output = POWER[self.read_serial()]
-        return self._output
-
-    def read_serial(self,sleep=1):
-        out = ''
-        time.sleep(sleep)
-        while self._ser.inWaiting() > 0:
-            out += self._ser.read(1).decode()
-        out = out.removesuffix('\r\n')
-        return out
-
-    def power_sequence(self,power:bool):
-        # Power on sequence
-        if power:
-            print('Powering ON\n')
-            # Copy voltage sequence to not alter property
-            voltages = self.v_sequence.copy()
-            # Check if output is OFF and turn on
-            if not self.get_output():
-                self.set_voltage(0.001)
-                self.set_output(ON)
-                time.sleep(1)
-            for voltage in voltages:
-                self.set_voltage(voltage)
-                time.sleep((self.get_ramp_time()+10)/1000)
-        else:
-            print('Powering OFF\n')
-            self.set_voltage(0.001)
-        
-    def close(self):
-        self._ser.close()
-
 def main():
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Programmable Power Supply")
-    parser.add_argument('-t','--ramp_time',action='store',dest='ramp_time',help='ramp_time = ramp time in ms to configure power supply.')
     parser.add_argument('-i','--current',action='store',dest='current',help='current = Current limit to set power supply to.')
-    parser.add_argument('-v','--voltage',action='store',nargs='+',dest='voltage',help='voltage = Voltage(s) to set power supply to. If multiple values are given, they will be set sequentially for power on/off. Values are taken to be in ascending order, and will be reversed for power-off sequence.')
+    parser.add_argument('-v','--voltage',action='store',dest='voltage',help='voltage = Voltage(s) to set power supply to. If multiple values are given, they will be set sequentially for power on/off. Values are taken to be in ascending order, and will be reversed for power-off sequence.')
     parser.add_argument('-p','--power',action='store',dest='power',help='power = \'ON\' = Run power up sequence, \'OFF\' = Run power down sequence.')
-    parser.add_argument('-o','--output',action='store',dest='output',help='output = Toggle OUTPUT \'ON\'/\'OFF\'. Use for debugging or configuring purposes only. Output is set last. Use \'-p\'/\'--power\' for power ON/OFF sequence.')
     parser.add_argument('-r','--read',action='store_true',dest='read',help='read = Read and print power supply output at the end of operations.')
     args = parser.parse_args()
 
     print('\nConfiguring power supply\n')
-    pwr = PowerSupply()
+    # Create instance with default parameters
+    # COM port, baudrate = 9600, slave=1, voltage_limit=30.0, current_limit=10.0):
+    power_supply = PowerSupply(port='/dev/ttyUSB0')
+    # Alternatively, create instance with custom parameters
+    # power_supply = PowerSupply('COM4', 115200, 2, 10.0, 5.0)
 
     # configure power sequence
     if args.power:
@@ -155,85 +30,66 @@ def main():
             power = POWER[args.power.upper()]
         except KeyError:
             print('ERROR:-p/--power valid inputs are \'ON\'/\'OFF\'.')
-            pwr.close()
             sys.exit()
     else:
         power = None
 
-    if args.output:
-        # Get boolean for output arg
-        try:
-            output = POWER[args.output.upper()]
-        except KeyError:
-            print('ERROR:-o/--output valid inputs are \'ON\'/\'OFF\'.')
-            pwr.close()
-            sys.exit()
-        if power!=None:
-            print('Both output and power args used. Ignoring output arg and running power sequence.')
-            output = None
-    else:
-        output = None
-
-    # Set ramp time if supplied
-    if args.ramp_time:
-        try:
-            pwr.set_ramp_time(int(args.ramp_time))
-        except TypeError:
-            print('ERROR:Must provide integer value for setting ramp time.')
-
     # Set current limit if supplied
     if args.current:
         try:
-            pwr.set_current(float(args.current))
+            power_supply.set_current(float(args.current))
+            # Get the set current
+            set_current = power_supply.get_current()
+            print(f"Successfully set current: {set_current}A")
         except TypeError:
             print('ERROR:Must provide float value for setting current limit.')
+            sys.exit()
 
-    # save voltage sequence in PowerSupply attribute
-    if (power != None) and args.voltage:
+    # Set output voltage if supplied
+    if args.voltage:
         try:
-            voltages = [float(v) for v in args.voltage]
-            pwr.v_sequence = voltages
+            power_supply.set_voltage(float(args.voltage))
+            set_voltage = power_supply.get_voltage()
+            print(f"Successfully set voltage: {set_voltage}V")
         except TypeError:
-            print('ERROR:Must provide float values for voltage sequence.')
-    # Set max voltage given if no power arg
-    elif args.voltage:
-        if len(args.voltage) > 1:
-            print('Power sequence arg not used. Setting max voltage value.')
-            try:
-                voltage = max(map(float,args.voltage))
-            except TypeError:
-                print('ERROR:Must provide float values for voltage arg.')
-                pwr.close()
-                sys.exit()
-        else:
-            try:
-                voltage = float(args.voltage[0])
-            except TypeError:
-                print('ERROR:Must provide float values for voltage arg.')
-                pwr.close()
-                sys.exit()
-        pwr.set_voltage(voltage)
-    elif power:
-        print('Must provide at least one voltage w/ -v/--voltage for power sequence.')
-        pwr.close()
-        sys.exit()
+            print('ERROR:Must provide float value for setting output voltage.')
+            sys.exit()
     
     print('Config Done\n')
 
     # Run power sequence
     if power!=None:
-        pwr.power_sequence(power)
-    # Or turn ON/OFF output
-    elif output!=None:
-        pwr.set_output(output)
-    
+        if power:
+            # Enable the output
+            power_supply.enable_output()
+            time.sleep(1)
+            # Check if output is enabled
+            if power_supply.is_output_enabled():
+                print("Output is enabled")
+        else:
+            #disable power output
+            power_supply.disable_output()
+            time.sleep(1)
+            # Check if output is disabled
+            if not(power_supply.is_output_enabled()):
+                print("Output is disabled")
+
     if args.read:
-        print(f'V_SET = {pwr.get_voltage()} V')
-        print(f'V_READ = {pwr.get_voltage(read=True)} V')
-        print(f'I_SET = {pwr.get_current()} A')
-        print(f'I_READ = {pwr.get_current(read=True)} A')
-        print(f'OUTPUT = {int(pwr.get_output(read=True)):d}')
-        print(f'RAMP_TIME = {pwr.get_ramp_time(read=True)} s')
+        print(f"Set voltage: {power_supply.get_voltage()}V")
+        print(f"Set current: {power_supply.get_current()}A")
+        print(f"Voltage display: {power_supply.get_voltage_display()}V")
+        print(f"Current display: {power_supply.get_current_display()}A")
+        print(f"Power display: {power_supply.get_power_display()}W")
+        print(f"Communication address: {power_supply.get_comm_address()}")
+        print(f"OVP status: {power_supply.get_ovp()}")
+        print(f"OCP status: {power_supply.get_ocp()}")
+        print(f"OPP status: {power_supply.get_opp()}")
+        print(f"Protection status: {power_supply.get_protection_status()}")
+        if power_supply.is_output_enabled():
+            print("Output is enabled")
+        else:
+            print("Output is disabled")
+
 
 if __name__ == "__main__":
     main()
