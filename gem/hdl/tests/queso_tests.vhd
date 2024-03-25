@@ -38,7 +38,8 @@ entity queso_tests is
         elink_mapping_arr_1      : in t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- bitslip count for each elink
         --prbs error counter
         elink_error_cnt_arr_o    : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0); -- counts up to ff errors per elink
-        crosstalk_cnt_arr_o      : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff non-zero data per elink
+        --raw data counter
+        elink_data_cnt_arr_o     : out t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0) -- counts up to ff non-zero data per elink
     );
 end queso_tests;
 
@@ -59,9 +60,8 @@ architecture Behavioral of queso_tests is
     signal rx_err_cnt_arr    : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal rx_prbs_err_arr_o : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
     signal rx_prbs_err_arr   : t_std8_array(g_NUM_OF_OHs * 216 - 1 downto 0);
-
     -- counter for crosstalk
-    signal crosstalk_cnt_arr : t_vfat3_queso_arr(g_NUM_OF_OHs-1 downto 0);
+    signal rx_data_cnt_arr   : t_vfat3_queso_arr(g_NUM_OF_OHs-1 downto 0);
    
 
 	COMPONENT ila_queso
@@ -196,7 +196,7 @@ begin
                         ref_clk_i => gbt_frame_clk_i,
                         reset_i   => counter_reset or reset_i,
                         en_i      => or_reduce(elink_rot1_unmasked(OH)(ELINK)),
-                        count_o   => crosstalk_cnt_arr(OH)(ELINK)
+                        count_o   => rx_data_cnt_arr(OH)(ELINK)
                     );
             end generate each_elink;
         end generate each_oh;
@@ -204,7 +204,7 @@ begin
         begin
             if rising_edge(gbt_frame_clk_i) then
                 elink_error_cnt_arr_o <= rx_err_cnt_arr;
-                crosstalk_cnt_arr_o   <= crosstalk_cnt_arr;
+                elink_data_cnt_arr_o  <= rx_data_cnt_arr;
             end if;
         end process;
 
@@ -230,8 +230,7 @@ begin
 
                 --send raw test data directly to error counting registers(now just displays count)
                 elink_error_cnt_arr_o <= test_vfat3_rx_data_arr_i;
-
-                crosstalk_cnt_arr_o <= crosstalk_cnt_arr;
+                elink_data_cnt_arr_o  <= rx_data_cnt_arr;
             end if;
         end process;
 
@@ -255,33 +254,33 @@ begin
                         ref_clk_i => gbt_frame_clk_i,
                         reset_i   => counter_reset or reset_i,
                         en_i      => or_reduce(test_vfat3_rx_data_arr_i(OH)(ELINK)),
-                        count_o   => crosstalk_cnt_arr(OH)(ELINK)
+                        count_o   => rx_data_cnt_arr(OH)(ELINK)
                     );
             end generate each_elink;
         end generate each_oh;
     end generate g_QUESO_PRBS_COUNT_EN;
 
---	ila_queso_debug : ila_queso
---	PORT MAP (
---		clk                    => gbt_frame_clk_i,
---
---		probe0                 => tx_prbs_data, 
---		probe1(63 downto 56)   => elink_unmasked(0)(0),
---		probe1(55 downto 48)   => elink_unmasked(0)(1),
---		probe1(47 downto 40)   => elink_unmasked(0)(2),
---		probe1(39 downto 32)   => elink_unmasked(0)(3),
---		probe1(31 downto 24)   => elink_mapped(0)(0),
---		probe1(23 downto 16)   => elink_mapped(0)(1),
---		probe1(15 downto 8)    => elink_mapped(0)(2),
---		probe1(7 downto 0)     => elink_mapped(0)(3), 
---		probe2(15 downto 8)    => rx_prbs_err_arr(0),
---		probe2(7 downto 0)     => rx_prbs_err_arr(1),
---		probe3(31 downto 24)   => rx_err_cnt_arr(0)(0),
---		probe3(23 downto 16)   => rx_err_cnt_arr(0)(1),
---		probe3(15)             => queso_test_en_i,
---		probe3(14 downto 8)    => (others => '0'),
---		probe3(7 downto 0)     => tx_crawl_data
---	);
+	ila_queso_debug : ila_queso
+	PORT MAP (
+		clk                    => gbt_frame_clk_i,
+
+		probe0                 => tx_prbs_data, 
+		probe1(63 downto 56)   => elink_rot1_unmasked(0)(0),
+		probe1(55 downto 48)   => elink_rot1_unmasked(0)(1),
+		probe1(47 downto 40)   => elink_rot1_unmasked(0)(2),
+		probe1(39 downto 32)   => elink_rot1_unmasked(0)(3),
+		probe1(31 downto 24)   => test_vfat3_rx_data_arr_i(0)(0),
+		probe1(23 downto 16)   => test_vfat3_rx_data_arr_i(0)(1),
+		probe1(15 downto 8)    => test_vfat3_rx_data_arr_i(0)(2),
+		probe1(7 downto 0)     => test_vfat3_rx_data_arr_i(0)(3), 
+		probe2(15 downto 8)    => rx_prbs_err_arr(0),
+		probe2(7 downto 0)     => rx_err_cnt_arr(0)(0),
+		probe3(31 downto 24)   => rx_data_cnt_arr(0)(0),
+		probe3(23 downto 16)   => rx_data_cnt_arr(0)(1),
+		probe3(15)             => queso_test_en_i,
+		probe3(14 downto 8)    => (others => '0'),
+		probe3(7 downto 0)     => tx_crawl_data
+	);
 
 end Behavioral;
 

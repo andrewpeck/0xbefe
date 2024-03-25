@@ -595,13 +595,13 @@
   <node id="QUESO_TEST" address="0x4000"
           description="This module is used for QUESO testing only. It adds registers for error counters for each elink to 4 OHs.">
     <node id="OH${OH_IDX}"  address="0x00"
-          description="QUESO prbs counters for OH${OH_IDX}"
-          generate="true" generate_size="&NUM_OHS;" generate_address_step="0x100" generate_idx_var="OH_IDX">
+          description="QUESO prbs and data counters, and bitslips for OH${OH_IDX}"
+          generate="true" generate_size="&NUM_OHS;" generate_address_step="0x200" generate_idx_var="OH_IDX">
       <node id="VFAT${VFAT_IDX}"  address="0x00"
-            description="PRBScounters for VFAT${VFAT_IDX}"
-            generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x9" generate_idx_var="VFAT_IDX">
+            description="QUESO prbs and data counters, and bitslips for VFAT${VFAT_IDX}"
+            generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x10" generate_idx_var="VFAT_IDX">
         <node id="ELINK${ELINK_IDX}"  address="0x00"
-              description="PRBS counter for ELINK${ELINK_IDX}"
+              description="QUESO prbs and data counters, and bitslips for ELINK${ELINK_IDX}"
               generate="true" generate_size="9" generate_address_step="0x1" generate_idx_var="ELINK_IDX">
           <node id="PRBS_ERR_COUNT" mask="0x000000ff" permission="r" address="0x0"
                 description="Number of errors on this ELINK"
@@ -612,9 +612,9 @@
           <node id="ELINK_BITSLIP_1" mask="0x00ff0000" permission="rw" address="0x0"
                 description="Number of bits to rotate elink byte by (give value between 0 and 8)."
                 fw_signal="elink_mapping_arr_1(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))" fw_default="0x00"/>
-          <node id="CROSSTALK_COUNT" mask="0xff000000" permission="r" address="0x0"
+          <node id="DATA_COUNT" mask="0xff000000" permission="r" address="0x0"
                 description="Counter for non-zero data on each elink"
-                fw_signal="queso_crosstalk_cnt_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
+                fw_signal="queso_data_cnt_arr(${OH_IDX})(${ELINK_IDX} + (9 * ${VFAT_IDX}))"/>
         </node>
       </node>
     </node>

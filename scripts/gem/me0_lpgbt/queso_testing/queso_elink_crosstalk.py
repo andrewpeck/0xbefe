@@ -1,12 +1,14 @@
 from gem.gem_utils import *
+from gem.me0_lpgbt.rw_reg_lpgbt import rw_initialize
+from common.utils import get_befe_scripts_dir, Colors
+from queso_initialization import queso_oh_map, pi_list
+
 import paramiko
 from time import time, sleep
 import argparse
 import os, sys, glob, csv, json
 import numpy as np
 from operator import itemgetter
-from common.utils import get_befe_scripts_dir, Colors
-from queso_initialization import queso_oh_map, pi_list
 import datetime
 
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
@@ -44,7 +46,7 @@ def ssh_channel_en(fpga,loopback=True,en_all=True,vfat=None,channel=None,verbose
     if loopback:
         command += ' -l'
     # vfat arg
-    if vfat:
+    if vfat is not None:
         if type(vfat) is list:
             command += f" -v {' '.join(map(str,vfat))}"
         else:
@@ -54,7 +56,7 @@ def ssh_channel_en(fpga,loopback=True,en_all=True,vfat=None,channel=None,verbose
         channel = 'all'
     if channel is not None:
         command += f" -c {channel}"
-    
+    print(command)
     global ssh,base_ssh_command
     cur_ssh_command = base_ssh_command + command
     ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(cur_ssh_command)
@@ -83,10 +85,28 @@ def min_of_max_count(counters):
 if __name__ == "__main__":
     # Parsing arguments
     parser = argparse.ArgumentParser(description="Queso crosstalk test procedure")
+    parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
+    parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument('-l','--loopback', action='store_true', dest='loopback', help='loopback = Enable loopback for channels during crosstalk test, instead of sending only 1\'s')
     parser.add_argument('-p','--check_prbs', action='store_true', dest='check_prbs', help='check_prbs = Check PRBS errors in backend if loopback is enabled. Good for checking for dead channels.')
     parser.add_argument('-v','--verbose',action='store_true',dest='verbose',help='verbose = Enable for full crosstalk data and channel enable printouts.')
     args = parser.parse_args()
+
+    if args.system == "backend":
+        print ("Using Backend for queso bert")
+    elif args.system == "dryrun":
+        print ("Dry Run - not actually running queso crosstalk")
+    else:
+        print (Colors.YELLOW + "Only valid options: backend, dryrun" + Colors.ENDC)
+        sys.exit()
+
+    if args.gem != "ME0":
+        print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
+        sys.exit()
+
+    # Initialization 
+    rw_initialize(args.gem, args.system)
+
 
     # automatically find input file
     oh_gbt_vfat_map = {}
@@ -137,6 +157,9 @@ if __name__ == "__main__":
     file_out = open(filename,"w")
     
     # Counters and backend nodes
+    if args.loopback:
+        # Turn on prbs
+        write_backend_reg(get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"),1)
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET") # reset counters
 
     queso_crosstalk_nodes = {}
@@ -171,8 +194,26 @@ if __name__ == "__main__":
     # Add SSH host key automatically if needed
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/queso_testing/"
+    
+    # enable all elinks
+    for queso in queso_dict:
+        # Connect to each RPi using username/password authentication
+        if queso in pi_list:
+            pi_ip = pi_list[queso]
+        else:
+            print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+            continue
+        ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+        ssh_channel_en([1,2,3],vfat=[0,1],loopback=args.loopback,en_all=True,verbose=args.verbose)
+        ssh.close()
+    sleep(5) 
+    for queso in queso_dict:
+        print(read_backend_counters(queso,queso_crosstalk_nodes))
+        print(read_backend_counters(queso,queso_prbs_nodes))
+    sys.exit()
 
     # Disable all elinks
+    print(Colors.BLUE + 'Disabling all elinks in all quesos' + Colors.ENDC)
     for queso in queso_dict:
         # Connect to each RPi using username/password authentication
         if queso in pi_list:
@@ -187,7 +228,7 @@ if __name__ == "__main__":
     # Reset counters
     write_backend_reg(queso_reset_node, 1)
     sleep(0.1)
-
+    sys.exit()
     # Enable 1 elink at a time
     for fpga in fpga_vfat_map:
         for vfat_id in fpga_vfat_map[fpga]:
@@ -196,8 +237,10 @@ if __name__ == "__main__":
                 write_backend_reg(queso_reset_node, 1)
                 sleep(0.1)
                 # Enable 1 elink in all quesos in parallel
-                for queso in queso_dict:        
+                for queso in queso_dict:
                     vfat = fpga_vfat_map[fpga][vfat_id][queso]
+
+                    print(Colors.BLUE + f'Enabling VFAT {vfat} ELINK {elink} (in QUESO {queso})' + Colors.ENDC)       
 
                     # Connect to RPi
                     if queso in pi_list:
@@ -218,23 +261,26 @@ if __name__ == "__main__":
                     ssh.close()
 
                 # Check backend counters
+                print(Colors.BLUE + 'Reading cross talk counters' + Colors.ENDC)
                 crosstalk_counters = {}
                 if args.check_prbs:
-                        prbs_counters = {}
+                    print(Colors.BLUE + 'Reading PRBS counters' + Colors.ENDC)
+                    prbs_counters = {}
                 for queso in queso_dict:
                     crosstalk_counters[queso] = read_backend_counters(queso,queso_crosstalk_nodes)
                     if args.check_prbs:
                         prbs_counters[queso] = read_backend_counters(queso,queso_prbs_nodes)
+                print(crosstalk_counters)
+                print(prbs_counters)
                 # Wait for counter to max out
                 min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
-                if min_max_cnt == 0:
-                    print(Colors.RED + "No data found on any elinks" + Colors.ENDC)
                 while min_max_cnt < MAX_CNT:
-                    sleep(0.1)
+                    sleep(1)
                     # Check backend counters
                     crosstalk_counters[min_queso] = read_backend_counters(min_queso,queso_crosstalk_nodes)
                     min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
                     if min_max_cnt == 0:
+                        print(Colors.RED + "No data found on any elinks" + Colors.ENDC)
                         sys.exit()
                 
                 # Get final cnt values

@@ -115,7 +115,7 @@ architecture Behavioral of gem_tests is
     signal elink_mapping_arr_0     : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal elink_mapping_arr_1     : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal queso_prbs_err_arr      : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal queso_crosstalk_cnt_arr : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal queso_data_cnt_arr : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
     signal queso_reset             : std_logic;
     signal queso_prbs_en           : std_logic := '0';
     
@@ -252,7 +252,7 @@ begin
             elink_mapping_arr_0         => elink_mapping_arr_0,
             elink_mapping_arr_1         => elink_mapping_arr_1,
             elink_error_cnt_arr_o       => queso_prbs_err_arr, -- counts up to ff errors per elink
-            crosstalk_cnt_arr_o         => queso_crosstalk_cnt_arr -- counts up to ff non-zero data for each elink
+            elink_data_cnt_arr_o        => queso_data_cnt_arr -- counts up to ff non-zero data for each elink
         );
 
     g_reg_ge11 : if g_GEM_STATION = 1 generate

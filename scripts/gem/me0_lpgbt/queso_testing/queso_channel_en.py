@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     # Set up RPi
     gbt_rpi_chc = rpi_chc.rpi_chc()
-    channel_en_adr = 0x04
+    channel_en_adr = 0x08
 
     print()
     # Loop through fpga's to enable channels
@@ -112,9 +112,9 @@ if __name__ == '__main__':
         if vfat_en == 0:
             print(f"Disabling all channels for ALL VFATS in FPGA {fpga}.")
         elif en_all:
-            print(f"Enabling all channels for { {3:'ALL VFATS',2:'VFAT 1',1:'VFAT 0'}[vfat_en] } with loopback { {True:'ON',False:'OFF'}[args.loopback] } in FPGA {fpga}.")
+            print(f"Enabling all channels for { {3:'ALL VFATS',2:'VFAT 1',1:'VFAT 0'}[vfat_en] } with loopback {'ON' if args.loopback else 'OFF'} in FPGA {fpga}.")
         else:
-            print(f"Enabling channel {channel_sel} for { {3:'ALL VFATS',2:'VFAT 1',1:'VFAT 0'}[vfat_en] } with loopback { {True:'ON',False:'OFF'} } in FPGA {fpga}.")
+            print(f"Enabling channel {channel_sel} for { {3:'ALL VFATS',2:'VFAT 1',1:'VFAT 0'}[vfat_en] } with loopback {'ON' if args.loopback else 'OFF'} in FPGA {fpga}.")
         
         print(f"    Writing to CHANNEL_EN_REG at SPI addr 0x{channel_en_adr:02X} = 0x{channel_en_reg:02X}")
         spi_success, spi_data = gbt_rpi_chc.spi_rw(fpga,channel_en_adr,[channel_en_reg])
