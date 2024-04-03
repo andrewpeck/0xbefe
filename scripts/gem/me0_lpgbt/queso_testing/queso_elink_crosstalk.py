@@ -90,6 +90,10 @@ if __name__ == "__main__":
     parser.add_argument('-l','--loopback', action='store_true', dest='loopback', help='loopback = Enable loopback for channels during crosstalk test, instead of sending only 1\'s')
     parser.add_argument('-p','--check_prbs', action='store_true', dest='check_prbs', help='check_prbs = Check PRBS errors in backend if loopback is enabled. Good for checking for dead channels.')
     parser.add_argument('-v','--verbose',action='store_true',dest='verbose',help='verbose = Enable for full crosstalk data and channel enable printouts.')
+    # Channel controls/debug
+    parser.add_argument('-e','--enable',action='store_true',dest='enable',help='enable = Enable all elinks with loopback ON.')
+    parser.add_argument('-d','--disable',action='store_true',dest='disable',help='disable = Disable all elinks with loopback ON.')
+    parser.add_argument('-c','--channel',action='store',dest='channel',help='channel = Channel to enable in all quesos. Index = 27*fpga + 9*vfat_id + elink')
     args = parser.parse_args()
 
     if args.system == "backend":
@@ -142,20 +146,6 @@ if __name__ == "__main__":
         sys.exit()
     print()
 
-    OH_SN_str = "_".join([oh_sn for oh_sn in queso_dict.values()])
-
-    dataDir = results_dir + "/crosstalk_results"
-    try:
-        os.makedirs(dataDir)
-    except FileExistsError:
-        pass # skip for existing directory
-
-    now = str(datetime.datetime.now())[:16]
-    now = now.replace(":", "_")
-    now = now.replace(" ", "_")
-    filename = f"{dataDir}/vfat_elink_crosstalk_data_OH_SNs_{OH_SN_str}_{now}.txt"
-    file_out = open(filename,"w")
-    
     # Counters and backend nodes
     if args.loopback:
         # Turn on prbs
@@ -163,25 +153,25 @@ if __name__ == "__main__":
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET") # reset counters
 
     queso_crosstalk_nodes = {}
-    crosstalk_data = {}
+    queso_crosstalk_data = {}
     if args.check_prbs:
         queso_prbs_nodes = {}
         prbs_err_data = {}
     for queso in queso_dict:
         oh_select = queso_oh_map[queso]['OH']
         queso_crosstalk_nodes[queso] = {}
-        crosstalk_data[queso] = {}
+        queso_crosstalk_data[queso] = {}
         if args.check_prbs:
             queso_prbs_nodes[queso] = {}
             prbs_err_data[queso] = {}
         for vfat in queso_oh_map[queso]['VFAT']:
             queso_crosstalk_nodes[queso][vfat] = {}
-            crosstalk_data[queso][vfat] = {}
+            queso_crosstalk_data[queso][vfat] = {}
             if args.check_prbs:
                 prbs_err_data[queso][vfat] = [0 for _ in range(9)]
                 queso_prbs_nodes[queso][vfat] = {}
             for elink in range(9):
-                queso_crosstalk_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.CROSSTALK_COUNT")
+                queso_crosstalk_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.DATA_COUNT")
                 if args.check_prbs:
                     queso_prbs_nodes[queso][vfat][elink] = get_backend_node(f"BEFE.GEM.GEM_TESTS.QUESO_TEST.OH{oh_select}.VFAT{vfat}.ELINK{elink}.PRBS_ERR_COUNT")
 
@@ -195,22 +185,73 @@ if __name__ == "__main__":
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     base_ssh_command = "cd Documents/0xbefe/scripts; source env.sh me0 cvp13 0; cd gem; python3 me0_lpgbt/queso_testing/"
     
-    # enable all elinks
-    for queso in queso_dict:
-        # Connect to each RPi using username/password authentication
-        if queso in pi_list:
-            pi_ip = pi_list[queso]
-        else:
-            print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
-            continue
-        ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
-        ssh_channel_en([1,2,3],vfat=[0,1],loopback=args.loopback,en_all=True,verbose=args.verbose)
-        ssh.close()
-    sleep(5) 
-    for queso in queso_dict:
-        print(read_backend_counters(queso,queso_crosstalk_nodes))
-        print(read_backend_counters(queso,queso_prbs_nodes))
-    sys.exit()
+    if args.enable:
+        # Enable all elinks
+        print(Colors.BLUE + 'Enabling all elinks in all quesos with loopback ON, then exiting.' + Colors.ENDC)
+        for queso in queso_dict:
+            # Connect to each RPi using username/password authentication
+            if queso in pi_list:
+                pi_ip = pi_list[queso]
+            else:
+                print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+                continue
+            ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+            ssh_channel_en([1,2,3],vfat=[0,1],en_all=True,loopback=args.loopback,verbose=args.verbose)
+            ssh.close()
+        sys.exit()
+    elif args.disable:
+        # Disable all elinks
+        print(Colors.BLUE + 'Disabling all elinks in all quesos with loopback ON, then exiting.' + Colors.ENDC)
+        for queso in queso_dict:
+            # Connect to each RPi using username/password authentication
+            if queso in pi_list:
+                pi_ip = pi_list[queso]
+            else:
+                print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+                continue
+            ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+            ssh_channel_en([1,2,3],en_all=True,loopback=True,verbose=args.verbose)
+            ssh.close()
+        sys.exit()
+
+    elif args.channel is not None:
+        # Enable 1 channel in all quesos
+        try:
+            channel = int(args.channel)
+            if channel > 54 or channel < 0:
+                print(Colors.RED + 'Valid input for channel are integers range 0 - 54. Index = 27*vfat_id + 9*(fpga-1) + elink.' + Colors.ENDC)
+                sys.exit()
+        except TypeError:
+            print(Colors.RED + 'Valid input for channel are integers range 0 - 54. Index = 27*vfat_id + 9*(fpga-1) + elink.' + Colors.ENDC)
+            sys.exit()
+        elink   = channel % 9
+        fpga    = channel // 9 + 1
+        vfat_id = channel // 27
+        print(Colors.BLUE + f'Enabling FPGA {fpga} VFAT_ID {vfat_id} ELINK {elink} in all quesos, then exiting.' + Colors.ENDC)
+        # Enable 1 elink in all quesos in parallel
+        for queso in queso_dict:
+            vfat = fpga_vfat_map[str(fpga)][vfat_id][queso]
+
+            print(Colors.BLUE + f'Enabling VFAT {vfat} ELINK {elink} (in QUESO {queso})' + Colors.ENDC)
+            # Connect to RPi
+            if queso in pi_list:
+                pi_ip = pi_list[queso]
+            else:
+                print(Colors.YELLOW + "Pi IP not present for QUESO %s"%queso + Colors.ENDC)
+                continue
+            ssh.connect(pi_ip, username=username, password=password, look_for_keys=False)
+            # Enable data on 1 elink
+            ssh_channel_en(
+                fpga,
+                loopback=args.loopback,
+                en_all=False,
+                vfat=vfat_id,
+                channel=elink,
+                verbose=args.verbose
+            )
+            ssh.close()
+
+        sys.exit()
 
     # Disable all elinks
     print(Colors.BLUE + 'Disabling all elinks in all quesos' + Colors.ENDC)
@@ -228,20 +269,16 @@ if __name__ == "__main__":
     # Reset counters
     write_backend_reg(queso_reset_node, 1)
     sleep(0.1)
-    sys.exit()
+
     # Enable 1 elink at a time
     for fpga in fpga_vfat_map:
         for vfat_id in fpga_vfat_map[fpga]:
             for elink in range(9):
-                # Reset counters
-                write_backend_reg(queso_reset_node, 1)
-                sleep(0.1)
                 # Enable 1 elink in all quesos in parallel
                 for queso in queso_dict:
                     vfat = fpga_vfat_map[fpga][vfat_id][queso]
 
-                    print(Colors.BLUE + f'Enabling VFAT {vfat} ELINK {elink} (in QUESO {queso})' + Colors.ENDC)       
-
+                    print(Colors.BLUE + f'Enabling VFAT {vfat} ELINK {elink} (in QUESO {queso})' + Colors.ENDC)
                     # Connect to RPi
                     if queso in pi_list:
                         pi_ip = pi_list[queso]
@@ -260,41 +297,52 @@ if __name__ == "__main__":
                     )
                     ssh.close()
 
+                # Reset counters
+                write_backend_reg(queso_reset_node, 1)
+                sleep(0.1)
+
                 # Check backend counters
                 print(Colors.BLUE + 'Reading cross talk counters' + Colors.ENDC)
-                crosstalk_counters = {}
+                elink_data_counters = {}
                 if args.check_prbs:
                     print(Colors.BLUE + 'Reading PRBS counters' + Colors.ENDC)
                     prbs_counters = {}
                 for queso in queso_dict:
-                    crosstalk_counters[queso] = read_backend_counters(queso,queso_crosstalk_nodes)
+                    elink_data_counters[queso] = read_backend_counters(queso,queso_crosstalk_nodes)
                     if args.check_prbs:
                         prbs_counters[queso] = read_backend_counters(queso,queso_prbs_nodes)
-                print(crosstalk_counters)
-                print(prbs_counters)
                 # Wait for counter to max out
-                min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
+                min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(elink_data_counters)
                 while min_max_cnt < MAX_CNT:
-                    sleep(1)
+                    sleep(0.1)
                     # Check backend counters
-                    crosstalk_counters[min_queso] = read_backend_counters(min_queso,queso_crosstalk_nodes)
-                    min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(crosstalk_counters)
+                    elink_data_counters[min_queso] = read_backend_counters(min_queso,queso_crosstalk_nodes)
+                    min_queso,min_vfat,min_elink,min_max_cnt = min_of_max_count(elink_data_counters)
                     if min_max_cnt == 0:
                         print(Colors.RED + "No data found on any elinks" + Colors.ENDC)
                         sys.exit()
                 
                 # Get final cnt values
-                crosstalk_counters = read_backend_counters(queso,queso_crosstalk_nodes)
-                if args.check_prbs:
-                    prbs_counters = read_backend_counters(queso,queso_prbs_nodes)
+                for queso in queso_dict:
+                    elink_data_counters[queso] = read_backend_counters(queso,queso_crosstalk_nodes)
+                    if args.check_prbs:
+                        prbs_counters[queso] = read_backend_counters(queso,queso_prbs_nodes)
 
                 # Save for later analysis
-                for queso in crosstalk_counters:
+                for queso in queso_dict:
+                    vfat = fpga_vfat_map[fpga][vfat_id][queso]
                     # Save data per queso
-                    crosstalk_data[queso][vfat][elink] = crosstalk_counters[queso]
+                    queso_crosstalk_data[queso][vfat][elink] = elink_data_counters[queso]
                     if args.check_prbs:
                         # Only check relevant elink
                         prbs_err_data[queso][vfat][elink] += prbs_counters[queso][vfat][elink]
+                for queso in elink_data_counters:
+                    print(f'QUESO {queso}')
+                    for vfat in elink_data_counters[queso]:
+                        print(f'  VFAT {vfat}')
+                        for elink,cnt in enumerate(elink_data_counters[queso][vfat]):
+                            print(f'    ELINK {elink}: {cnt}')
+                sys.exit()
             # End vfat
         # End fpga
     
@@ -311,9 +359,22 @@ if __name__ == "__main__":
         ssh.close()
     
     # Sort by vfat # per queso
-    for queso in crosstalk_data:
-        crosstalk_data[queso] = dict(sorted(crosstalk_data[queso].items()))
-    
+    for queso in queso_crosstalk_data:
+        queso_crosstalk_data[queso] = dict(sorted(queso_crosstalk_data[queso].items()))
+
+    # Results file
+    dataDir = results_dir + "/crosstalk_results"
+    try:
+        os.makedirs(dataDir)
+    except FileExistsError:
+        pass # skip for existing directory
+
+    now = str(datetime.datetime.now())[:16]
+    now = now.replace(":", "_")
+    now = now.replace(" ", "_")
+    filename = f"{dataDir}/vfat_elink_crosstalk_data_OH_SNs_{OH_SN_str}_{now}.txt"
+    file_out = open(filename,"w")
+   
     # Validate data
     print('\nCross Talk Data:\n')
     file_out.write('Cross Talk Data:\n\n')
@@ -321,15 +382,15 @@ if __name__ == "__main__":
     for queso,oh_sn in queso_dict.items():
         print(f'QUESO {queso} - OH {oh_sn}:')
         file_out.write(f'OH {oh_sn} on QUESO {queso}:\n')
-        for vfat_inj in crosstalk_data[queso]:
+        for vfat_inj in queso_crosstalk_data[queso]:
             print(f'  VFAT {vfat_inj}:')
             file_out.write(f'  VFAT {vfat_inj:02d}:\n')
-            for elink_inj in crosstalk_data[queso][vfat_inj]:
+            for elink_inj in queso_crosstalk_data[queso][vfat_inj]:
                 crosstalk_elink_list = []
-                for vfat_read in crosstalk_data[queso][vfat_inj][elink_inj]:
-                    for elink_read in crosstalk_data[queso][vfat_inj][elink_inj][vfat_read]:
+                for vfat_read in queso_crosstalk_data[queso][vfat_inj][elink_inj]:
+                    for elink_read in range(9):
                         if not ((vfat_inj == vfat_read) and (elink_inj == elink_read)):
-                            if crosstalk_data[queso][vfat_inj][elink_inj][vfat_read][elink_read] > 0:
+                            if queso_crosstalk_data[queso][vfat_inj][elink_inj][vfat_read][elink_read] > 0:
                                 crosstalk_elink_list += [(vfat_read,elink_read)]
                 if crosstalk_elink_list:
                     # Found crosstalk
