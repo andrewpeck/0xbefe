@@ -76,8 +76,8 @@ def invert_eprx(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX11INVERT"), 0x1)
         # FPGA 3
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX3INVERT"),  0x1)
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX0INVERT"),  0x1)
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX12INVERT"), 0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX13INVERT"), 0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX1INVERT"),  0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX4INVERT"),  0x1)
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTRX.EPRX_CHN_CONTROL.EPRX6INVERT"),  0x1)
 
@@ -102,12 +102,12 @@ def invert_epclk(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"),  0x0)
         # Set inversions from QUESO schematic
         # FPGA 1
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK6INVERT"),  0x1)
+        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK6INVERT"),  0x1)
         # FPGA 2
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK15INVERT"), 0x1)
+        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK15INVERT"), 0x1)
         # FPGA 3
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK16INVERT"), 0x1)
-        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK3INVERT"),  0x1)
+        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK16INVERT"), 0x1)
+        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK3INVERT"),  0x1)
     
     print ("EPCLK inversions done")
 
