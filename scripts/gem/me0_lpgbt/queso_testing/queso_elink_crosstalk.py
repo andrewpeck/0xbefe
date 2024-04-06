@@ -96,7 +96,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.system == "backend":
-        print ("Using Backend for queso bert")
+        print ("Using Backend for queso crosstalk")
     elif args.system == "dryrun":
         print ("Dry Run - not actually running queso crosstalk")
     else:
@@ -396,9 +396,9 @@ if __name__ == "__main__":
     for queso,oh_sn in queso_dict.items():
         crosstalk_results[queso] = {}
         for vfat_inj in queso_crosstalk_data[queso]:
-            crosstalk_results[queso][vfat] = {}
+            crosstalk_results[queso][vfat_inj] = {}
             for elink_inj in queso_crosstalk_data[queso][vfat_inj]:
-                crosstalk_results[queso][vfat][elink_inj] = {
+                crosstalk_results[queso][vfat_inj][elink_inj] = {
                     'crosstalk' : {},
                     'dead' : False
                 }
@@ -434,7 +434,7 @@ if __name__ == "__main__":
                 if (queso,vfat,elink) in bad_elink_list:
                     print( f"    ELINK {elink_inj}: {Colors.RED}BAD{Colors.ENDC}")
                 else:
-                    print( f"    ELINK {elink_inj}: {Colors.GREEN}GOOD{Colors.GREEN}")
+                    print( f"    ELINK {elink_inj}: {Colors.GREEN}GOOD{Colors.ENDC}")
                 
                 if crosstalk_results[queso][vfat][elink]['dead']:
                     # Found dead elink
@@ -457,6 +457,7 @@ if __name__ == "__main__":
             if crosstalk_results[queso][vfat][elink]['dead']:
                 print(Colors.RED + f"Dead elink: No data observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}" + Colors.ENDC)
                 file_out.write(f"Dead elink: No data observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}\n")
+            print()
     else:
         print(Colors.GREEN + "No Cross Talk observed between elinks" + Colors.ENDC)
         file_out.write("No Cross Talk observed between elinks\n")
