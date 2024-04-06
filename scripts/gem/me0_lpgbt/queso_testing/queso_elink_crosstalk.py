@@ -374,7 +374,7 @@ if __name__ == "__main__":
     
     # Sort by vfat # per queso
     for queso in queso_crosstalk_data:
-        queso_crosstalk_data[queso] = queso_crosstalk_data[queso]
+        queso_crosstalk_data[queso] = dict(sorted(queso_crosstalk_data[queso].items()))
     
     # Results file
     dataDir = results_dir + "/crosstalk_results"
@@ -389,86 +389,74 @@ if __name__ == "__main__":
     filename = f"{dataDir}/vfat_elink_crosstalk_data_{now}.txt"
     file_out = open(filename,"w")
    
-    # Validate data
-    print('\nCross Talk Data:\n')
-    file_out.write('Cross Talk Data:\n\n')
-    crosstalk_found = {}
-    dead_elinks_found = {}
+    # -- Validate data --
+    crosstalk_results = {}
+    crosstalk_elink_list = []
+    bad_elink_list = []
     for queso,oh_sn in queso_dict.items():
-        print(f'QUESO {queso} - OH {oh_sn}:')
-        file_out.write(f'OH {oh_sn} on QUESO {queso}:\n')
+        crosstalk_results[queso] = {}
         for vfat_inj in queso_crosstalk_data[queso]:
-            print(f'  VFAT {vfat_inj:02d}:')
-            file_out.write(f'  VFAT {vfat_inj:02d}:\n')
+            crosstalk_results[queso][vfat] = {}
             for elink_inj in queso_crosstalk_data[queso][vfat_inj]:
-                crosstalk_elink_list = []
-                dead_elink_list = []
+                crosstalk_results[queso][vfat][elink_inj] = {
+                    'crosstalk' : {},
+                    'dead' : False
+                }
                 for vfat_read in queso_crosstalk_data[queso][vfat_inj][elink_inj]:
                     for elink_read in range(9):
                         if not ((vfat_inj == vfat_read) and (elink_inj == elink_read)): #NAND
+                            # Check for data elsewhere
                             if queso_crosstalk_data[queso][vfat_inj][elink_inj][vfat_read][elink_read] > 0:
-                                crosstalk_elink_list += [(vfat_read,elink_read)]
+                                if vfat_read not in crosstalk_results[queso][vfat_inj][elink_inj]['crosstalk']:
+                                    crosstalk_results[queso][vfat_inj][elink_inj]['crosstalk'][vfat_read] = [elink_read]
+                                else:
+                                    crosstalk_results[queso][vfat_inj][elink_inj]['crosstalk'][vfat_read] += [elink_read]
+                                crosstalk_elink_list += [(queso,vfat_read,elink_read)]
+                                if (queso,vfat_read,elink_read) not in bad_elink_list:
+                                    bad_elink_list += [(queso,vfat_read,elink_read)]
                         else:
                             # Check for dead channels
                             if queso_crosstalk_data[queso][vfat_inj][elink_inj][vfat_read][elink_read] == 0:
-                                dead_elink_list += [(vfat_inj,elink_inj)]
-
-                if crosstalk_elink_list:
-                    # Found crosstalk
+                                crosstalk_results[queso][vfat_inj][elink_inj]['dead'] = True
+                                if (queso,vfat_read,elink_read) not in bad_elink_list:
+                                    bad_elink_list += [(queso,vfat_read,elink_read)]
+    
+    # -- Print results --
+    print('\nCross Talk Data:\n')
+    file_out.write('Cross Talk Data:\n\n')
+    for queso in crosstalk_results:
+        print(f'QUESO {queso} - OH {oh_sn}:')
+        file_out.write(f'OH {oh_sn} on QUESO {queso}:\n')
+        for vfat in crosstalk_results[queso]:
+            print(f'  VFAT {vfat_inj:02d}:')
+            file_out.write(f'  VFAT {vfat_inj:02d}:\n')
+            for elink in crosstalk_results[queso][vfat]:
+                if (queso,vfat,elink) in bad_elink_list:
                     print( f"    ELINK {elink_inj}: {Colors.RED}BAD{Colors.ENDC}")
-                    if args.verbose:
-                        print(f"Cross Talk observed in {', '.join([f'VFAT {vfat:02d} ELINK {elink}' for vfat,elink in crosstalk_elink_list])}")
-                    for vfat_read,elink_read in crosstalk_elink_list:
-                        if queso not in crosstalk_found:
-                            crosstalk_found[queso] = {}
-                            crosstalk_found[queso][vfat_inj] = {}
-                            crosstalk_found[queso][vfat_inj][elink_inj] = {}
-                            crosstalk_found[queso][vfat_inj][elink_inj][vfat_read] = [elink_read]
-                        elif vfat_inj not in crosstalk_found[queso]:
-                            crosstalk_found[queso][vfat_inj] = {}
-                            crosstalk_found[queso][vfat_inj][elink_inj] = {}
-                            crosstalk_found[queso][vfat_inj][elink_inj][vfat_read] = [elink_read]
-                        elif elink_inj not in crosstalk_found[queso][vfat_inj]:
-                            crosstalk_found[queso][vfat_inj][elink_inj] = {}
-                            crosstalk_found[queso][vfat_inj][elink_inj][vfat_read] = [elink_read]
-                        elif vfat_read not in crosstalk_found[queso][vfat_inj][elink_inj]:
-                            crosstalk_found[queso][vfat_inj][elink_inj][vfat_read] = [elink_read]
-                        else:
-                            crosstalk_found[queso][vfat_inj][elink_inj][vfat_read] += [elink_read]
-                if dead_elink_list:
+                else:
+                    print( f"    ELINK {elink_inj}: {Colors.GREEN}GOOD{Colors.GREEN}")
+                
+                if crosstalk_results[queso][vfat][elink]['dead']:
                     # Found dead elink
-                    print( f"    ELINK {elink_inj}: {Colors.RED}BAD{Colors.ENDC}")
+                    print(Colors.YELLOW + f"No data observed in this elink" + Colors.ENDC)
+                if (queso,vfat,elink) in crosstalk_elink_list:
+                    # Found crosstalk
+                    print(Colors.YELLOW + f"Cross Talk noise observed in this elink" + Colors.ENDC)
+                if crosstalk_results[queso][vfat][elink]['crosstalk']:
+                    # Found crosstalk
                     if args.verbose:
-                        print(f"No data observed in {', '.join([f'VFAT {vfat:02d} ELINK {elink}' for vfat,elink in dead_elink_list])}")
-                    for vfat,elink in crosstalk_elink_list:
-                        if queso not in dead_elinks_found:
-                            dead_elinks_found[queso] = {}
-                            dead_elinks_found[queso][vfat] = [elink]
-                        elif vfat not in dead_elinks_found[queso]:
-                            dead_elinks_found[queso][vfat] = [elink]
-                        else:
-                            dead_elinks_found[queso][vfat] += [elink]
-                if (not crosstalk_elink_list) and (not dead_elink_list):
-                    print( f"    ELINK {elink_inj}: {Colors.GREEN}GOOD{Colors.ENDC}")
+                        print(Colors.YELLOW + f"Cross Talk observed in {', '.join([f'VFAT {vfat:02d} ELINK {elink}' for vfat,elink in crosstalk_elink_list])}" + Colors.ENDC)
 
     print('\nCross Talk Results:\n')
     file_out.write('Cross Talk Results:\n\n')
-    if crosstalk_found:
-        for queso in crosstalk_found:
-            for vfat_inj in crosstalk_found[queso]:
-                for elink_inj in crosstalk_found[queso][vfat_inj]:
-                    print(f'  QUESO {queso} OH {queso_dict[queso]} VFAT {vfat_inj:02d} ELINK {elink_inj}:')
-                    file_out.write(f'  QUESO {queso} OH {queso_dict[queso]} VFAT {vfat_inj:02d} ELINK {elink_inj}:\n')
-                    for vfat_read in crosstalk_found[queso][vfat_inj][elink_inj]:
-                        elinks_read = crosstalk_found[queso][vfat_inj][elink_inj][vfat_read]
-                        print(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(map(str,elinks_read))}")
-                        file_out.write(f"    Cross Talk observed in VFAT {vfat_read:02d} ELINKS {' '.join(map(str,elinks_read))}\n")
-                    if queso in dead_elinks_found:
-                        if vfat_inj in dead_elinks_found[queso]:
-                            if elink_inj in dead_elinks_found[queso][vfat_inj]:
-                                print(f"    Dead elink: No data observed")
-                                file_out.write(f"    Dead elink: No data observed\n")
-
+    if bad_elink_list:
+        for queso,vfat,elink in bad_elink_list:
+            if (queso,vfat,elink) in crosstalk_elink_list:
+                print(Colors.RED + f'Crosstalk observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}' + Colors.ENDC)
+                file_out.write(f'Crosstalk observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}\n')
+            if crosstalk_results[queso][vfat][elink]['dead']:
+                print(Colors.RED + f"Dead elink: No data observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}" + Colors.ENDC)
+                file_out.write(f"Dead elink: No data observed in QUESO {queso} OH {queso_dict[queso]} VFAT {vfat:02d} ELINK {elink}\n")
     else:
         print(Colors.GREEN + "No Cross Talk observed between elinks" + Colors.ENDC)
         file_out.write("No Cross Talk observed between elinks\n")
