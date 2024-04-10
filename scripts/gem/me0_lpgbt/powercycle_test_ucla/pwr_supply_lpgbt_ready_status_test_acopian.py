@@ -1,41 +1,54 @@
-from pyHM310T import PowerSupply
+from prog_power_supply import *
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 import gem.gem_utils as gem_utils
 from time import sleep
 import sys, os
 import argparse
 
-def main(system, oh_select, gbt_list, current, voltages, niter):
+print('Configuring Power Supply\n')
+pwr = PowerSupply()
+
+def main(system, oh_select, gbt_list, ramp_time, current, voltages, niter):
 
     if sys.version_info[0] < 3:
         raise Exception("Python version 3.x required")
 
-    # Configure Power Supply
-    power_supply = PowerSupply(port='/dev/ttyUSB0')
-    sleep(0.5)
-    power_supply.set_current(current)
-    sleep(0.5)
-    power_supply.set_voltage(voltages)
-    sleep(0.5)
+    # Configure power supply
+    global pwr
+    if ramp_time is not None:
+        pwr.set_ramp_time(ramp_time)
+    if current is not None:
+        pwr.set_current(current)
+    pwr.v_sequence = voltages
 
     # Get first list of registers to compare
     print ("Turning off power, then on and getting initial list of registers and turning off power")
-
     # Turn power supply off
-    power_supply.disable_output()
-    sleep(3)
-    # Check if output is disabled
-    while (power_supply.is_output_enabled()):
-        sleep(0.5)
-    print("Output is disabled")
-
+    pwr.power_sequence(OFF)
+    sleep(1) 
     # Turn power supply on
-    power_supply.enable_output()
-    sleep(3)
-    # Check if output is enabled
-    while (not power_supply.is_output_enabled()):
-        sleep(0.5)
-    print("Output is enabled")
+    pwr.power_sequence(ON)
+    # Check value set
+    set_status = pwr.get_voltage() == voltages[-1]
+    if not set_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    # Wait and check if value reached
+    v_read = pwr.get_voltage(read=True)
+    read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+    timeout = 10
+    while not read_status:
+        timeout -= 1
+        if timeout == 1:
+            break
+        v_read = pwr.get_voltage(read=True)
+        read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+    if not read_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    else:
+        print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
+    sleep(0.5)
 
     # Configure lpGBTs
     os.system("python3 init_frontend.py")
@@ -68,12 +81,26 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             reg_list_sub[gbt][reg] = mpeek(reg)
 
     # Turn power supply off
-    power_supply.disable_output()
-    sleep(3)
-    # Check if output is disabled
-    while (power_supply.is_output_enabled()):
-        sleep(0.5)
-    print("Output is disabled")
+    pwr.power_sequence(OFF)
+    # Check value set
+    set_status = pwr.get_voltage() == 0.001
+    if not set_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    # Wait and check if value reached
+    timeout = 10
+    read_status = pwr.get_voltage(read=True) < 0.1
+    while not read_status:
+        timeout -= 1
+        if timeout == 1:
+            break
+        read_status = pwr.get_voltage(read=True) < 0.1
+    if not read_status:
+        print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+        rw_terminate()
+    else:
+        print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
+    sleep(0.5)
    
     n_error_backend_ready_boss = {}
     n_error_backend_ready_sub = {}
@@ -105,12 +132,28 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
         print ("Iteration: %d\n"%(n+1))
 
         # Turn power supply on
-        power_supply.enable_output()
-        sleep(3)
-        # Check if output is enabled
-        while (not power_supply.is_output_enabled()):
-            sleep(0.5)
-        print("Output is enabled")
+        pwr.power_sequence(ON)
+        # Check value set
+        set_status = pwr.get_voltage() == voltages[-1]
+        if not set_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        # Wait and check if value reached
+        v_read = pwr.get_voltage(read=True)
+        read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+        timeout = 10
+        while not read_status:
+            timeout -= 1
+            if timeout == 1:
+                break
+            v_read = pwr.get_voltage(read=True)
+            read_status = (v_read > (voltages[-1] - 0.1)) and (v_read < (voltages[-1] + 0.1))
+        if not read_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        else:
+            print(Colors.GREEN + 'Power ON done!\n' + Colors.ENDC)
+        sleep(0.5)
 
         # Configure lpGBTs
         os.system("python3 init_frontend.py")
@@ -235,12 +278,26 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
 
         print ("")
         # Turn power supply off
-        power_supply.disable_output()
-        sleep(3)
-        # Check if output is disabled
-        while (power_supply.is_output_enabled()):
-            sleep(0.5)
-        print("Output is disabled")
+        pwr.power_sequence(OFF)
+        # Check value set
+        set_status = pwr.get_voltage() == 0.001
+        if not set_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        # Wait and check if value reached
+        timeout = 10
+        read_status = pwr.get_voltage(read=True) < 0.1
+        while not read_status:
+            timeout -= 1
+            if timeout == 1:
+                break
+            read_status = pwr.get_voltage(read=True) < 0.1
+        if not read_status:
+            print (Colors.RED + "ERROR: Exiting" + Colors.ENDC)
+            rw_terminate()
+        else:
+            print(Colors.GREEN + 'Power OFF done!\n' + Colors.ENDC)
+        sleep(0.5)
 
     print ("\nEnd of powercycle iteration")
     print ("Number of iterations: %d\n"%niter)
@@ -335,6 +392,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
         print (str_n_error_reg_list_sub)
 
     print ("")
+    pwr.close()
 
 if __name__ == "__main__":
     # Parsing arguments
@@ -343,8 +401,9 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--gem", action="store", dest="gem", help="gem = ME0 only")
     parser.add_argument("-o", "--ohid", action="store", dest="ohid", help="ohid = OH number")
     parser.add_argument("-g", "--gbtid", action="store", nargs="+", dest="gbtid", help="gbtid = List of GBT IDs")
+    parser.add_argument('-t','--ramp_time',action='store',dest='ramp_time',help='ramp_time = ramp time in ms to configure power supply.')
     parser.add_argument('-i','--current',action='store',dest='current',help='current = Current limit to set power supply to.')
-    parser.add_argument('-v','--voltage',action='store',dest='voltage',help='voltage = Voltage to set power supply to.')
+    parser.add_argument('-v','--voltage',action='store',nargs='+',dest='voltage',help='voltage = Voltage(s) to set power supply to. If multiple values are given, they will be set sequentially for power on/off. Values are taken to be in ascending order, and will be reversed for power-off sequence.')
     parser.add_argument("-n", "--niter", action="store", dest="niter", default="1000", help="niter = Number of iterations (default=1000)")
     args = parser.parse_args()
 
@@ -378,13 +437,13 @@ if __name__ == "__main__":
             gbt_list["sub"].append(int(gbt))
 
     if not args.voltage:
-        print(Colors.YELLOW + 'Enter voltage' + Colors.ENDC)
+        print(Colors.YELLOW + 'Enter 1 or more voltages' + Colors.ENDC)
         sys.exit()
     else:
         try:
-            voltage = float(args.voltage)
+            voltages = [float(v) for v in args.voltage]
         except TypeError:
-            print(Colors.YELLOW + 'Must enter floating point values for voltage' + Colors.ENDC)
+            print(Colors.YELLOW + 'Must enter floating point values for voltages' + Colors.ENDC)
             sys.exit()
 
     if args.current:
@@ -396,17 +455,29 @@ if __name__ == "__main__":
     else:
         current = None
 
+    if args.ramp_time:
+        try:
+            ramp_time = int(args.ramp_time)
+        except TypeError:
+            print(Colors.YELLOW + 'Must enter integer value for ramp time' + Colors.ENDC)
+    else:
+        ramp_time = None
+
     # Initialization
     rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
     try:
-        main(args.system, oh_select, gbt_list, current, voltage, int(args.niter))
+        main(args.system, oh_select, gbt_list, ramp_time, current, voltages, int(args.niter))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        pwr.power_sequence(OFF)
+        pwr.close()
         rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        pwr.power_sequence(OFF)
+        pwr.close()
         rw_terminate()
 
     # Termination
