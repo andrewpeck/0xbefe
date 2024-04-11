@@ -185,8 +185,8 @@ architecture Behavioral of daq is
 
     -- DAQ conf
     signal daq_enable           : std_logic := '1'; -- enable sending data to DAQLink
-    signal input_mask           : std_logic_vector(23 downto 0) := x"000000";
-    signal run_type             : std_logic_vector(3 downto 0) := x"0"; -- run type (set by software and included in the AMC header)
+    signal input_mask           : std_logic_vector(15 downto 0) := (others => '0');
+    signal run_type             : std_logic_vector( 3 downto 0) := x"0"; -- run type (set by software and included in the AMC header)
     signal run_params           : std_logic_vector(23 downto 0) := x"000000"; -- optional run parameters (set by software and included in the AMC header)
     signal zero_suppression_en  : std_logic;
     signal ignore_daqlink       : std_logic := '0'; -- when this is set to true, DAQLink status is ignored (useful for local spy-only data taking)
@@ -283,20 +283,20 @@ architecture Behavioral of daq is
     signal max_dav_timer            : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
     signal last_dav_timer           : unsigned(23 downto 0) := (others => '0'); -- TODO: probably don't need this to be so large.. (need to test)
     signal dav_timeout              : std_logic_vector(23 downto 0) := x"03d090"; -- 10ms (very large)
-    signal dav_timeout_flags        : std_logic_vector(23 downto 0) := (others => '0'); -- inputs which have timed out
+    signal dav_timeout_flags        : std_logic_vector(15 downto 0) := (others => '0'); -- inputs which have timed out
 
     ---=== AMC Event Builder signals ===---
 
     -- index of the input currently being processed
-    signal e_input_idx                : integer range 0 to 23 := 0;
+    signal e_input_idx                : integer range 0 to 15 := 0;
 
     -- word count of the event being sent
     signal e_word_count               : unsigned(19 downto 0) := (others => '0');
 
     -- bitmask indicating chambers with data for the event being sent
-    signal e_dav_mask                 : std_logic_vector(23 downto 0) := (others => '0');
+    signal e_dav_mask                 : std_logic_vector(15 downto 0) := (others => '0');
     -- number of chambers with data for the event being sent
-    signal e_dav_count                : integer range 0 to 24;
+    signal e_dav_count                : integer range 0 to 16;
 
     ---=== Chamber Event Builder signals ===---
 
@@ -1062,7 +1062,7 @@ begin
 
         i_track_input_processor : entity work.track_input_processor
         generic map (
-            g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH
+            g_NUM_VFATS_PER_OH          => g_NUM_VFATS_PER_OH
         )
         port map
         (
@@ -1385,7 +1385,7 @@ begin
                 elsif (daq_state = x"2") then
 
                     -- calculate the DAV count (I know it's ugly...)
-                    e_dav_count <= to_integer(unsigned(e_dav_mask(0 downto 0))) + to_integer(unsigned(e_dav_mask(1 downto 1))) + to_integer(unsigned(e_dav_mask(2 downto 2))) + to_integer(unsigned(e_dav_mask(3 downto 3))) + to_integer(unsigned(e_dav_mask(4 downto 4))) + to_integer(unsigned(e_dav_mask(5 downto 5))) + to_integer(unsigned(e_dav_mask(6 downto 6))) + to_integer(unsigned(e_dav_mask(7 downto 7))) + to_integer(unsigned(e_dav_mask(8 downto 8))) + to_integer(unsigned(e_dav_mask(9 downto 9))) + to_integer(unsigned(e_dav_mask(10 downto 10))) + to_integer(unsigned(e_dav_mask(11 downto 11))) + to_integer(unsigned(e_dav_mask(12 downto 12))) + to_integer(unsigned(e_dav_mask(13 downto 13))) + to_integer(unsigned(e_dav_mask(14 downto 14))) + to_integer(unsigned(e_dav_mask(15 downto 15))) + to_integer(unsigned(e_dav_mask(16 downto 16))) + to_integer(unsigned(e_dav_mask(17 downto 17))) + to_integer(unsigned(e_dav_mask(18 downto 18))) + to_integer(unsigned(e_dav_mask(19 downto 19))) + to_integer(unsigned(e_dav_mask(20 downto 20))) + to_integer(unsigned(e_dav_mask(21 downto 21))) + to_integer(unsigned(e_dav_mask(22 downto 22))) + to_integer(unsigned(e_dav_mask(23 downto 23)));
+                    e_dav_count <= to_integer(unsigned(e_dav_mask(0 downto 0))) + to_integer(unsigned(e_dav_mask(1 downto 1))) + to_integer(unsigned(e_dav_mask(2 downto 2))) + to_integer(unsigned(e_dav_mask(3 downto 3))) + to_integer(unsigned(e_dav_mask(4 downto 4))) + to_integer(unsigned(e_dav_mask(5 downto 5))) + to_integer(unsigned(e_dav_mask(6 downto 6))) + to_integer(unsigned(e_dav_mask(7 downto 7))) + to_integer(unsigned(e_dav_mask(8 downto 8))) + to_integer(unsigned(e_dav_mask(9 downto 9))) + to_integer(unsigned(e_dav_mask(10 downto 10))) + to_integer(unsigned(e_dav_mask(11 downto 11))) + to_integer(unsigned(e_dav_mask(12 downto 12))) + to_integer(unsigned(e_dav_mask(13 downto 13))) + to_integer(unsigned(e_dav_mask(14 downto 14))) + to_integer(unsigned(e_dav_mask(15 downto 15)));
 
                     -- send the data
                     if g_IS_SLINK_ROCKET then
@@ -1419,7 +1419,7 @@ begin
                     else
 
                         -- send the data
-                        daq_event_data <= e_dav_mask &                                    -- data available mask
+                        daq_event_data <= x"00" & e_dav_mask &                            -- data available mask
                                           x"00000" &                                      -- unused
                                           ttc_status_i.fake_multi_bx &
                                           std_logic_vector(to_unsigned(e_dav_count, 5)) & -- data available count
@@ -1598,7 +1598,7 @@ begin
                 ----==== send the GEM Event trailer ====----
                 elsif (daq_state = x"7") then
 
-                    daq_event_data <= dav_timeout_flags &                   -- data timeout mask
+                    daq_event_data <= x"00" & dav_timeout_flags &           -- data timeout mask
                                       x"0" &                                -- unused
                                       run_type & run_params &               -- run type & run params
                                       -- BE status
@@ -1645,7 +1645,7 @@ begin
                     e_word_count <= (others => '0');
                     e_input_idx <= 0;
                     cnt_sent_events <= cnt_sent_events + 1;
-                    dav_timeout_flags <= x"000000";
+                    dav_timeout_flags <= (others => '0');
 
                 ----==== send a padding word to align the payload data with 128bit boundary ====----
                 elsif (daq_state = x"9") then
@@ -1698,7 +1698,7 @@ begin
                     e_word_count <= (others => '0');
                     e_input_idx <= 0;
                     cnt_sent_events <= cnt_sent_events + 1;
-                    dav_timeout_flags <= x"000000";
+                    dav_timeout_flags <= (others => '0');
 
                 -- hmm
                 else

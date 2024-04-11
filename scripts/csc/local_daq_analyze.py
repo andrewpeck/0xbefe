@@ -129,7 +129,7 @@ def main():
     print("Minimum FED block size (in 64bit words): %d" % minWords)
     print("Maximum FED block size (in 64bit words): %d (event #%d)" % (maxWords, maxWordsEvtNum))
     print("DMB block sizes (in 64bit words):")
-    for id, stat in totalDmbWords.iteritems():
+    for id, stat in totalDmbWords.items():
         print("    %s: average = %f, min = %d, max = %d" % (id, (float(stat[0]) / float(stat[1])), stat[2], stat[3]))
 
 def getDmbIdStr(dmb):

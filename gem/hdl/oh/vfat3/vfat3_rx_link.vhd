@@ -42,7 +42,8 @@ entity vfat3_rx_link is
 
         -- counters
         cnt_events_o        : out std_logic_vector(15 downto 0);
-        cnt_crc_errors_o    : out std_logic_vector(7 downto 0)
+        cnt_crc_errors_o    : out std_logic_vector(7 downto 0);
+        cnt_not_in_table_o  : out std_logic_vector(7 downto 0)
         
     );
 end vfat3_rx_link;
@@ -69,18 +70,25 @@ architecture vfat3_rx_link_arch of vfat3_rx_link is
         );
     end component;
 
-    constant VFAT3_SC0_WORD         : std_logic_vector(7 downto 0) := x"96";
-    constant VFAT3_SC1_WORD         : std_logic_vector(7 downto 0) := x"99";
+    constant VFAT3_F1_WORD              : std_logic_vector(7 downto 0) := x"7e";
+    constant VFAT3_F2_WORD              : std_logic_vector(7 downto 0) := x"81";
+    constant VFAT3_SC0_WORD             : std_logic_vector(7 downto 0) := x"96";
+    constant VFAT3_SC1_WORD             : std_logic_vector(7 downto 0) := x"99";
+    constant VFAT3_SYNC_ACK_WORD        : std_logic_vector(7 downto 0) := x"3a";
+    constant VFAT3_SYNC_VERIFY_ACK_WORD : std_logic_vector(7 downto 0) := x"fe";
 
-    constant VFAT3_DAQ_HEADER_I     : std_logic_vector(7 downto 0) := x"1e";
-    constant VFAT3_DAQ_HEADER_IW    : std_logic_vector(7 downto 0) := x"5e";
+    constant VFAT3_DAQ_HEADER_I         : std_logic_vector(7 downto 0) := x"1e";
+    constant VFAT3_DAQ_HEADER_IW        : std_logic_vector(7 downto 0) := x"5e";
 
     -- hardcoded fixed length of the default non-zero-suppressed DAQ packet
     -- TODO: make this configurable with registers (should come from higher level)
     -- TODO: support also zero suppressed packets
-    constant VFAT3_DAQ_PACKET_WORDS : unsigned(4 downto 0) := "1" & x"5";
+    constant VFAT3_DAQ_PACKET_WORDS     : unsigned(4 downto 0) := "1" & x"5";
 
     constant TIED_TO_GND        : std_logic := '0';
+
+    signal vfat3_code           : std_logic := '0';
+    signal not_in_table         : std_logic := '0';
 
     signal daq_data_en          : std_logic := '0';
     signal daq_word_cntdown     : unsigned(4 downto 0) := (others => '0');
@@ -91,6 +99,7 @@ architecture vfat3_rx_link_arch of vfat3_rx_link is
     
     signal cnt_events           : unsigned(15 downto 0) := (others => '0');
     signal cnt_crc_errors       : unsigned(7 downto 0) := (others => '0');
+    signal cnt_not_in_table     : unsigned(7 downto 0) := (others => '0');
     
 begin
     
@@ -108,6 +117,7 @@ begin
 
     cnt_events_o <= std_logic_vector(cnt_events);
     cnt_crc_errors_o  <= std_logic_vector(cnt_crc_errors);
+    cnt_not_in_table_o  <= std_logic_vector(cnt_not_in_table);
 
     --======== DAQ ========--
     
@@ -157,15 +167,27 @@ begin
             CRC_out       => open,
             CRC_ok_out    => crc_ok
         );
-        
+
+    --======== Stream monitoring ========--
+
+    vfat3_code <= '1' when ((data_i = VFAT3_F1_WORD) or
+                  (data_i = VFAT3_F2_WORD) or
+                  (data_i = VFAT3_SC0_WORD) or
+                  (data_i = VFAT3_SC1_WORD) or
+                  (data_i = VFAT3_SYNC_ACK_WORD) or
+                  (data_i = VFAT3_SYNC_VERIFY_ACK_WORD)) else '0';
+
+    not_in_table <= not (vfat3_code or daq_data_en);
+
     --======== Counters ========--
-    
+
     process(ttc_clk_i.clk_40)
     begin
         if (rising_edge(ttc_clk_i.clk_40)) then
             if (reset_i = '1') then
                 cnt_events <= (others => '0');
                 cnt_crc_errors <= (others => '0');
+                cnt_not_in_table <= (others => '0');
             else
                 if (event_done = '1') then
                     cnt_events <= cnt_events + 1;
@@ -173,7 +195,11 @@ begin
 
                 if (event_done = '1' and crc_ok = '0' and cnt_crc_errors /= x"ff") then
                     cnt_crc_errors <= cnt_crc_errors + 1;
-                end if;                
+                end if;
+
+                if (sync_ok_i = '1' and not_in_table = '1' and cnt_not_in_table /= x"ff") then
+                    cnt_not_in_table <= cnt_not_in_table + 1;
+                end if;
             end if;
         end if;
     end process;

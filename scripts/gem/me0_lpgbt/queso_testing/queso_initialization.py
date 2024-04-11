@@ -7,16 +7,6 @@ from common.utils import get_befe_scripts_dir
 from common.rw_reg import *
 import datetime
 
-class Colors:
-    WHITE   = "\033[97m"
-    CYAN    = "\033[96m"
-    MAGENTA = "\033[95m"
-    BLUE    = "\033[94m"
-    YELLOW  = "\033[93m"
-    GREEN   = "\033[92m"
-    RED     = "\033[91m"
-    ENDC    = "\033[0m"
-
 # QUESO to OH mapping
 queso_oh_map = {}
 queso_oh_map["1"] = {}
@@ -63,18 +53,18 @@ pi_list["6"] =  "169.254.200.178"
 pi_list["7"] =  "169.254.8.226"
 pi_list["8"] =  "169.254.57.247"
 
+scripts_gem_dir = get_befe_scripts_dir() + "/gem"
+queso_dir = scripts_gem_dir + '/me0_lpgbt/queso_testing'
+input_fn = queso_dir + '/resources/input_queso.txt'
+
 if __name__ == "__main__":
     # Parsing arguments
-    parser = argparse.ArgumentParser(description="Queso initialization procedure")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
+    parser = argparse.ArgumentParser(description=f"Queso initialization procedure\nInput file taken from \'{input_fn}\'")
     parser.add_argument("-r", "--reset", action="store_true", dest="reset", help="reset = reset all fpga")
     parser.add_argument("-p", "--power_on", action="store_true", dest="power_on", help = 'power_on = only power on regulators without running test scripts')
     parser.add_argument("-o", "--turn_off", action="store_true", dest="turn_off", help = 'turn_off = only power off regulators without running test scripts')
     args = parser.parse_args()
 
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
     # set power only flag
     if args.power_on and args.turn_off:
         print(Colors.YELLOW + '"power_on" and "turn_off" both true, only use one power argument' + Colors.ENDC)
@@ -83,7 +73,8 @@ if __name__ == "__main__":
     queso_dict = {}
     if not power_only:
         results_oh_sn = {}
-    input_file = open(args.input_file)
+
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
@@ -211,8 +202,7 @@ if __name__ == "__main__":
         print("")
         sys.exit()
 
-    scripts_gem_dir = get_befe_scripts_dir() + "/gem"
-    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
+    resultDir = queso_dir + '/results'
     dataDir = resultDir+"/%s_tests"%test_type # directory name if test_type variable exists    
     try:
         os.makedirs(dataDir) # create directory for data
@@ -226,7 +216,7 @@ if __name__ == "__main__":
     try:
         os.makedirs(OHDir) # create directory for OHs under test
     except FileExistsError: # skip if directory already exists
-        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite? >> '%OHDir + Colors.ENDC)
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%OHDir + Colors.ENDC)
         if dir_overwrite.lower() in ['y','yes']:
             pass  
         else:
@@ -433,8 +423,8 @@ if __name__ == "__main__":
     print(Colors.BLUE + "Initialization\n" + Colors.ENDC)
     logfile.write("Initialization\n\n")
     logfile.close()
-    os.system("python3 init_frontend.py")
-    os.system("python3 status_frontend.py >> %s"%log_fn)
+    os.system(f"python3 {scripts_gem_dir}/init_frontend.py")
+    os.system(f"python3 {scripts_gem_dir}/status_frontend.py >> {log_fn}")
     logfile = open(log_fn,"a")
     list_of_files = glob.glob(scripts_gem_dir + "/results/gbt_data/gbt_status_data/gbt_status_*.json")
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -494,7 +484,7 @@ if __name__ == "__main__":
     for ohid in oh_gbt_vfat_map:
         gbtid_list = oh_gbt_vfat_map[ohid]["GBT"]
         for gbtid in gbtid_list:
-            os.system("python3 me0_lpgbt/queso_testing/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d >> %s"%(ohid, gbtid,log_fn))
+            os.system("python3 %s/queso_oh_links_invert.py -s backend -q ME0 -o %d -g %d >> %s"%(queso_dir,ohid, gbtid,log_fn))
     logfile = open(log_fn,"a")
     print(Colors.GREEN + "\nInvert Elinks Done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -508,7 +498,7 @@ if __name__ == "__main__":
     logfile.close()
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
-        os.system("python3 me0_lpgbt/queso_testing/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(ohid, vfat_list_str))
+        os.system("python3 %s/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(queso_dir,ohid, vfat_list_str))
         list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
@@ -625,11 +615,13 @@ if __name__ == "__main__":
         logfile.write("\n######################################################\n\n")
 
         ssh.close()
-
-    current_ranges = {'2V5':0.3,'1V2':0.7}
+    
+    current_nominal_1v2 = 0.426
+    current_nominal_2v5 = 0.066
+    current_ranges = {'2V5':[0.9*current_nominal_2v5, 1.1*current_nominal_2v5],'1V2':[0.9*current_nominal_1v2, 1.1*current_nominal_1v2]}
     for queso,oh_sn in queso_dict.items():
-        for v,i_max in current_ranges.items():
-            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_max or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
+        for v,i_range in current_ranges.items():
+            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] < i_range[0] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_range[1] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
                 if not test_failed:
                     print(Colors.RED + "\nReading Currents Failed" + Colors.ENDC)
                     logfile.write("\nReading Currents Failed\n")

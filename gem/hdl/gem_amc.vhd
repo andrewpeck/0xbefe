@@ -26,23 +26,23 @@ use work.lpgbtfpga_package.all;
 
 entity gem_amc is
     generic(
-        g_SLR                : integer;
-        g_GEM_STATION        : integer;
-        g_NUM_OF_OHs         : integer;
-        g_OH_VERSION         : integer;
-        g_GBT_WIDEBUS        : integer;
-        g_OH_TRIG_LINK_TYPE  : t_oh_trig_link_type;
-        g_NUM_GBTS_PER_OH    : integer;
-        g_NUM_VFATS_PER_OH   : integer;
-        g_USE_TRIG_TX_LINKS  : boolean := true;  -- if true, then trigger output links will be instantiated
-        g_NUM_TRIG_TX_LINKS  : integer;
-
-        g_NUM_IPB_SLAVES     : integer;
-        g_IPB_CLK_PERIOD_NS  : integer;
-        g_DAQ_CLK_FREQ       : integer;
-        g_IS_SLINK_ROCKET    : boolean;
-        g_QUESO_TEST_EN      : boolean;
-        g_EXT_TTC_RECEIVER   : boolean := true -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
+        g_SLR                  : integer;
+        g_GEM_STATION          : integer;
+        g_NUM_OF_OHs           : integer;
+        g_OH_VERSION           : integer;
+        g_GBT_WIDEBUS          : integer;
+        g_OH_TRIG_LINK_TYPE    : t_oh_trig_link_type;
+        g_NUM_GBTS_PER_OH      : integer;
+        g_NUM_VFATS_PER_OH     : integer;
+        g_USE_TRIG_TX_LINKS    : boolean := true;  -- if true, then trigger output links will be instantiated
+        g_NUM_TRIG_TX_LINKS    : integer;
+        g_NUM_IPB_SLAVES       : integer;
+        g_IPB_CLK_PERIOD_NS    : integer;
+        g_DAQ_CLK_FREQ         : integer;
+        g_IS_SLINK_ROCKET      : boolean;
+        g_QUESO_TEST_EN        : boolean;
+        g_EXT_TTC_RECEIVER     : boolean := true; -- set this to true if TTC data is received and decoded externally and provided through ttc_cmds_i port, otherwise set this to false and connect ttc_data_p_i / ttc_data_n_i to a TTC data source
+        g_DISABLE_ME0_CLUSTERS : boolean := false -- if true, the ME0 S-bit clusterization algorithm will not be instanciated
     );
     port(
         reset_i                 : in   std_logic;
@@ -221,6 +221,8 @@ architecture gem_amc_arch of gem_amc is
 
     signal lpgbt_reset_tx               : std_logic;
     signal lpgbt_reset_rx               : std_logic;
+
+    signal gbt_prbs_tx_en               : std_logic;
 
     --== GBT elinks ==--
     signal sca_tx_data_arr              : t_std2_array(g_NUM_OF_OHs - 1 downto 0);
@@ -494,8 +496,9 @@ begin
         me0_cluster: entity work.sbit_me0
             generic map(
                 g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
+                g_DISABLE_CLUSTERS  => g_DISABLE_ME0_CLUSTERS,
+                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
                 g_DEBUG             => CFG_DEBUG_SBIT_ME0
             )
             port map(
@@ -519,7 +522,7 @@ begin
     -- Trigger module --
     i_trigger : entity work.trigger
         generic map(
-            g_NUM_OF_OHs => g_NUM_OF_OHs,
+            g_NUM_OF_OHs        => g_NUM_OF_OHs,
             g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS,
             g_USE_TRIG_TX_LINKS => g_USE_TRIG_TX_LINKS,
             g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
@@ -636,6 +639,7 @@ begin
             use_v3b_elink_mapping_o     => use_v3b_elink_mapping,
             vfat_hdlc_address_arr_o     => vfat_hdlc_address_arr,
             gbt_ic_rx_use_ec_o          => gbt_ic_rx_use_ec,
+            gbt_prbs_tx_en_o            => gbt_prbs_tx_en,
             manual_link_reset_o         => manual_link_reset,
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
@@ -769,8 +773,8 @@ begin
                 tx_data_arr_i               => gbt_tx_data_arr,
                 tx_bitslip_cnt_i            => gbt_tx_bitslip_arr,
 
---                rx_bitslip_cnt_i            => gbt_rx_bitslip_arr,
---                rx_bitslip_auto_i           => gbt_rx_bitslip_auto_arr,
+                rx_bitslip_cnt_i            => gbt_rx_bitslip_arr,
+                rx_bitslip_auto_i           => gbt_rx_bitslip_auto_arr,
                 rx_data_valid_arr_o         => gbt_rx_valid_arr,
                 rx_data_arr_o               => gbt_rx_data_arr,
                 rx_data_widebus_arr_o       => gbt_rx_data_widebus_arr,
@@ -780,6 +784,7 @@ begin
                 mgt_tx_data_arr_o           => gt_gbt_tx_data_arr_o,
                 mgt_rx_data_arr_i           => gt_gbt_rx_data_arr_i,
 
+                prbs_mode_en_i              => gbt_prbs_tx_en,
                 link_status_arr_o           => gbt_link_status_arr
             );
     end generate;
@@ -811,6 +816,8 @@ begin
                 mgt_rx_data_arr_i    => gt_gbt_rx_data_arr_i,
                 tx_data_arr_i        => lpgbt_tx_data_arr,
                 rx_data_arr_o        => lpgbt_rx_data_arr,
+                prbs_mode_en_i       => gbt_prbs_tx_en,
+                tx_bitslip_cnt_i     => gbt_tx_bitslip_arr,
                 link_status_arr_o    => gbt_link_status_arr
             );
     end generate;

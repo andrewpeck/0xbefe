@@ -128,7 +128,6 @@ package csc_pkg is
 
     type t_xdcfeb_switches is record
         ------ XDCFEB board switches ------
-        prog_b          : std_logic; -- directly wired to FPGA PROG_B signal (active low reset)
         prog_en         : std_logic; -- when high enables the PROG_B through GBT
         gbt_override    : std_logic; -- when high overrides the switches
         sel_gbt         : std_logic; -- when high selects GBT as the programming source, when low PROMs are programming the FPGA
@@ -140,6 +139,14 @@ package csc_pkg is
         pattern_en      : std_logic; -- when high the GBT TX eports will be sending the data provided in pattern_data (and programming is disabled) 
         pattern_data    : std_logic_vector(31 downto 0); -- data to send to GBT TX eports when pattern_en is high
         rx_select       : integer range 0 to 11; -- selects the fiber to latch the XDCFEB RX data from
+    end record;
+
+    type t_alct_switches is record
+        ------ ALCT board switches ------
+        prog_dis        : std_logic; -- TODO: not sure at this time, need to check schematics, most likely disables program_b when high | default = 0
+        gbt_override    : std_logic; -- when high overrides the switches | default = 1
+        sel_gbt_cclk    : std_logic; -- TODO: not sure at this time, need to check schematics, most likely selects cclk from gbt or prom | default = 1
+        sel_gbt_xprm    : std_logic; -- TODO: not sure at this time, need to check schematics, most likely selects either gbt or prom as the programming source | default = 1
     end record;
 	
 end csc_pkg;

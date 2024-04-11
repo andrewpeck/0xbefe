@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE node [
 <!ENTITY STATION "2">
-<!ENTITY NUM_OHS "1">
+<!ENTITY NUM_OHS "2">
 <!ENTITY NUM_GBTS_PER_OH "2">
 <!ENTITY NUM_VFATS_PER_OH "12">
 <!ENTITY NUM_TRIG_TX_LINKS "8">
@@ -14,6 +14,7 @@
 <!ENTITY ADDRESS_TABLE_MGT_QPLL_DRP SYSTEM "../befe/mgt_qpll_drp.xml">
 <!ENTITY ADDRESS_TABLE_SLINK SYSTEM "../befe/slink_rocket.xml">
 <!ENTITY ADDRESS_TABLE_PROMLESS SYSTEM "../befe/promless_bram.xml">
+<!ENTITY ADDRESS_TABLE_TTC_TX SYSTEM "../befe/ttc_tx.xml">
 <!ENTITY ADDRESS_TABLE_TTC SYSTEM "../befe/ttc.xml">
 <!ENTITY ADDRESS_TABLE_GEM_AMC SYSTEM "gem_amc.xml">
 ]>
@@ -22,6 +23,7 @@
   &ADDRESS_TABLE_MGTS;
   &ADDRESS_TABLE_SLINK;
   &ADDRESS_TABLE_PROMLESS;
+  &ADDRESS_TABLE_TTC_TX;
   <node id="GEM" address="0x0">
     &ADDRESS_TABLE_TTC;
     &ADDRESS_TABLE_GEM_AMC;

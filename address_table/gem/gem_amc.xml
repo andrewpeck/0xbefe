@@ -21,7 +21,7 @@
           description="Trigger counter reset"
           fw_write_pulse_signal="reset_cnt"
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
-    <node id="OH_KILL_MASK" address="0x2" mask="0x00ffffff" permission="rw"
+    <node id="OH_KILL_MASK" address="0x2" mask="0x0000ffff" permission="rw"
           description="OH trigger kill mask (kills all sbits from the corresponding OHs)"
           fw_signal="oh_mask"
           fw_default="0x000000"/>
@@ -203,6 +203,9 @@
     <node id="GBT_IC_RX_USE_EC" address="0x4" mask="0x00000001" permission="rw" ignore="&STATION;!=0"
           description="When this option is set, the sub lpGBT IC communication goes fully through the boss lpBGT via the bidirectional EC channel. When unset, the sub lpGBT IC communication goes to the boss lpGBT EC, but comes back through the sub lpGBT Ic channel. With the proper configuration sequence, it completely avoids blind IC transactions with the sub lpGBT."
           fw_signal="gbt_ic_rx_use_ec" fw_default="0b1"/>
+    <node id="GBT_PRBS_TX_EN" address="0x4" mask="0x00000002" permission="rw"
+          description="Enable / disable GBT PRBS31 TX (should be disabled in normal operation). When enabled, this feature replaces all elink data (except IC and EC) with a PRBS31 sequence which can be checked by backend GBT RX PRBS31 checker when loopback is enabled on the chip."
+          fw_signal="gbt_prbs_tx_en" fw_default="0b0"/>          
   </node>
 
   <node id="RELEASE" address="0x30">
@@ -227,10 +230,10 @@
           fw_signal="std_logic_vector(to_unsigned(CFG_NUM_VFATS_PER_OH(g_SLR), 5))"/>
     <node id="USE_TRIG_TX_LINKS" address="0x0" mask="0x00000400" permission="r"
           description="Indicates whether or not trigger TX links are supported by this firmware build"
-          fw_signal="'1' when CFG_USE_TRIG_TX_LINKS else '0'"/>
+          fw_signal="'1' when CFG_USE_TRIG_TX_LINKS(g_SLR) else '0'"/>
     <node id="NUM_TRIG_TX_LINKS" address="0x0" mask="0x01e00000" permission="r"
           description="Number of supported trigger TX links"
-          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX, 4))"/>
+          fw_signal="std_logic_vector(to_unsigned(CFG_NUM_TRIG_TX(g_SLR), 4))"/>
     <node id="USE_LOCAL_DAQ_LINK" address="0x0" mask="0x00000800" permission="r"
           description="Indicates whether or not local DAQ link is supported by this firmware build"
           fw_signal="'1' when CFG_USE_SPY_LINK_TX(g_SLR) else '0'"/>
@@ -670,7 +673,7 @@
           fw_signal="tts_override" fw_default="0x0"
           sw_val_warn="self != 0"
           sw_enum="['DISABLED', 'WARNING', 'OUT-OF-SYNC', 'UNKNOWN', 'BUSY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'READY', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'ERROR', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']"/>
-    <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0xffffff00" permission="rw"
+    <node id="INPUT_ENABLE_MASK"  address="0x0" mask="0x00ffff00" permission="rw"
           description="This is a bitmask telling AMC to enable certain inputs (least
                        significant bit is input 0). Only first is enabled by default"
           fw_signal="input_mask" fw_default="0x1"/>
@@ -1208,11 +1211,16 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_sync_status.had_unf"
           sw_val_bad="self == 1"/>
 
-    <node id="GBT${GBT}_FEC_ERR_CNT" address="0x0" mask="0x00000ff0" permission="r"
+    <node id="GBT${GBT}_FEC_ERR_CNT" address="0x10" mask="0x0000ffff" permission="r"
           description="Number of FEC errors corrected by the GBT decoder"
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_rx_correction_cnt"
           sw_val_warn="self > 0"/>
+
+    <node id="GBT${GBT}_PRBS_ERR_CNT" address="0x10" mask="0xffff0000" permission="r"
+          description="Number of PRBS errors after the FEC. This is only meaningful if GBT PRBS TX mode is enabled and loopback is enabled on the GBT chip"
+          generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
+          fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_prbs_err_cnt"/>
 
     <node id="GBT${GBT}_TX_PHASE" address="0x0" mask="0x0007f000" permission="rw"
           description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
@@ -1253,7 +1261,7 @@
           description="Mask the DAQ RX of the selected VFATs (the periodic synchronization checks, slow controls, and VFAT DAQ counters, remain functional)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
-    <node id="VFAT${VFAT_IDX}" address="0x10"
+    <node id="VFAT${VFAT_IDX}" address="0x40"
           description="Link status of VFAT ${VFAT_IDX} on ${OH_IDX}"
           generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_IDX">
 
@@ -1271,6 +1279,10 @@
       <node id="DAQ_CRC_ERROR_CNT" address="0x0" mask="0xff000000" permission="r"
             description="This counter counts the number of CRC errors in the DAQ events received from this VFAT (this counter stops at max value)"
             fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).daq_crc_err_cnt"
+            sw_val_warn="self > 0"/>
+      <node id="NOT_IN_TABLE_CNT" address="0x1" mask="0x000000ff" permission="r"
+            description="This counter counts the number of invalid words received from this VFAT (this counter stops at max value)"
+            fw_signal="vfat3_link_status_arr_i(${OH_IDX})(${VFAT_IDX}).not_in_table_cnt"
             sw_val_warn="self > 0"/>
 
     </node>
@@ -1325,19 +1337,19 @@
       <node id="OH_FPGA_HARD_RESET" address="0x1" permission="w"
             description="Writing to this register will trigger OH FPGA hard reset"
             fw_write_pulse_signal="manual_hard_reset"/>
-      <node id="TTC_HARD_RESET_EN" address="0x2" permission="rw"
+      <node id="TTC_HARD_RESET_EN" address="0x2" mask="0x0000ffff" permission="rw"
             description="This is a bitmask (one bit per OH) that determines whether or not TTC hard reset commands are forwarded to the SCA to reset the OH FPGA (Nth bit set to 1 will enable TTC hard resets to the Nth OH)"
-            fw_signal="sca_ttc_hr_enable" fw_default="0xffffffff"/>
-      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0xffffffff" permission="rw"
+            fw_signal="sca_ttc_hr_enable" fw_default="0xffff"/>
+      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0x0000ffff" permission="rw"
             description="This bitmask defines which SCAs will be reset uppon receipt of MODULE_RESET command."
-            fw_signal="sca_reset_mask" fw_default="0xffffffff"/>
+            fw_signal="sca_reset_mask" fw_default="0xffff"/>
     </node>
 
     <node id="STATUS" address="0x100">
-      <node id="READY" address="0x0" mask="0xffffffff" permission="r"
+      <node id="READY" address="0x0" mask="0x0000ffff" permission="r"
             description="Bits in this register indicate that the SCA controller for the corresponding link has good communication with the SCA chip"
             fw_signal="sca_ready_arr"/>
-      <node id="CRITICAL_ERROR" address="0x1" mask="0xffffffff" permission="r"
+      <node id="CRITICAL_ERROR" address="0x1" mask="0x0000ffff" permission="r"
             description="Bits in this register indicate that the SCA controller for the corresponding link has encountered a critical error (needs reset)"
             fw_signal="sca_critical_error_arr"/>
       <node id="NOT_READY_CNT_OH${OH_IDX}" address="0x2" mask="0x0000ffff" permission="r"
@@ -1369,7 +1381,7 @@
     </node>
 
     <node id="MANUAL_CONTROL" address="0x1000">
-      <node id="LINK_ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+      <node id="LINK_ENABLE_MASK" address="0x0" mask="0x0000ffff" permission="rw"
             description="This is a bitmask of enabled links for the SCA manual command.
                          Multiple channels can be enabled at the same time, which will
                          result in a broadcast command to these channels when writing to the command registers"
@@ -1414,7 +1426,7 @@
 
     <node id="JTAG" address="0x2500">
       <node id="CTRL" address="0x0">
-        <node id="ENABLE_MASK" address="0x0" mask="0xffffffff" permission="rw"
+        <node id="ENABLE_MASK" address="0x0" mask="0x0000ffff" permission="rw"
               description="This is a bitmask of enabled links for the SCA JTAG commands.
                            Multiple channels can be enabled at the same time, which will
                            result in a broadcast command to these channels when writing to the TDO and TMS registers"
@@ -1509,7 +1521,7 @@
     <node id="GBT_I2C_ADDR" address="0x5" mask="0x0000007f" permission="rw"
           description="GBTx/lpGBT I2C address of the chip to communicate with, as defined by the external pins (or internal registers) of the chip"
           fw_signal="ic_gbt_i2c_addr" fw_default="0b0000001"/>
-    <node id="GBT_LINK_SELECT" address="0x6" mask="0x0000003f" permission="rw"
+    <node id="GBT_LINK_SELECT" address="0x6" mask="0x0000007f" permission="rw"
           description="Selects the GBT link to use"
           fw_signal="ic_link_select" fw_default="0b000000"/>
     <node id="READ_DATA" address="0x7" permission="r"

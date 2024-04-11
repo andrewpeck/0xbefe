@@ -83,7 +83,7 @@ architecture drp_controller_arch of drp_controller is
   signal s_gth_common_drp_enable     : std_logic_vector(g_NUM_OF_GTH_COMMONs-1 downto 0);
   signal s_gth_common_drp_data_reply : t_drp_data(g_NUM_OF_GTH_COMMONs-1 downto 0);
 
-  signal s_gth_ch_drp_slave_select     : std_logic_vector (7 downto 0);
+  signal s_gth_ch_drp_slave_select     : std_logic_vector (8 downto 0);
   signal s_gth_common_drp_slave_select : std_logic_vector (7 downto 0);
 
 
@@ -181,7 +181,7 @@ begin
   process(BRAM_CTRL_DRP_clk)is
   begin
     if (rising_edge(BRAM_CTRL_DRP_clk)) then
-      if (s_gth_ch_drp_slave_select = x"FF") then
+      if (s_gth_ch_drp_slave_select = "111111111") then
         s_gth_ch_drp_enable <= (others => '1');
       else
         s_gth_ch_drp_enable <= CE_decode(to_integer(unsigned(s_gth_ch_drp_slave_select)), g_NUM_OF_GTH_GTs);
@@ -209,7 +209,7 @@ begin
 --============================================================================
 -- GTH Channel DRP Write Register Interface                                                  
 --============================================================================  
-          when x"0800" => s_gth_ch_drp_slave_select <= BRAM_CTRL_DRP_din(7 downto 0);
+          when x"0800" => s_gth_ch_drp_slave_select <= BRAM_CTRL_DRP_din(8 downto 0);
 
 --============================================================================
 -- GTH Common (QPLL) DRP Write Register Interface                                                  
@@ -225,7 +225,7 @@ begin
 --============================================================================
 -- GTH Channel DRP Read Register Interface                                                  
 --============================================================================          
-        when x"0800" => BRAM_CTRL_DRP_dout <= x"000000" & s_gth_ch_drp_slave_select;
+        when x"0800" => BRAM_CTRL_DRP_dout <= x"00000" & "000" & s_gth_ch_drp_slave_select;
 
         when x"0900" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(0);
         when x"0904" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(1);
@@ -263,6 +263,38 @@ begin
         when x"0984" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(33);
         when x"0988" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(34);
         when x"098C" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(35);
+        when x"0990" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(36);
+        when x"0994" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(37);
+        when x"0998" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(38);
+        when x"099C" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(39);
+        when x"09A0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(40);
+        when x"09A4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(41);
+        when x"09A8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(42);
+        when x"09AC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(43);
+        when x"09B0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(44);
+        when x"09B4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(45);
+        when x"09B8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(46);
+        when x"09BC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(47);
+        when x"09C0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(48);
+        when x"09C4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(49);
+        when x"09C8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(50);
+        when x"09CC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(51);
+        when x"09D0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(52);
+        when x"09D4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(53);
+        when x"09D8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(54);
+        when x"09DC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(55);
+        when x"09E0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(56);
+        when x"09E4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(57);
+        when x"09E8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(58);
+        when x"09EC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(59);
+        when x"09F0" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(60);
+        when x"09F4" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(61);
+        when x"09F8" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(62);
+        when x"09FC" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(63);
+        when x"0A00" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(64);
+        when x"0A04" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(65);
+        when x"0A08" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(66);
+        when x"0A0C" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_ch_drp_data_reply(67);
 
 --============================================================================
 -- GTH Common (QPLL) DRP Read Register Interface                                                  
@@ -285,6 +317,7 @@ begin
         when x"1934" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_common_drp_data_reply(13);
         when x"1938" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_common_drp_data_reply(14);
         when x"193C" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_common_drp_data_reply(15);
+        when x"1940" => BRAM_CTRL_DRP_dout <= x"0000" & s_gth_common_drp_data_reply(16);
 
         when others => BRAM_CTRL_DRP_dout <= x"00000000";
       end case;

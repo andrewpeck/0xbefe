@@ -33,8 +33,8 @@ def main(system, oh_select, gbt_list, niter):
     if sys.version_info[0] < 3:
         raise Exception("Python version 3.x required")
 
-    # Run a init frontend
-    os.system("python3 init_frontend.py")
+    # Run a init backend
+    os.system("python3 init_backend.py")
     sleep(2)
 
     # Get first list of registers to compare
@@ -78,6 +78,8 @@ def main(system, oh_select, gbt_list, niter):
     n_error_reg_list_sub = {}
     n_error_ic_read_boss = {}
     n_error_ic_read_sub = {}
+    n_error_backend_was_not_ready_boss = {}
+    n_error_backend_was_not_ready_sub = {}
 
     for gbt in gbt_list["boss"]:
         n_retries_backend_ready_boss[gbt] = 0
@@ -87,6 +89,7 @@ def main(system, oh_select, gbt_list, niter):
         n_error_mode_boss[gbt] = 0
         n_error_reg_list_boss[gbt] = 0
         n_error_ic_read_boss[gbt] = 0
+        n_error_backend_was_not_ready_boss[gbt] = 0
     for gbt in gbt_list["sub"]:
         n_retries_backend_ready_sub[gbt] = 0
         n_error_backend_ready_sub[gbt] = 0
@@ -95,6 +98,7 @@ def main(system, oh_select, gbt_list, niter):
         n_error_mode_sub[gbt] = 0
         n_error_reg_list_sub[gbt] = 0
         n_error_ic_read_sub[gbt] = 0
+        n_error_backend_was_not_ready_sub[gbt] = 0
 
     print ("Begin link break iteration\n")
     # Link reset interations
@@ -130,8 +134,22 @@ def main(system, oh_select, gbt_list, niter):
                 select_ic_link(oh_select, gbt)
                 link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
                 if (link_ready!=1):
-                    print (Colors.YELLOW + "  Link STILL NOT READY" + Colors.ENDC)
+                    print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                     n_error_backend_ready_boss[gbt] += 1
+
+                    # Link Resets again
+                    reset_all_links()
+                    # Reconfigure lpGBTs
+                    os.system("python3 init_frontend.py")
+                    sleep(1)
+                    select_ic_link(oh_select, gbt)
+                    link_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_READY" % (oh_select, gbt)))
+
+                    if (link_ready!=1):
+                        print (Colors.RED + "  Link STILL NOT READY" + Colors.ENDC)
+                        n_error_backend_ready_boss[gbt] += 1
+                    else:
+                        print (Colors.GREEN + "  Link READY" + Colors.ENDC)
                 else:
                     print (Colors.GREEN + "  Link READY" + Colors.ENDC)
             else:
@@ -180,6 +198,14 @@ def main(system, oh_select, gbt_list, niter):
                 if val != reg_list_boss[gbt][reg]:
                     n_error_reg_list_boss[gbt] += 1
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
+
+            # Check if Link Was Not Ready
+            link_was_not_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_WAS_NOT_READY" % (oh_select, gbt)))
+            if link_was_not_ready!=0:
+                print (Colors.YELLOW + "  Link WAS NOT READY" + Colors.ENDC)
+                n_error_backend_was_not_ready_boss[gbt] += 1
+            else:
+                print (Colors.GREEN + "  LINK WAS READY" + Colors.ENDC)
 
         # Sub
         for gbt in gbt_list["sub"]:
@@ -255,6 +281,14 @@ def main(system, oh_select, gbt_list, niter):
                     n_error_reg_list_sub[gbt] += 1
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
+            # Check if Link Was Not Ready
+            link_was_not_ready = gem_utils.read_backend_reg(gem_utils.get_backend_node("BEFE.GEM.OH_LINKS.OH%s.GBT%s_WAS_NOT_READY" % (oh_select, gbt)))
+            if link_was_not_ready!=0:
+                print (Colors.YELLOW + "  Link WAS NOT READY" + Colors.ENDC)
+                n_error_backend_was_not_ready_sub[gbt] += 1
+            else:
+                print (Colors.GREEN + "  LINK WAS READY" + Colors.ENDC)
+
         print ("")
 
         for gbt in gbt_list["boss"]:
@@ -266,6 +300,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_boss = ""
             str_n_error_reg_list_boss = ""
             str_n_error_ic_read_boss = ""
+            str_n_error_backend_was_not_ready_boss = ""
             if n_retries_backend_ready_boss[gbt]==0:
                 str_n_retries_backend_ready_boss += Colors.GREEN
             else:
@@ -294,6 +329,10 @@ def main(system, oh_select, gbt_list, niter):
                 str_n_error_ic_read_boss += Colors.GREEN
             else:
                 str_n_error_ic_read_boss += Colors.YELLOW
+            if n_error_backend_was_not_ready_boss[gbt]==0:
+                str_n_error_backend_was_not_ready_boss += Colors.GREEN
+            else:
+                str_n_error_backend_was_not_ready_boss += Colors.YELLOW
             str_n_retries_backend_ready_boss += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_boss[gbt])
             str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
             str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
@@ -301,6 +340,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
             str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
             str_n_error_ic_read_boss += "  Number of IC READ Errors: %d"%n_error_ic_read_boss[gbt]
+            str_n_error_backend_was_not_ready_boss += "  Number of Backend WAS NOT READY Status Errors: %d"%(n_error_backend_was_not_ready_boss[gbt])
             str_n_retries_backend_ready_boss += Colors.ENDC
             str_n_error_backend_ready_boss += Colors.ENDC
             str_n_error_uplink_fec_boss += Colors.ENDC
@@ -308,6 +348,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_boss += Colors.ENDC
             str_n_error_reg_list_boss += Colors.ENDC
             str_n_error_ic_read_boss += Colors.ENDC
+            str_n_error_backend_was_not_ready_boss += Colors.ENDC
             print (str_n_retries_backend_ready_boss)
             print (str_n_error_backend_ready_boss)
             print (str_n_error_uplink_fec_boss)
@@ -315,6 +356,7 @@ def main(system, oh_select, gbt_list, niter):
             print (str_n_error_pusm_ready_boss)
             print (str_n_error_reg_list_boss)
             print (str_n_error_ic_read_boss)
+            print (str_n_error_backend_was_not_ready_boss)
 
         print ("")
         for gbt in gbt_list["sub"]:
@@ -326,6 +368,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_sub = ""
             str_n_error_reg_list_sub = ""
             str_n_error_ic_read_sub = ""
+            str_n_error_backend_was_not_ready_sub = ""
             if n_retries_backend_ready_sub[gbt]==0:
                 str_n_retries_backend_ready_sub += Colors.GREEN
             else:
@@ -354,6 +397,10 @@ def main(system, oh_select, gbt_list, niter):
                 str_n_error_ic_read_sub += Colors.GREEN
             else:
                 str_n_error_ic_read_sub += Colors.YELLOW
+            if n_error_backend_was_not_ready_sub[gbt]==0:
+                str_n_error_backend_was_not_ready_sub += Colors.GREEN
+            else:
+                str_n_error_backend_was_not_ready_sub += Colors.RED
             str_n_retries_backend_ready_sub += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_sub[gbt])
             str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
             str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
@@ -361,6 +408,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
             str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
             str_n_error_ic_read_sub += "  Number of IC READ Errors: %d"%n_error_ic_read_sub[gbt]
+            str_n_error_backend_was_not_ready_sub += "  Number of Backend WAS NOT READY Status Errors: %d"%(n_error_backend_was_not_ready_sub[gbt])
             str_n_retries_backend_ready_sub += Colors.ENDC
             str_n_error_backend_ready_sub += Colors.ENDC
             str_n_error_uplink_fec_sub += Colors.ENDC
@@ -368,6 +416,7 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_pusm_ready_sub += Colors.ENDC
             str_n_error_reg_list_sub += Colors.ENDC
             str_n_error_ic_read_sub += Colors.ENDC
+            str_n_error_backend_was_not_ready_sub += Colors.ENDC
             print (str_n_retries_backend_ready_sub)
             print (str_n_error_backend_ready_sub)
             print (str_n_error_uplink_fec_sub)
@@ -375,6 +424,7 @@ def main(system, oh_select, gbt_list, niter):
             print (str_n_error_pusm_ready_sub)
             print (str_n_error_reg_list_sub)
             print (str_n_error_ic_read_sub)
+            print (str_n_error_backend_was_not_ready_sub)
         print ("")
         
     print ("\nEnd of link reset iteration")
@@ -391,6 +441,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_boss = ""
         str_n_error_reg_list_boss = ""
         str_n_error_ic_read_boss = ""
+        str_n_error_backend_was_not_ready_boss = ""
         if n_retries_backend_ready_boss[gbt]==0:
             str_n_retries_backend_ready_boss += Colors.GREEN
         else:
@@ -419,6 +470,10 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_ic_read_boss += Colors.GREEN
         else:
             str_n_error_ic_read_boss += Colors.YELLOW
+        if n_error_backend_was_not_ready_boss[gbt]==0:
+            str_n_error_backend_was_not_ready_boss += Colors.GREEN
+        else:
+            str_n_error_backend_was_not_ready_boss += Colors.RED
         str_n_retries_backend_ready_boss += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_boss[gbt])
         str_n_error_backend_ready_boss += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_boss[gbt])
         str_n_error_uplink_fec_boss += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_boss[gbt]
@@ -426,6 +481,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_boss += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_boss[gbt]
         str_n_error_reg_list_boss += "  Number of Register Value Errors: %d"%n_error_reg_list_boss[gbt]
         str_n_error_ic_read_boss += "  Number of IC READ Errors: %d"%n_error_ic_read_boss[gbt]
+        str_n_error_backend_was_not_ready_boss += "  Number of Backend WAS NOT READY Status Errors: %d"%(n_error_backend_was_not_ready_boss[gbt])
         str_n_retries_backend_ready_boss += Colors.ENDC
         str_n_error_backend_ready_boss += Colors.ENDC
         str_n_error_uplink_fec_boss += Colors.ENDC
@@ -433,6 +489,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_boss += Colors.ENDC
         str_n_error_reg_list_boss += Colors.ENDC
         str_n_error_ic_read_boss += Colors.ENDC
+        str_n_error_backend_was_not_ready_boss += Colors.ENDC
         print (str_n_retries_backend_ready_boss)
         print (str_n_error_backend_ready_boss)
         print (str_n_error_uplink_fec_boss)
@@ -440,6 +497,7 @@ def main(system, oh_select, gbt_list, niter):
         print (str_n_error_pusm_ready_boss)
         print (str_n_error_reg_list_boss)
         print (str_n_error_ic_read_boss)
+        print (str_n_error_backend_was_not_ready_boss)
 
     print ("")
     for gbt in gbt_list["sub"]:
@@ -451,6 +509,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_sub = ""
         str_n_error_reg_list_sub = ""
         str_n_error_ic_read_sub = ""
+        str_n_error_backend_was_not_ready_sub = ""
         if n_retries_backend_ready_sub[gbt]==0:
             str_n_retries_backend_ready_sub += Colors.GREEN
         else:
@@ -479,6 +538,10 @@ def main(system, oh_select, gbt_list, niter):
             str_n_error_ic_read_sub += Colors.GREEN
         else:
             str_n_error_ic_read_sub += Colors.YELLOW
+        if n_error_backend_was_not_ready_sub[gbt]==0:
+            str_n_error_backend_was_not_ready_sub += Colors.GREEN
+        else:
+            str_n_error_backend_was_not_ready_sub += Colors.RED
         str_n_retries_backend_ready_sub += "  Number of Backend READY Status Retries: %d"%(n_retries_backend_ready_sub[gbt])
         str_n_error_backend_ready_sub += "  Number of Backend READY Status Errors: %d"%(n_error_backend_ready_sub[gbt])
         str_n_error_uplink_fec_sub += "  Number of link breaks with Uplink FEC Errors: %d"%n_error_uplink_fec_sub[gbt]
@@ -486,6 +549,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_sub += "  Number of PUSMSTATE Errors: %d"%n_error_pusm_ready_sub[gbt]
         str_n_error_reg_list_sub += "  Number of Register Value Errors: %d"%n_error_reg_list_sub[gbt]
         str_n_error_ic_read_sub += "  Number of IC READ Errors: %d"%n_error_ic_read_sub[gbt]
+        str_n_error_backend_was_not_ready_sub += "  Number of Backend WAS NOT READY Status Errors: %d"%(n_error_backend_was_not_ready_sub[gbt])
         str_n_retries_backend_ready_sub += Colors.ENDC
         str_n_error_backend_ready_sub += Colors.ENDC
         str_n_error_uplink_fec_sub += Colors.ENDC
@@ -493,6 +557,7 @@ def main(system, oh_select, gbt_list, niter):
         str_n_error_pusm_ready_sub += Colors.ENDC
         str_n_error_reg_list_sub += Colors.ENDC
         str_n_error_ic_read_sub += Colors.ENDC
+        str_n_error_backend_was_not_ready_sub += Colors.ENDC
         print (str_n_retries_backend_ready_sub)
         print (str_n_error_backend_ready_sub)
         print (str_n_error_uplink_fec_sub)
@@ -500,6 +565,7 @@ def main(system, oh_select, gbt_list, niter):
         print (str_n_error_pusm_ready_sub)
         print (str_n_error_reg_list_sub)
         print (str_n_error_ic_read_sub)
+        print (str_n_error_backend_was_not_ready_sub)
     print ("")
 
 if __name__ == "__main__":

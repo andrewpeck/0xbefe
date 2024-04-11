@@ -20,15 +20,17 @@ package ipb_sys_addr_decode is
         promless         : integer;
         pcie             : integer;
         ttc_tx           : integer;
-        ttc_link        : integer;
-        ttc_clk         : integer;
-        ttc             : integer;
+        ttc_link         : integer;
+        ttc_clk          : integer;
+        ttc              : integer;
+        eth_switch       : integer;
+        link_data_gen    : integer;
 --        mgt_chan_drp     : integer;
 --        mgt_qpll_drp     : integer;
         none             : integer;
     end record;
 
-    constant C_NUM_IPB_SYS_SLAVES : integer := 8;
+    constant C_NUM_IPB_SYS_SLAVES : integer := 10;
 
     -- IPbus slave index definition
     constant C_IPB_SYS_SLV : t_ipb_sys_slv := (
@@ -40,6 +42,8 @@ package ipb_sys_addr_decode is
         ttc_link => 5,
         ttc_clk => 6,
         ttc => 7,
+        eth_switch => 8,
+        link_data_gen => 9,
 --        mgt_qpll_drp => 5,
 --        mgt_chan_drp => 6,
         none => C_NUM_IPB_SYS_SLAVES
@@ -63,6 +67,8 @@ package body ipb_sys_addr_decode is
         elsif std_match(addr, "--------00000101----------------") then sel := C_IPB_SYS_SLV.ttc_link;
         elsif std_match(addr, "--------00000110----------------") then sel := C_IPB_SYS_SLV.ttc_clk;
         elsif std_match(addr, "--------00000111----------------") then sel := C_IPB_SYS_SLV.ttc;
+        elsif std_match(addr, "--------00001000----------------") then sel := C_IPB_SYS_SLV.eth_switch;
+        elsif std_match(addr, "--------00001001----------------") then sel := C_IPB_SYS_SLV.link_data_gen;
 --        elsif std_match(addr, "--------00001101----------------") then sel := C_IPB_SYS_SLV.mgt_qpll_drp;
 --        elsif std_match(addr, "--------0000111-----------------") then sel := C_IPB_SYS_SLV.mgt_chan_drp; -- occupies 1111 and 1110 addresses, because it actually needs 17 address bits
         else sel := C_IPB_SYS_SLV.none;
