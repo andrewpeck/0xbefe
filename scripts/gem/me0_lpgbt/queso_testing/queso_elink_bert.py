@@ -166,7 +166,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     print ("Starting PRBS and FEC errors: \n")
     logfile.write("Starting PRBS and FEC errors: \n\n")
 
-    err_str = Colors.RED + "  PRBS errors on: "
+    err_str = Colors.RED + "  PRBS errors on:\n"
     for oh_select in oh_gbt_vfat_map:
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:

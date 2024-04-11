@@ -102,12 +102,16 @@ def invert_epclk(boss):
         lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"),  0x0)
         # Set inversions from QUESO schematic
         # FPGA 1
-        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK6INVERT"),  0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK6INVERT"),  0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK7INVERT"),  0x0)
+        
         # FPGA 2
-        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK15INVERT"), 0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK15INVERT"), 0x0)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK5INVERT"), 0x0)
+
         # FPGA 3
-        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK16INVERT"), 0x1)
-        #lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK3INVERT"),  0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK16INVERT"), 0x1)
+        lpgbt_writeReg(getNode("LPGBT.RWF.EPORTCLK.EPCLK3INVERT"),  0x1)
     
     print ("EPCLK inversions done")
 
