@@ -2796,4 +2796,5 @@ if __name__ == "__main__":
 
     logfile.close()
     os.system("rm out.txt")
-    os.system("rm %s"%calib_active_fn)
+    if os.path.isfile(calib_active_fn):
+        os.system("rm %s"%calib_active_fn)
