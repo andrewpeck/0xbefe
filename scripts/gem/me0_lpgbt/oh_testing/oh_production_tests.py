@@ -346,10 +346,11 @@ if __name__ == "__main__":
                         elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == '0x%08X'%chip_id:
                             xml_results[oh_sn]['LPGBT_S_ADC_CALIB'].update(calib_data)
             # Save lpgbt adc calibration to smaller file to speed up runtime
-            with open(calib_active_fn,'w') as calib_file:
-                writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
-                writer.writeheader()
-                writer.writerows(calib_db_active)
+            if len(calib_db_active) != 0:
+                with open(calib_active_fn,'w') as calib_file:
+                    writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
+                    writer.writeheader()
+                    writer.writerows(calib_db_active)
         # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
