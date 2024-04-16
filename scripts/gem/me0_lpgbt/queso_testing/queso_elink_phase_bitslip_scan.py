@@ -25,10 +25,10 @@ def set_phase(oh_select, vfat, elink, phase):
         GBT_ELINK_SAMPLE_PHASE_BASE_REG = 0x0D0
 
     elink_set = -9999
-    if elink==0:
+    if elink==8:
         elink_set = rx_elink
     else:
-        elink_set = sbit_elinks[elink-1]
+        elink_set = sbit_elinks[elink]
 
     addr = GBT_ELINK_SAMPLE_PHASE_BASE_REG + elink_set
     value = (mpeek(addr) & 0x0f) | (phase << 4)        
@@ -70,7 +70,7 @@ def find_phase_center(err_list):
         u = -9999
         diff = 0
         max_diff = 0
-        bad_phase_mean = -9999
+        bad_phase_mean = 0
         for i in range(0, len(bad_phases)-1):
             bad_phase_mean += bad_phases[i]
             l = bad_phases[i]
@@ -210,9 +210,9 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
                         for elink in queso_bitslip_nodes[vfat]:
                             gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_0"], bitslip_0)
                             gem_utils.write_backend_reg(queso_bitslip_nodes[vfat][elink]["bitslip_1"], bitslip_1)
-                    sleep(0.1)
 
                     # Reset and wait
+                    sleep(0.1)
                     gem_utils.write_backend_reg(queso_reset_node, 1)
                     sleep(0.1)
 
@@ -230,6 +230,7 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         gem_utils.write_backend_reg(gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_EN"), 0)
 
         # Reset QUESO BERT registers
+        sleep(0.1)
         gem_utils.write_backend_reg(queso_reset_node, 1)
 
         # Find best phase and bitslip
@@ -293,10 +294,10 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         for vfat in queso_bitslip_nodes:
             for elink in queso_bitslip_nodes[vfat]:
                 lpgbt = gem_utils.ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]
-                if elink == 0:
+                if elink == 8:
                     elink_nr = gem_utils.ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
                 else:
-                    elink_nr = gem_utils.ME0_VFAT_TO_SBIT_ELINK[vfat][elink-1]
+                    elink_nr = gem_utils.ME0_VFAT_TO_SBIT_ELINK[vfat][elink]
                 file_out.write("%d  %d  %d  %d  %d  0x%01x  %d  0x%01x  0x%01x  %s\n"%(oh_select, lpgbt, elink_nr, vfat, elink, phase_bitslip_list[vfat][elink]["phase"], phase_bitslip_list[vfat][elink]["width"], phase_bitslip_list[vfat][elink]["bitslip_0"], phase_bitslip_list[vfat][elink]["bitslip_1"], phase_bitslip_list[vfat][elink]["status"]))
         file_out.close()
         
