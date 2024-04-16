@@ -1,4 +1,4 @@
-from prog_power_supply import *
+from prog_power_supply_acopian import *
 from gem.me0_lpgbt.rw_reg_lpgbt import *
 import gem.gem_utils as gem_utils
 from time import sleep
