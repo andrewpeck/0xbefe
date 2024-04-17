@@ -32,7 +32,7 @@ gem/hdl/trigger/generated/me0_cvp13/sbit_me0.vhd
 
 #queso test
 gem/hdl/tests/queso_tests.vhd
-gem/hdl/tests/queso_link_unmask.vhd
+gem/hdl/tests/queso_link_decrypt.vhd
 
 
 #dummy promless just to keep compiler happy

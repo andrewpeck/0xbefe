@@ -16,7 +16,7 @@ entity queso_tests is
         g_NUM_GBTS_PER_OH   : integer;
         g_NUM_VFATS_PER_OH  : integer;
         g_QUESO_PRBS        : boolean;
-        g_BITMASK_EN        : boolean
+        g_XOR_DECRYPT_EN    : boolean
     );
     port(
         -- reset
@@ -50,10 +50,10 @@ architecture Behavioral of queso_tests is
     signal tx_crawl_data     : std_logic_vector(7 downto 0) := x"00";
 
 
-    -- unmasked elinks
+    -- decrypted elinks
     signal elink_rot0          : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal elink_rot0_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
-    signal elink_rot1_unmasked : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_rot0_decrypted : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
+    signal elink_rot1_decrypted : t_vfat3_queso_arr(g_NUM_OF_OHs - 1 downto 0);
 
 
     -- error counter for prbs
@@ -101,9 +101,9 @@ begin
         -- Send prbs word to tx fannout in ME0 mux
         test_vfat3_tx_data_arr_o <= tx_prbs_data;
         
-        g_BITMASK : if g_BITMASK_EN generate
-            -- Unmasking of data for each elink (done after bitslipping)
-            g_queso_link_unmask : entity work.queso_link_unmask
+        g_DECRYPT : if g_XOR_DECRYPT_EN generate
+            -- Decrypting of data for each elink (done after bitslipping)
+            g_queso_link_decrypt : entity work.queso_link_decrypt
                 generic map(
                     g_NUM_OF_OHs => g_NUM_OF_OHs
                 )
@@ -111,12 +111,12 @@ begin
                     -- clock
                     clk_i => gbt_frame_clk_i,
                     -- links
-                    queso_rx_data_arr_i       => elink_rot0,
-                    queso_data_unmasked_arr_o => elink_rot0_unmasked
+                    queso_rx_data_arr_i => elink_rot0,
+                    queso_data_arr_o    => elink_rot0_decrypted
                 );
         else generate
-            elink_rot0_unmasked <= elink_rot0;
-        end generate g_BITMASK;
+            elink_rot0_decrypted <= elink_rot0;
+        end generate g_DECRYPT;
             
         ----====Take in RX and apply prbs checker + error counter====------
         each_oh : for OH in 0 to g_NUM_OF_OHs - 1 generate
@@ -145,8 +145,8 @@ begin
                     port map(
                         clk_i       => gbt_frame_clk_i,
                         slip_cnt_i  => elink_mapping_arr_1(OH)(ELINK),
-                        data_i      => elink_rot0_unmasked(OH)(ELINK),
-                        data_o      => elink_rot1_unmasked(OH)(ELINK)
+                        data_i      => elink_rot0_decrypted(OH)(ELINK),
+                        data_o      => elink_rot1_decrypted(OH)(ELINK)
                     );
 
                 --instantiate prbs31 8 bit checker
@@ -161,7 +161,7 @@ begin
                     port map(
                         RST      => reset_i,
                         CLK      => gbt_frame_clk_i,
-                        DATA_IN  => elink_rot1_unmasked(OH)(ELINK), --unmasked & mapped data is checked
+                        DATA_IN  => elink_rot1_decrypted(OH)(ELINK), --decrypted & mapped data is checked
                         EN       => queso_test_en_i, 
                         DATA_OUT => rx_prbs_err_arr_o(OH*216 + ELINK) --error array (each bit)
                     );
@@ -195,7 +195,7 @@ begin
                     port map(
                         ref_clk_i => gbt_frame_clk_i,
                         reset_i   => counter_reset or reset_i,
-                        en_i      => or_reduce(elink_rot1_unmasked(OH)(ELINK)),
+                        en_i      => or_reduce(elink_rot1_decrypted(OH)(ELINK)),
                         count_o   => rx_data_cnt_arr(OH)(ELINK)
                     );
             end generate each_elink;
@@ -265,10 +265,10 @@ begin
 		clk                    => gbt_frame_clk_i,
 
 		probe0                 => tx_prbs_data, 
-		probe1(63 downto 56)   => elink_rot1_unmasked(0)(0),
-		probe1(55 downto 48)   => elink_rot1_unmasked(0)(1),
-		probe1(47 downto 40)   => elink_rot1_unmasked(0)(2),
-		probe1(39 downto 32)   => elink_rot1_unmasked(0)(3),
+		probe1(63 downto 56)   => elink_rot1_decrypted(0)(0),
+		probe1(55 downto 48)   => elink_rot1_decrypted(0)(1),
+		probe1(47 downto 40)   => elink_rot1_decrypted(0)(2),
+		probe1(39 downto 32)   => elink_rot1_decrypted(0)(3),
 		probe1(31 downto 24)   => test_vfat3_rx_data_arr_i(0)(0),
 		probe1(23 downto 16)   => test_vfat3_rx_data_arr_i(0)(1),
 		probe1(15 downto 8)    => test_vfat3_rx_data_arr_i(0)(2),
