@@ -346,10 +346,11 @@ if __name__ == "__main__":
                         elif xml_results[oh_sn]['LPGBT_S_CHIP_ID'] == '0x%08X'%chip_id:
                             xml_results[oh_sn]['LPGBT_S_ADC_CALIB'].update(calib_data)
             # Save lpgbt adc calibration to smaller file to speed up runtime
-            with open(calib_active_fn,'w') as calib_file:
-                writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
-                writer.writeheader()
-                writer.writerows(calib_db_active)
+            if len(calib_db_active) != 0:
+                with open(calib_active_fn,'w') as calib_file:
+                    writer = csv.DictWriter(calib_file,calib_db_active[0].keys())
+                    writer.writeheader()
+                    writer.writerows(calib_db_active)
         # error check
         for slot,oh_sn in geb_dict.items():
             for gbt in geb_oh_map[slot]["GBT"]:
@@ -2160,7 +2161,7 @@ if __name__ == "__main__":
     logfile.write("Step 12: DAQ SCurve\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance", "debug"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running DAQ SCurves for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running DAQ SCurves for OH %d all VFATs\n\n"%oh_select)
@@ -2548,7 +2549,7 @@ if __name__ == "__main__":
     logfile.write("Step 15: S-bit Crosstalk\n\n")
     time.sleep(0.1)
 
-    if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
+    if test_type in ["prototype", "pre_production", "pre_series", "acceptance"]:
         for oh_select,gbt_vfat_dict in oh_gbt_vfat_map.items():
             print (Colors.BLUE + "Running S-bit Crosstalk for OH %d all VFATs\n"%oh_select + Colors.ENDC)
             logfile.write("Running S-bit Crosstalk for OH %d all VFATs\n\n"%oh_select)
@@ -2795,4 +2796,5 @@ if __name__ == "__main__":
 
     logfile.close()
     os.system("rm out.txt")
-    os.system("rm %s"%calib_active_fn)
+    if os.path.isfile(calib_active_fn):
+        os.system("rm %s"%calib_active_fn)

@@ -6,6 +6,7 @@ import numpy as np
 from common.utils import get_befe_scripts_dir
 from common.rw_reg import *
 import datetime
+from gem.gem_utils import ME0_VFAT_TO_GBT_ELINK_GPIO, ME0_VFAT_TO_SBIT_ELINK
 
 # QUESO to OH mapping
 queso_oh_map = {}
@@ -498,7 +499,7 @@ if __name__ == "__main__":
     logfile.close()
     for ohid in oh_gbt_vfat_map:
         vfat_list_str = ' '.join(str(v) for v in oh_gbt_vfat_map[ohid]["VFAT"])
-        os.system("python3 %s/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s -l"%(queso_dir,ohid, vfat_list_str))
+        os.system("python3 %s/queso_elink_phase_bitslip_scan.py -s backend -q ME0 -o %d -v %s"%(queso_dir,ohid, vfat_list_str))
         list_of_files = glob.glob(resultDir + "/phase_bitslip_results/vfat_elink_phase_bitslip_results_OH%d*.txt"%ohid)
         latest_file = max(list_of_files, key=os.path.getctime)
         os.system("cp %s %s/vfat_elink_phase_bitslip_results_OH%d.txt"%(latest_file, OHDir, ohid))
@@ -524,10 +525,17 @@ if __name__ == "__main__":
             bitslip_results[lpgbt][lpgbt_elink]={'Status':status,'Phase':phase,'Width':width,'Bitslip_0':bitslip_0,'Bitslip_1':bitslip_1}
         bitslip_results_file.close()
         for lpgbt in bitslip_results:
+            # find out the unused sot elink and put results as all -9999
+            expected_keys = set(range(28))
+            actual_keys = set(bitslip_results[lpgbt].keys())
+            missing_keys = (expected_keys - actual_keys)
+            sot_elink = next(iter(missing_keys))
+            bitslip_results[lpgbt][sot_elink]={'Status':-9999,'Phase':-9999,'Width':-9999,'Bitslip_0':-9999,'Bitslip_1':-9999}
             for queso,oh_sn in queso_dict.items():
                 if queso_oh_map[queso]["OH"]==ohid and int(lpgbt) in queso_oh_map[queso]["GBT"]:
                     gbt_type = "M" if int(lpgbt)%2 == 0 else "S"
-                    results_oh_sn[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type] = [result for _,result in bitslip_results[lpgbt].items()]
+                    # in order of lpgbt_elink from 0 to 27
+                    results_oh_sn[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type] = [bitslip_results[lpgbt][cur_key] for cur_key in range(28) if cur_key in bitslip_results[lpgbt]]
                     break
     for queso,oh_sn in queso_dict.items():
         for gbt in queso_oh_map[queso]["GBT"]:
@@ -541,13 +549,14 @@ if __name__ == "__main__":
                         test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-                        
-    for oh_sn in results_oh_sn:
-        results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
-        results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
+    
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
         if end_tests.lower() in ['y','yes']:
+            # Only if exit the test then convert results to string now and write results
+            for oh_sn in results_oh_sn:
+                results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
+                results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
             print('\nTerminating and logging results at directory:\n%s'%results_fn)
             logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
             results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()]
@@ -563,6 +572,71 @@ if __name__ == "__main__":
     print(Colors.GREEN + "\nSetting Elink Phases and Bitslips Done" + Colors.ENDC)
     print("\n######################################################\n")
     logfile.write("\nSetting Elink Phases and Bitslips Done\n")
+    logfile.write("\n######################################################\n\n")
+    sleep(2)
+
+    # Crosstalk Test
+    print(Colors.BLUE + "Checking Crosstalk for Each ELINK" + Colors.ENDC)
+    logfile.write("Checking Crosstalk for Each ELINK\n")
+
+    os.system("python3 %s/queso_elink_crosstalk.py -s backend -q ME0 -l -p"%queso_dir)
+    list_of_files = glob.glob(resultDir + "/crosstalk_results/vfat_elink_crosstalk_data_*.txt")
+    latest_file = max(list_of_files, key=os.path.getctime)
+    os.system("cp %s %s/vfat_elink_crosstalk_results.txt"%(latest_file, OHDir))
+    
+    crosstalk_results_file = open(latest_file)
+    in_results_section = False
+    for line in crosstalk_results_file.readlines():
+        if "Cross Talk Results:" in line:
+            in_results_section = True
+        elif in_results_section:
+            if "No Cross Talk observed between elinks" in line:
+                break
+            bad = False
+            if "Crosstalk observed" in line:
+                split_line = line.split()
+                queso = split_line[4]
+                vfat = int(split_line[8])
+                elink = int(split_line[10])
+                bad = True
+            elif "Dead elink:" in line:
+                split_line = line.split()
+                queso = split_line[7]
+                vfat = int(split_line[11])
+                elink = int(split_line[13])
+                bad = True
+            if bad:
+                if int(elink) == 8:
+                    lpgbt_elink = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
+                else:
+                    lpgbt_elink = ME0_VFAT_TO_SBIT_ELINK[vfat][elink]
+                gbt_type = 'M' if ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][0] == "boss" else 'S'
+                oh_sn = queso_dict[queso]
+                results_oh_sn[oh_sn]['LPGBT_%s_QUESO_ELINK_PHASES_BITSLIPS'%gbt_type][lpgbt_elink]['Status'] = 0
+                test_failed = True
+    
+    for oh_sn in results_oh_sn:
+        results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
+        results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
+    
+    while test_failed:
+        end_tests = input('\nWould you like to exit testing? >> ')
+        if end_tests.lower() in ['y','yes']:
+            print('\nTerminating and logging results at directory:\n%s'%results_fn)
+            logfile.write('\nTerminating and logging results at directory:\n%s\n'%results_fn)
+            results_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in results_oh_sn.items()]
+            with open(results_fn,"w") as results_oh_sn_file:
+                json.dump(results_oh_sn,results_oh_sn_file,indent=2)
+            logfile.close()
+            sys.exit()  
+        elif end_tests.lower() in ['n','no']:
+            test_failed = False
+        else:
+            print('Valid entries: y, yes, n, no')
+
+    print(Colors.GREEN + "\nChecking Crosstalk for Each ELINK Done" + Colors.ENDC)
+    print("\n######################################################\n")
+    logfile.write("\nChecking Crosstalk for Each ELINK Done\n")
     logfile.write("\n######################################################\n\n")
     sleep(2)
         
