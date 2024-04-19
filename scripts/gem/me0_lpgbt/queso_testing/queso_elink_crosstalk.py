@@ -468,11 +468,11 @@ if __name__ == "__main__":
                                     bad_elink_list += [(queso,vfat_read,elink_read)]
     
     # -- Print results --
-    print('\nCross Talk Data:\n')
-    file_out.write('Cross Talk Data:\n\n')
+    print('\nCross Talk Data:')
+    file_out.write('Cross Talk Data:\n')
     for queso in crosstalk_results:
-        print(f'QUESO {queso} - OH {oh_sn}:')
-        file_out.write(f'OH {oh_sn} on QUESO {queso}:\n')
+        print(f'\nOH {oh_sn} on QUESO {queso}:')
+        file_out.write(f'\nOH {oh_sn} on QUESO {queso}:\n')
         for vfat_inj in crosstalk_results[queso]:
             print(f'  VFAT {vfat_inj:02d}:')
             file_out.write(f'  VFAT {vfat_inj:02d}:\n')
