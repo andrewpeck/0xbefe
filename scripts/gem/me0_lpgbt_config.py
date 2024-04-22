@@ -5,7 +5,7 @@ import argparse
 from common.utils import get_befe_scripts_dir
 from me0_lpgbt_vtrx import i2cmaster_write, i2cmaster_read
 
-def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
+def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal, write_only):
 
     # enable TX2 (also TX1 which is enabled by default) channel on VTRX+
     if boss:
@@ -83,36 +83,37 @@ def main(system, oh_ver, boss, input_config_file, reset_before_config, minimal):
     lpgbt_writeReg(getNode("LPGBT.RWF.POWERUP.DLLCONFIGDONE"), 0x1)
     lpgbt_writeReg(getNode("LPGBT.RWF.POWERUP.PLLCONFIGDONE"), 0x1)
 
-    # Check READY status
-    sleep(1) # Waiting for 1 sec for the lpGBT configuration to be complete
-    pusmstate = lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
-    print ("PUSMSTATE register value: " + str(pusmstate))
-    ready_value = -9999
-    if oh_ver == 1:
-        ready_value = 18
-    elif oh_ver == 2:
-        ready_value = 19
-    if (pusmstate==ready_value):
-        print ("lpGBT status is READY")
+    if not write_only:
+        # Check READY status
+        sleep(1) # Waiting for 1 sec for the lpGBT configuration to be complete
+        pusmstate = lpgbt_readReg(getNode("LPGBT.RO.PUSM.PUSMSTATE"))
+        print ("PUSMSTATE register value: " + str(pusmstate))
+        ready_value = -9999
+        if oh_ver == 1:
+            ready_value = 18
+        elif oh_ver == 2:
+            ready_value = 19
+        if (pusmstate==ready_value):
+            print ("lpGBT status is READY")
 
-    # Writing lpGBT configuration to text file
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scripts_gem_dir + "/results"
-    me0Dir = resultDir + "/me0_lpgbt_data"
-    try:
-        os.makedirs(me0Dir) # create directory for ME0 lpGBT data
-    except FileExistsError: # skip if directory already exists
-        pass
-    dataDir = me0Dir + "/lpgbt_config_data"
-    try:
-        os.makedirs(dataDir) # create directory for data
-    except FileExistsError: # skip if directory already exists
-        pass
+        # Writing lpGBT configuration to text file
+        scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+        resultDir = scripts_gem_dir + "/results"
+        me0Dir = resultDir + "/me0_lpgbt_data"
+        try:
+            os.makedirs(me0Dir) # create directory for ME0 lpGBT data
+        except FileExistsError: # skip if directory already exists
+            pass
+        dataDir = me0Dir + "/lpgbt_config_data"
+        try:
+            os.makedirs(dataDir) # create directory for data
+        except FileExistsError: # skip if directory already exists
+            pass
     
-    if boss:
-        lpgbt_write_config_file(oh_ver, dataDir+"/config_boss_ohv%d.txt"%oh_ver)
-    else:
-        lpgbt_write_config_file(oh_ver, dataDir+"/config_sub_ohv%d.txt"%oh_ver)
+        if boss:
+            lpgbt_write_config_file(oh_ver, dataDir+"/config_boss_ohv%d.txt"%oh_ver)
+        else:
+            lpgbt_write_config_file(oh_ver, dataDir+"/config_sub_ohv%d.txt"%oh_ver)
 
 def configLPGBT(oh_ver):
     print ("Configuring Clock Generator, Line Drivers, Power Good for CERN configuration...")
@@ -651,7 +652,7 @@ if __name__ == "__main__":
 
     # Configuring LPGBT
     try:
-        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal))
+        main(args.system, oh_ver, boss, args.input_config_file, int(args.reset_before_config), int(args.minimal), write_only)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()

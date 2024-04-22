@@ -4,8 +4,9 @@
 -- 
 -- Create Date:    2020-06-09
 -- Module Name:    gty_channel_trig_3p2
--- Description:    This is a wrapper for a single GTY channel that can be used to receive trigger data from OH OTMB output: it's an 8b10b 3.2Gb/s link with bypassed buffers, and 16bit wide bus.
---                 The refclk has to be 160MHz LHC freq (only one refclk is used based on g_REFCLK_01 generic), and user clocks 120MHz 
+-- Description:    This is a wrapper for a single GTY channel that can be used to receive trigger data from OH OTMB output: it's an 8b10b 3.2Gb/s or 4.0Gb/s link depending on QPLL used, it has bypassed buffers, and 16bit wide bus.
+--                 If this is used with trig_4p0 QPLL, it will run at 4.0Gb/s
+--                 The refclk has to be 160MHz LHC freq (only one refclk is used based on g_REFCLK_01 generic), and user clocks 160MHz in 3.2Gb/s operation, and 200MHz in 4.0Gb/s operation 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;

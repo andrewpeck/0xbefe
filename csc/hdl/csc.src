@@ -13,6 +13,7 @@ csc/hdl/daq/input_processor.vhd
 
 # Misc
 csc/hdl/misc/gbt_link_mux_csc.vhd
+#common/hdl/misc/eth_switch.vhd           <-- use the generated version specific to the project
 
 # System
 #csc/hdl/system/system_regs.vhd           <-- use the generated version specific to the project

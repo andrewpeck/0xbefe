@@ -38,13 +38,13 @@ gem/hdl/oh/link/link_rx_trigger_ge21.vhd
 # Trigger
 #gem/hdl/trigger/trigger.vhd                <-- use the generated version specific to the project
 gem/hdl/trigger/trigger_output.vhd
-#gem/hdl/trigger/sbit_me0.vhd
+#gem/hdl/trigger/sbit_me0.vhd               <-- use the generated version specific to the project
 gem/hdl/trigger/trigger_input_processor.vhd
 gem/hdl/trigger/sbit_monitor.vhd
-gem/hdl/trigger/me0_sbit_allign.vhd
+gem/hdl/trigger/me0_sbit_align.vhd
 
 # DAQ
-#gem/hdl/daq/daq.vhd <-- use the generated version specific to the project
+#gem/hdl/daq/daq.vhd                        <-- use the generated version specific to the project
 gem/hdl/daq/vfat_input_buffer.vhd
 gem/hdl/daq/vfat_input_serializer.vhd
 gem/hdl/daq/track_input_processor.vhd
@@ -59,4 +59,3 @@ gem/hdl/misc/gbt_link_mux_me0.vhd
 
 # Tests
 #gem/hdl/tests/gem_tests.vhd                <-- use the generated version specific to the project
-

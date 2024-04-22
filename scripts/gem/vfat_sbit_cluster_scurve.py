@@ -9,9 +9,10 @@ import json
 from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, calpulse_only, l1a_bxgap, trim, s_bit_cluster_mapping):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -36,6 +37,8 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
 
     sbit_data = {}
     cal_mode = {}
+    threshold_orig = {}
+
     # Check ready and get nodes
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -58,6 +61,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
             
+        threshold_orig[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
         if threshold != -9999:
             print("Setting threshold = %d (DAC)"%threshold)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
@@ -245,6 +249,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
         print("Unconfiguring VFAT %d" % (vfat))
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # disable calpulsing on all channels for this VFAT
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
         configureVfat(0, vfat, oh_select, 0)
     write_backend_reg(get_backend_node("BEFE.GEM.GEM_SYSTEM.VFAT3.SC_ONLY_MODE"), 0)
 
@@ -404,10 +409,10 @@ if __name__ == "__main__":
             s_bit_cluster_mapping[vfat][channel]["cluster_address"] = cluster_address
         file_in.close()
     else:
-        if not os.path.isdir("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
+        if not os.path.isdir(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results"):
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()
-        list_of_files = glob.glob("results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
+        list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*.txt")
         if len(list_of_files)==0:
             print (Colors.YELLOW + "Run the S-bit cluster mapping first" + Colors.ENDC)
             sys.exit()

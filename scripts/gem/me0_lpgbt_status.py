@@ -259,7 +259,8 @@ def main(system, oh_ver, boss):
     print ("\t%d" % (lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTH")) << 1 | lpgbt_readReg(getNode("LPGBT.RO.CLKG.CLKG_VCOCAPSELECTL"))))
 
     #print ("Configuring adc...")
-    adc_calib = read_central_adc_calib_file()
+    # adc_calib = read_central_adc_calib_file()
+    adc_calib = {}
     junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
     vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
     init_adc(oh_ver, vref_tune)
@@ -462,13 +463,13 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     # Check if GBT is READY
-    if args.system == "backend":
-        check_lpgbt_ready(args.ohid, args.gbtid)
+#    if args.system == "backend":
+#        check_lpgbt_ready(args.ohid, args.gbtid)
 
     # Readback rom register to make sure communication is OK
-    if args.system != "dryrun":
-        check_rom_readback(args.ohid, args.gbtid)
-        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
+#    if args.system != "dryrun":
+#        check_rom_readback(args.ohid, args.gbtid)
+#        check_lpgbt_mode(boss, args.ohid, args.gbtid)   
         
     try:
         main(args.system, oh_ver, boss)

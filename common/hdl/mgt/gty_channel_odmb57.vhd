@@ -5,10 +5,11 @@
 -- Create Date:    2021-03-09
 -- Module Name:    GTY_CHANNEL_ODMB57
 -- Description:    This is a wrapper for a single GTY channel that can be used with ODMB5 and ODMB7 boards:
---                 Receiver is 8b10b encoded 12.5Gb/s with elastic buffers
+--                 Receiver is 8b10b encoded 12.5Gb/s with elastic buffers and channel bonding
 --                 Transmitter is a GBTX link (4.8Gb/s raw without buffers)
 --                 This MGT should be used with a QPLL0 for the receiver, and QPLL1 or CPLL for the transmitter (refclk is a multiple of LHC freq)
---                 Receiver user data bus width is 64 bits @ 156.25MHz (note rxusrclk is 312.5MHz, rxusrclk2 is 156.25MHz)
+--                 Receiver user data bus width is 32 bits @ 312.5MHz
+--                 For future should go to receiver user data bus width of 64 bits @ 156.25MHz (note in that case rxusrclk is 312.5MHz, rxusrclk2 is 156.25MHz)
 --                 Transmitter user data bus witdth is 40 bits @ 120MHz 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,16 +27,17 @@ use work.mgt_pkg.all;
 
 entity gty_channel_odmb57 is
     generic(
-        g_CPLL_REFCLK_01    : integer range 0 to 1 := 0;
-        g_TX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for TX
-        g_RX_USE_QPLL       : boolean := FALSE; -- when set to true the QPLL is used for RX
-        g_TX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
-        g_RX_QPLL_01        : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
-        g_TXOUTCLKSEL       : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
-        g_RXOUTCLKSEL       : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
-        g_TX_REFCLK_FREQ    : integer; -- RX refclk frequency
-        g_RX_REFCLK_FREQ    : integer; -- TX refclk frequency
-        g_USE_TX_SYNC       : boolean := true -- set to true if using tx multilane phase alignment (default)
+        g_CPLL_REFCLK_01        : integer range 0 to 1 := 0;
+        g_TX_USE_QPLL           : boolean := FALSE; -- when set to true the QPLL is used for TX
+        g_RX_USE_QPLL           : boolean := FALSE; -- when set to true the QPLL is used for RX
+        g_TX_QPLL_01            : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for TX
+        g_RX_QPLL_01            : integer range 0 to 1 := 0; -- defines whether QPLL0 or QPLL1 is used for RX
+        g_TXOUTCLKSEL           : std_logic_vector(2 downto 0) := "011"; -- straight refclk by default
+        g_RXOUTCLKSEL           : std_logic_vector(2 downto 0) := "010"; -- recovered clock by default
+        g_TX_REFCLK_FREQ        : integer; -- RX refclk frequency
+        g_RX_REFCLK_FREQ        : integer; -- TX refclk frequency
+        g_RX_CHAN_BOND_MASTER   : boolean;  -- if true, then this RX channel is channel bonding master, otherwise slave
+        g_USE_TX_SYNC           : boolean := true -- set to true if using tx multilane phase alignment (default)
     );
     port(
         
@@ -59,6 +61,9 @@ entity gty_channel_odmb57 is
         rx_fast_ctrl_i  : in  t_mgt_rx_fast_ctrl;
         rx_init_i       : in  t_mgt_rx_init;
         rx_status_o     : out t_mgt_rx_status;
+        
+        rx_chan_bond_i  : in  std_logic_vector(4 downto 0); -- connect rx_chan_bond_o of the master here if this channel is a slave
+        rx_chan_bond_o  : out std_logic_vector(4 downto 0);
         
         misc_ctrl_i     : in  t_mgt_misc_ctrl;
         misc_status_o   : out t_mgt_misc_status;
@@ -186,6 +191,12 @@ architecture gty_channel_odmb57_arch of gty_channel_odmb57 is
     signal rxctrl2              : std_logic_vector(7 downto 0);
     signal rxctrl3              : std_logic_vector(7 downto 0);
     
+    -- channel bonding          
+                                
+    signal rxchbondmaster       : std_logic;
+    signal rxchbondi            : std_logic_vector(4 downto 0);
+    signal rxchbondlevel        : std_logic_vector(2 downto 0);
+    
 begin
 
     -- Do not support RXPROGDIV, this is because it's sourced from CDR, so generally we don't want to use it, and also this requires updating the reset FSM to reset the RXPROGDIV after CDRLOCK goes high (this of course can be implemented later if needed)
@@ -282,6 +293,18 @@ begin
         rx_status_o.rxprogdivresetdone <= '1';
     end generate;
 
+    g_chan_bond_master : if g_RX_CHAN_BOND_MASTER generate
+        rxchbondmaster <= '1';
+        rxchbondi <= (others => '0');
+        rxchbondlevel <= "001";
+    end generate;
+
+    g_chan_bond_slave : if not g_RX_CHAN_BOND_MASTER generate
+        rxchbondmaster <= '0';
+        rxchbondi <= rx_chan_bond_i;
+        rxchbondlevel <= "000";
+    end generate;
+
     -- TX: raw encoding 40 bit wide data bus
     txdata(31 downto 0) <= tx_data_i.txdata(37 downto 30) &
                            tx_data_i.txdata(27 downto 20) &
@@ -304,13 +327,26 @@ begin
     txctrl2 <= (others => '0');        
         
     -- RX: 8b10b encoding 64bit wide data bus
-    rx_data_o.rxdata(63 downto 0) <= rxdata(63 downto 0);
-    
-    rx_data_o.rxcharisk(7 downto 0) <= rxctrl0(7 downto 0);
-    rx_data_o.rxdisperr(7 downto 0) <= rxctrl1(7 downto 0);
-    rx_data_o.rxchariscomma(7 downto 0) <= rxctrl2(7 downto 0);
-    rx_data_o.rxnotintable(7 downto 0) <= rxctrl3(7 downto 0);
+--    rx_data_o.rxdata(63 downto 0) <= rxdata(63 downto 0);
+--    
+--    rx_data_o.rxcharisk(7 downto 0) <= rxctrl0(7 downto 0);
+--    rx_data_o.rxdisperr(7 downto 0) <= rxctrl1(7 downto 0);
+--    rx_data_o.rxchariscomma(7 downto 0) <= rxctrl2(7 downto 0);
+--    rx_data_o.rxnotintable(7 downto 0) <= rxctrl3(7 downto 0);
 
+    -- RX: 8b10b encoding 32bit wide data bus
+    rx_data_o.rxdata(31 downto 0) <= rxdata(31 downto 0);
+    rx_data_o.rxdata(63 downto 32) <= (others => '0');
+    
+    rx_data_o.rxcharisk(3 downto 0) <= rxctrl0(3 downto 0);
+    rx_data_o.rxcharisk(7 downto 4) <= (others => '0');
+    rx_data_o.rxdisperr(3 downto 0) <= rxctrl1(3 downto 0);
+    rx_data_o.rxdisperr(7 downto 4) <= (others => '0');
+    rx_data_o.rxchariscomma(3 downto 0) <= rxctrl2(3 downto 0);
+    rx_data_o.rxchariscomma(7 downto 4) <= (others => '0');
+    rx_data_o.rxnotintable(3 downto 0) <= rxctrl3(3 downto 0);
+    rx_data_o.rxnotintable(7 downto 4) <= (others => '0');
+    
     i_gty_channel : GTYE4_CHANNEL
         generic map(
             ACJTAG_DEBUG_MODE            => '0',
@@ -321,7 +357,7 @@ begin
             ADAPT_CFG2                   => "0000000000000000",
             ALIGN_COMMA_DOUBLE           => "FALSE",
             ALIGN_COMMA_ENABLE           => "1111111111",
-            ALIGN_COMMA_WORD             => 2,
+            ALIGN_COMMA_WORD             => 4,
             ALIGN_MCOMMA_DET             => "TRUE",
             ALIGN_MCOMMA_VALUE           => "1010000011",
             ALIGN_PCOMMA_DET             => "TRUE",
@@ -335,11 +371,11 @@ begin
             CDR_SWAP_MODE_EN             => '0',
             CFOK_PWRSVE_EN               => '1',
             CHAN_BOND_KEEP_ALIGN         => "FALSE",
-            CHAN_BOND_MAX_SKEW           => 1,
-            CHAN_BOND_SEQ_1_1            => "0000000000",
-            CHAN_BOND_SEQ_1_2            => "0000000000",
-            CHAN_BOND_SEQ_1_3            => "0000000000",
-            CHAN_BOND_SEQ_1_4            => "0000000000",
+            CHAN_BOND_MAX_SKEW           => 14,
+            CHAN_BOND_SEQ_1_1            => "0110111100",
+            CHAN_BOND_SEQ_1_2            => "0001100000",
+            CHAN_BOND_SEQ_1_3            => "0001100000",
+            CHAN_BOND_SEQ_1_4            => "0001100000",
             CHAN_BOND_SEQ_1_ENABLE       => "1111",
             CHAN_BOND_SEQ_2_1            => "0000000000",
             CHAN_BOND_SEQ_2_2            => "0000000000",
@@ -347,7 +383,7 @@ begin
             CHAN_BOND_SEQ_2_4            => "0000000000",
             CHAN_BOND_SEQ_2_ENABLE       => "1111",
             CHAN_BOND_SEQ_2_USE          => "FALSE",
-            CHAN_BOND_SEQ_LEN            => 1,
+            CHAN_BOND_SEQ_LEN            => 4,
             CH_HSPMUX                    => "0010000001000000",
             CKCAL1_CFG_0                 => "1100000011000000",
             CKCAL1_CFG_1                 => "0001000011000000",
@@ -360,14 +396,14 @@ begin
             CKCAL2_CFG_4                 => "0000000000000000",
             CLK_CORRECT_USE              => "TRUE",
             CLK_COR_KEEP_IDLE            => "FALSE",
-            CLK_COR_MAX_LAT              => 29,
-            CLK_COR_MIN_LAT              => 24,
+            CLK_COR_MAX_LAT              => 43,
+            CLK_COR_MIN_LAT              => 36,
             CLK_COR_PRECEDENCE           => "TRUE",
             CLK_COR_REPEAT_WAIT          => 0,
             CLK_COR_SEQ_1_1              => "0110111100",
             CLK_COR_SEQ_1_2              => "0001010000",
-            CLK_COR_SEQ_1_3              => "0000000000",
-            CLK_COR_SEQ_1_4              => "0000000000",
+            CLK_COR_SEQ_1_3              => "0001010000",
+            CLK_COR_SEQ_1_4              => "0001010000",
             CLK_COR_SEQ_1_ENABLE         => "1111",
             CLK_COR_SEQ_2_1              => "0000000000",
             CLK_COR_SEQ_2_2              => "0000000000",
@@ -375,7 +411,7 @@ begin
             CLK_COR_SEQ_2_4              => "0000000000",
             CLK_COR_SEQ_2_ENABLE         => "1111",
             CLK_COR_SEQ_2_USE            => "FALSE",
-            CLK_COR_SEQ_LEN              => 2,
+            CLK_COR_SEQ_LEN              => 4,
             CPLL_CFG0                    => "0000000111111010",
             CPLL_CFG1                    => "0000000000101011",
             CPLL_CFG2                    => "0000000000000010",
@@ -626,7 +662,7 @@ begin
             RX_CM_TRIM                   => 10,
             RX_CTLE_PWR_SAVING           => '0',
             RX_CTLE_RES_CTRL             => "0000",
-            RX_DATA_WIDTH                => 80,
+            RX_DATA_WIDTH                => 40,
             RX_DDI_SEL                   => "000000",
             RX_DEFER_RESET_BUF_EN        => "TRUE",
             RX_DEGEN_CTRL                => "100",
@@ -841,10 +877,10 @@ begin
             RXBYTEREALIGN        => rx_data_o.rxbyterealign,
             RXCDRLOCK            => open,
             RXCDRPHDONE          => open,
-            RXCHANBONDSEQ        => open,
-            RXCHANISALIGNED      => open,
-            RXCHANREALIGN        => open,
-            RXCHBONDO            => open,
+            RXCHANBONDSEQ        => rx_status_o.rxchanbondseq,
+            RXCHANISALIGNED      => rx_status_o.rxchanisaligned,
+            RXCHANREALIGN        => rx_status_o.rxchanrealign,
+            RXCHBONDO            => rx_chan_bond_o,
             RXCKCALDONE          => open,
             RXCLKCORCNT          => rx_status_o.rxclkcorcnt,
             RXCOMINITDET         => open,
@@ -964,11 +1000,11 @@ begin
             RXCDRHOLD            => '0',
             RXCDROVRDEN          => '0',
             RXCDRRESET           => '0',
-            RXCHBONDEN           => '0',
-            RXCHBONDI            => "00000",
-            RXCHBONDLEVEL        => "000",
-            RXCHBONDMASTER       => '0',
-            RXCHBONDSLAVE        => '0',
+            RXCHBONDEN           => '1',
+            RXCHBONDI            => rxchbondi,
+            RXCHBONDLEVEL        => rxchbondlevel,
+            RXCHBONDMASTER       => rxchbondmaster,
+            RXCHBONDSLAVE        => not rxchbondmaster,
             RXCKCALRESET         => '0',
             RXCKCALSTART         => "0000000",
             RXCOMMADETEN         => '1',

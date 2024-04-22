@@ -63,7 +63,7 @@ if __name__ == "__main__":
     input_file = open(args.input_file)
     for line in input_file.readlines():
         if "#" in line:
-            if "BATCH" in line:
+            if "TEST_TYPE" in line:
                 batch = line.split()[2]
                 if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
                     print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
@@ -71,9 +71,10 @@ if __name__ == "__main__":
             continue
         slot = line.split()[0]
         slot_name = line.split()[1]
-        oh_sn = line.split()[2]
-        vtrx_sn = line.split()[3]
-        pigtail = float(line.split()[4])
+        geb_sn = line.split()[2]
+        oh_sn = line.split()[3]
+        vtrxp_sn = line.split()[4]
+        pigtail = float(line.split()[5])
         if oh_sn != "-9999":
             if batch in ["prototype", "pre_production"]:
                 if int(oh_sn) not in range(1,1001):
@@ -92,7 +93,7 @@ if __name__ == "__main__":
                 sys.exit()
             geb_dict[slot] = oh_sn
             slot_name_dict[slot] = slot_name
-            vtrx_dict[slot] = vtrx_sn
+            vtrx_dict[slot] = vtrxp_sn
             pigtail_dict[slot] = pigtail
     input_file.close()
 

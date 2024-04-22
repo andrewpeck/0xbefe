@@ -1,14 +1,16 @@
 include:
     - project: 'hog/Hog'
       file: '/hog.yml'
-      ref: '264494c'
+      ref: 'Hog2024.1'
 
-    - local: '/Top/csc_apex/gitlab-ci.yml'
+    # - local: '/Top/csc_apex/gitlab-ci.yml' # not needed
     - local: '/Top/csc_cvp13/gitlab-ci.yml'
     - local: '/Top/csc_x2o/gitlab-ci.yml'
     # - local: '/Top/csc_x2o_r1/gitlab-ci.yml' # special build
     # - local: '/Top/csc_x2o_tamu/gitlab-ci.yml' # special build
     - local: '/Top/ge11_ctp7/gitlab-ci.yml'
+    - local: '/Top/ge11_x2o/gitlab-ci.yml'
+    # - local: '/Top/ge11_x2o_r1/gitlab-ci.yml' # special build
     - local: '/Top/ge210_cvp13/gitlab-ci.yml'
     - local: '/Top/ge21_apex/gitlab-ci.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci.yml'
@@ -18,6 +20,7 @@ include:
     # - local: '/Top/ge21_x2o_r1/gitlab-ci.yml' # special build
     # - local: '/Top/ge21_x2o_tamu/gitlab-ci.yml' # special build
     - local: '/Top/me0_apex/gitlab-ci.yml'
+    - local: '/Top/me0_ctp7/gitlab-ci.yml'
     - local: '/Top/me0_cvp13/gitlab-ci.yml'
     - local: '/Top/me0_x2o/gitlab-ci.yml'
     # - local: '/Top/me0_x2o_r1/gitlab-ci.yml' # special build
@@ -27,23 +30,26 @@ include:
     # - local: '/Top/oh_ge21.75/gitlab-ci.yml'
 
     # intermediate (devel) builds
-    # - local: '/Top/csc_apex/gitlab-ci-devel.yml' # FIXME CSC issues
-    # - local: '/Top/csc_cvp13/gitlab-ci-devel.yml' # FIXME CSC issues
-    # - local: '/Top/csc_x2o/gitlab-ci-devel.yml' # FIXME CSC + X2O issues
+    # - local: '/Top/csc_apex/gitlab-ci-devel.yml' # not needed
+    - local: '/Top/csc_cvp13/gitlab-ci-devel.yml'
+    - local: '/Top/csc_x2o/gitlab-ci-devel.yml'
     # - local: '/Top/csc_x2o_r1/gitlab-ci-devel.yml' # special build
     # - local: '/Top/csc_x2o_tamu/gitlab-ci-devel.yml' # special build
     - local: '/Top/ge11_ctp7/gitlab-ci-devel.yml'
+    - local: '/Top/ge11_x2o/gitlab-ci-devel.yml'
+    # - local: '/Top/ge11_x2o_r1/gitlab-ci-devel.yml' # special build
     - local: '/Top/ge210_cvp13/gitlab-ci-devel.yml'
     - local: '/Top/ge21_apex/gitlab-ci-devel.yml'
     - local: '/Top/ge21_ctp7/gitlab-ci-devel.yml'
     - local: '/Top/ge21_cvp13/gitlab-ci-devel.yml'
     - local: '/Top/ge21_cvp13_qc7/gitlab-ci-devel.yml'
-    # - local: '/Top/ge21_x2o/gitlab-ci-devel.yml' # FIXME X2O issues
+    - local: '/Top/ge21_x2o/gitlab-ci-devel.yml'
     # - local: '/Top/ge21_x2o_r1/gitlab-ci-devel.yml' # special build
     # - local: '/Top/ge21_x2o_tamu/gitlab-ci-devel.yml' # special build
     - local: '/Top/me0_apex/gitlab-ci-devel.yml'
+    - local: '/Top/me0_ctp7/gitlab-ci-devel.yml'
     - local: '/Top/me0_cvp13/gitlab-ci-devel.yml'
-    # - local: '/Top/me0_x2o/gitlab-ci-devel.yml' # FIXME X2O issues
+    - local: '/Top/me0_x2o/gitlab-ci-devel.yml'
     # - local: '/Top/me0_x2o_r1/gitlab-ci-devel.yml' # special build
     # - local: '/Top/me0_x2o_tamu/gitlab-ci-devel.yml' # special build
     - local: '/Top/oh_ge11/gitlab-ci-devel.yml'

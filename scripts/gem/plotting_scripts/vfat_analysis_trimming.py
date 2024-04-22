@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -10,6 +11,8 @@ import pandas as pd
 import datetime
 from collections import OrderedDict
 from common.utils import get_befe_scripts_dir
+
+matplotlib.use('Agg')
 
 def read_threshold_file(file_in, vfat):
     vfat_data = pd.read_csv(file_in, names=["vfatCH", "threshold", "ENC"], sep="    ", skiprows=[0,1], skipfooter=3, engine="python")
@@ -87,7 +90,7 @@ if __name__ == "__main__":
 
     for vfat_input_file in nd_file_list:
         filename = vfat_input_file.split("/")[-1]
-        vfat = int(filename.split("_VFAT")[1].removesuffix(".txt"))
+        vfat = int(filename.split("_VFAT")[1].replace('.txt',''))
         nd_file_in = open(vfat_input_file, "r")
         try:
             ud_file_in = open(ud_dir_name+"/"+filename, "r")

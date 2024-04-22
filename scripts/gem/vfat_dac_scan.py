@@ -56,6 +56,8 @@ MAX_DAC_SIZE = {
      "CFG_VREF_ADC": 3 
 }
 
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+
 def parseList(inFile):
     with open(inFile) as file:
         dacList = file.readlines()
@@ -63,7 +65,6 @@ def parseList(inFile):
     return dacList
 
 def vfat_dac_scan(gem, system, oh_select, vfat_list, dac_list, parallel, lower, upper_list, step, niter, adc_ref, vref_list):
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
     resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
@@ -413,7 +414,7 @@ if __name__ == "__main__":
         for vfat in vfat_list:
             vref_list[vfat] = vref
     else:
-        calib_path = "results/vfat_data/vfat_calib_data/%s_OH%s_vfat_calib_info_vref.txt"%(args.gem, args.ohid)
+        calib_path = scripts_gem_dir +  "/results/vfat_data/vfat_calib_data/%s_OH%s_vfat_calib_info_vref.txt"%(args.gem, args.ohid)
         vref_calib = {}
         if os.path.isfile(calib_path):
             calib_file = open(calib_path)

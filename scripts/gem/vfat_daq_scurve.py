@@ -8,8 +8,8 @@ from common.utils import get_befe_scripts_dir
 from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel, setVfatchannelTrim
 
 def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, parallel, threshold, ll, ul, step, nl1a, l1a_bxgap, trim):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data
@@ -35,6 +35,8 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
 
     daq_data = {}
     cal_mode = {}
+    threshold_orig = {}
+
     # Check ready and get nodes
     for vfat in vfat_list:
         gbt, gbt_select, elink, gpio = me0_vfat_to_gbt_elink_gpio(vfat)
@@ -58,6 +60,7 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_MODE"% (oh_select, vfat)), 0)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_CAL_DUR"% (oh_select, vfat)), 0)
             
+        threshold_orig[vfat] = read_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)))
         if threshold != -9999:
             print("Setting threshold = %d (DAC)"%threshold)
             write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold)
@@ -195,6 +198,7 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
         print("Unconfiguring VFAT %d" % (vfat))
         for channel in range(0,128):
             enableVfatchannel(vfat, oh_select, channel, 0, 0) # disable calpulsing on all channels for this VFAT
+        write_backend_reg(get_backend_node("BEFE.GEM.OH.OH%i.GEB.VFAT%i.CFG_THR_ARM_DAC"%(oh_select,vfat)), threshold_orig[vfat])
         configureVfat(0, vfat, oh_select, 0)
 
     # Writing Results

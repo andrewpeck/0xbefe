@@ -1,13 +1,19 @@
 from gem.gem_utils import *
 from time import sleep, time
 import datetime
-import sys
+import os, sys
 import argparse
 import math
 import json
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt.queso_testing.queso_initialization import queso_oh_map
 import gem.me0_lpgbt.rw_reg_lpgbt as rw_reg_lpgbt
+from gem.me0_lpgbt.rw_reg_lpgbt import Colors
+
+scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+queso_dir = scripts_gem_dir + "/me0_lpgbt/queso_testing"
+resultDir = queso_dir + '/results'
+input_fn = queso_dir + '/resources/input_queso.txt'
 
 def lpgbt_fec_error_counter(oh_ver):
     error_counter = 0
@@ -33,13 +39,12 @@ def init_lpgbt_fec_error_counter(oh_ver):
         rw_reg_lpgbt.mpoke(0x1C8, 0x0)
         rw_reg_lpgbt.mpoke(0x1C9, 0x0)
 
-def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, batch = None):
-    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scripts_gem_dir + "/me0_lpgbt/queso_testing/results"
-    if batch is None:
+def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loopback, test_type = None):
+    global resultDir
+    if test_type is None:
         dataDir = resultDir + "/bert_results"
     else:
-        dataDir = resultDir + "/%s_tests"%batch
+        dataDir = resultDir + "/%s_tests"%test_type
     try:
         os.makedirs(dataDir) # create directory for results
     except FileExistsError: # skip if directory already exists
@@ -51,7 +56,11 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     try:
         os.makedirs(OHDir) # create directory for OHs under test
     except FileExistsError: # skip if directory already exists
-        pass  
+        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%OHDir + Colors.ENDC)
+        if dir_overwrite.lower() in ['y','yes']:
+            pass  
+        else:
+            sys.exit()
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
@@ -59,9 +68,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_elink_bert_results.json"
 
-    print (Colors.BLUE + "\nTests started for Batch: %s\n"%batch + Colors.ENDC)
+    print (Colors.BLUE + "\nTests started for Batch: %s\n"%test_type + Colors.ENDC)
     print ("")
-    logfile.write("\nTests started for Batch: %s\n\n"%batch)
+    logfile.write("\nTests started for Batch: %s\n\n"%test_type)
 
     print ("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Checking BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
@@ -85,20 +94,16 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         runtime = float(runtime)
 
     queso_reset_node = get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
-    queso_bitslip_nodes = {}
     queso_prbs_nodes = {}
     prbs_errors = {}
     for oh_select in oh_gbt_vfat_map:
-        queso_bitslip_nodes[oh_select] = {}
         queso_prbs_nodes[oh_select] = {}
         prbs_errors[oh_select] = {}
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:
-            queso_bitslip_nodes[oh_select][vfat] = {}
             queso_prbs_nodes[oh_select][vfat] = {}
             prbs_errors[oh_select][vfat] = {}
             for elink in range(0, 9):
-                queso_bitslip_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.ELINK_BITSLIP"%(oh_select, vfat, elink))
                 queso_prbs_nodes[oh_select][vfat][elink] = get_backend_node("BEFE.GEM.GEM_TESTS.QUESO_TEST.OH%d.VFAT%d.ELINK%d.PRBS_ERR_COUNT"%(oh_select, vfat, elink))
                 prbs_errors[oh_select][vfat][elink] = {}
                 prbs_errors[oh_select][vfat][elink]["lpgbt"] = -9999
@@ -170,7 +175,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     print ("Starting PRBS and FEC errors: \n")
     logfile.write("Starting PRBS and FEC errors: \n\n")
 
-    err_str = Colors.RED + "  PRBS errors on: "
+    err_str = Colors.RED + "  PRBS errors on:\n"
     for oh_select in oh_gbt_vfat_map:
         vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
         for vfat in vfat_list:
@@ -340,7 +345,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 prbs_errors[oh_select][vfat][elink]["lpgbt_elink"] = elink_nr
                 err_str += "    ELINK %d (GBT: %d, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink]["n_errors"])
                 if prbs_errors[oh_select][vfat][elink]["n_errors"] == 0:
-                    err_str += ", BER < {:.2e}".format(ber_ul) 
+                    err_str += ", BER < {:.4e}".format(ber_ul) 
                     prbs_errors[oh_select][vfat][elink]["ber_ul"] = ber_ul
                 err_str += Colors.ENDC
                 print (err_str)
@@ -428,45 +433,45 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_ERROR_COUNT"] = n_sub_total_elink_errors
         prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_ERROR_COUNT"] = n_boss_total_elink_errors + n_sub_total_elink_errors
         if n_boss_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] == 0:
-            prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
+            prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "{:.4e}".format(optical_uplink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on boss lpGBT = %d"%n_boss_total_elink_errors + Colors.ENDC)
             print (Colors.GREEN + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
-            print (Colors.GREEN + "  For each uplink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
+            print (Colors.GREEN + "  For each uplink elink on boss lpGBT: " + "BER < {:.4e}".format(ber_ul) + Colors.ENDC)
+            print (Colors.GREEN + "  For optical uplink on boss lpGBT: " + "BER < " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss lpGBT = %d\n"%n_boss_total_elink_errors)
             logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"])
-            logfile.write("  For each uplink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + "\n")
-            logfile.write("  For optical uplink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + "\n")
+            logfile.write("  For each uplink elink on boss lpGBT: " + "BER < {:.4e}".format(ber_ul) + "\n")
+            logfile.write("  For optical uplink on boss lpGBT: " + "BER < "  + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + "\n")
         else:
             print (Colors.RED + "  Total number of PRBS errors on boss lpGBT = %d"%n_boss_total_elink_errors + Colors.ENDC)
             print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss lpGBT = %d\n"%n_boss_total_elink_errors)
             logfile.write("  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"])
         if n_sub_total_elink_errors == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] == 0:
-            prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_uplink_ber_ul) 
+            prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "{:.4e}".format(optical_uplink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on sub lpGBT = %d"%n_sub_total_elink_errors + Colors.ENDC)
             print (Colors.GREEN + "  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
-            print (Colors.GREEN + "  For each uplink elink on sub lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
+            print (Colors.GREEN + "  For each uplink elink on sub lpGBT: " + "BER < {:.4e}".format(ber_ul) + Colors.ENDC)
+            print (Colors.GREEN + "  For optical uplink on sub lpGBT: " + "BER < "  + prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on sub lpGBT = %d\n"%n_sub_total_elink_errors)
             logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"])
-            logfile.write("  For each uplink elink on sub lpGBT: " + "BER < {:.2e}".format(ber_ul) + "\n")
-            logfile.write("  For optical uplink on sub lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + "\n")
+            logfile.write("  For each uplink elink on sub lpGBT: " + "BER < {:.4e}".format(ber_ul) + "\n")
+            logfile.write("  For optical uplink on sub lpGBT: " + "BER < "  + prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + "\n")
         else:
             print (Colors.RED + "  Total number of PRBS errors on sub lpGBT = %d"%n_sub_total_elink_errors + Colors.ENDC)
             print (Colors.RED + "  Total number of uplink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"])
             logfile.write("  Total number of PRBS errors on sub lpGBT = %d\n"%n_sub_total_elink_errors)
             logfile.write("  Total number of uplink FEC errors on sub lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_S_QUESO_UP_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
         if (n_boss_total_elink_errors + n_sub_total_elink_errors) == 0 and prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_FEC_ERROR_COUNT"] == 0:
-            prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "BER < {:.2e}".format(optical_downlink_ber_ul) 
+            prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] = "{:.4e}".format(optical_downlink_ber_ul) 
             print (Colors.GREEN + "  Total number of PRBS errors on boss and sub lpGBT = %d"%(n_boss_total_elink_errors + n_sub_total_elink_errors) + Colors.ENDC)
             print (Colors.GREEN + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
-            print (Colors.GREEN + "  For each downlink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul) + Colors.ENDC)
-            print (Colors.GREEN + "  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
+            print (Colors.GREEN + "  For each downlink elink on boss lpGBT: " + "BER < {:.4e}".format(ber_ul) + Colors.ENDC)
+            print (Colors.GREEN + "  For optical downlink on boss lpGBT: " + "BER < "  + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"] + Colors.ENDC)
             logfile.write("  Total number of PRBS errors on boss and sub lpGBT = %d\n"%(n_boss_total_elink_errors + n_sub_total_elink_errors))
             logfile.write("  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_FEC_ERROR_COUNT"])
-            logfile.write("  For each downlink elink on boss lpGBT: " + "BER < {:.2e}".format(ber_ul))
-            logfile.write("  For optical downlink on boss lpGBT: " + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"])
+            logfile.write("  For each downlink elink on boss lpGBT: " + "BER < {:.4e}".format(ber_ul))
+            logfile.write("  For optical downlink on boss lpGBT: " + "BER < "  + prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_PRBS_BER_UPPER_LIMIT"])
         else:
             print (Colors.RED + "  Total number of PRBS errors on boss and sub lpGBT = %d"%(n_boss_total_elink_errors + n_sub_total_elink_errors) + Colors.ENDC)
             print (Colors.RED + "  Total number of downlink FEC errors on boss lpGBT = %d"%prbs_errors_oh_sn[oh_sn]["LPGBT_M_QUESO_DOWN_OPTICAL_LINK_FEC_ERROR_COUNT"] + Colors.ENDC)
@@ -478,12 +483,12 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     logfile.write("\n")
     
     for oh_sn in prbs_errors_oh_sn:
-        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_ERROR_COUNT'])
-        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'])
-        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_ERROR_COUNT'])
-        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_BER_UPPER_LIMIT'])
-        prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_ERROR_COUNT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_ERROR_COUNT'])
-        prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'] = str(prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'])
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_ERROR_COUNT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_ERROR_COUNT']]
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT']]
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_ERROR_COUNT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_ERROR_COUNT']]
+        prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_BER_UPPER_LIMIT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_M_QUESO_DOWN_ELINK_PRBS_BER_UPPER_LIMIT']]
+        prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_ERROR_COUNT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_ERROR_COUNT']]
+        prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT'] = ["{:.4e}".format(p_err) for p_err in prbs_errors_oh_sn[oh_sn]['LPGBT_S_QUESO_UP_ELINK_PRBS_BER_UPPER_LIMIT']]
     
     prbs_errors_oh_sn = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in prbs_errors_oh_sn.items()]
     with open(results_fn, "w") as resultsfile:
@@ -496,7 +501,6 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     resultsfile.close()
 
 if __name__ == "__main__":
-
     # Parsing arguments
     parser = argparse.ArgumentParser(description="QUESO BERT")
     parser.add_argument("-s", "--system", action="store", dest="system", help="system = backend or dryrun")
@@ -504,7 +508,6 @@ if __name__ == "__main__":
     #parser.add_argument("-o", "--ohs", action="store", nargs="+", dest="ohs", help="ohs = list of OH numbers (0-1)")
     #parser.add_argument("-n", "--oh_ser_nrs", action="store", nargs="+", dest="oh_ser_nrs", help="oh_ser_nrs = list of OH serial numbers")
     #parser.add_argument("-v", "--vfats", action="store", nargs="+", dest="vfats", help="vfats = list of VFAT numbers (0-23)")
-    parser.add_argument("-i", "--input_file", action="store", dest="input_file", help="INPUT_FILE = input file containing OH serial numbers for QUESOs")
     parser.add_argument("-t", "--time", action="store", dest="time", help="TIME = measurement time in minutes")
     parser.add_argument("-b", "--ber", action="store", dest="ber", help="BER = measurement till this BER. eg. 1e-12")
     parser.add_argument("-c", "--cl", action="store", dest="cl", default="0.95", help="CL = confidence level desired for BER measurement, default = 0.95")
@@ -523,26 +526,27 @@ if __name__ == "__main__":
         print(Colors.YELLOW + "Valid gem station: ME0" + Colors.ENDC)
         sys.exit()
 
-    if args.input_file is None:
-        print(Colors.YELLOW + "Need Input File" + Colors.ENDC)
-        sys.exit()
     oh_gbt_vfat_map = {}
     queso_dict = {}
-    input_file = open(args.input_file)
+
+    input_file = open(input_fn)
     for line in input_file.readlines():
         if "#" in line:
             if "TEST_TYPE" in line:
-                batch = line.split()[2]
-                if batch not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test batch codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
+                test_type = line.split()[2]
+                if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
+                    print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
                     sys.exit()
             continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
-            if int(oh_sn) not in range(1, 1019):
-                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
-                sys.exit() 
+            if test_type == "pre_production" and int(oh_sn) not in range(1, 1001):
+                print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
+                sys.exit()
+            elif test_type in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
+                print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
+                sys.exit()
             queso_dict[queso_nr] = oh_sn
     input_file.close()
     if len(queso_dict) == 0:
@@ -573,7 +577,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl), args.loopback, batch=batch)
+        queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl), args.loopback, test_type=test_type)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         terminate()

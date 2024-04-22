@@ -1,9 +1,12 @@
 from gem.gem_utils import *
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 import os, sys, glob
 import argparse
+
+matplotlib.use('Agg')
 
 if __name__ == "__main__":
 
@@ -12,8 +15,8 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--filename", action="store", dest="filename", help="Cross talk result filename")
     args = parser.parse_args()
 
-    directoryName        = args.filename.removesuffix(".txt")
-    plot_filename_prefix = (directoryName.split("/"))[3]
+    directoryName        = args.filename.replace('.txt','')
+    plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)
 

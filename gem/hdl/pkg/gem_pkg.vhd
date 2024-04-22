@@ -224,6 +224,7 @@ package gem_pkg is
         sync_error_cnt          : std_logic_vector(3 downto 0);
         daq_event_cnt           : std_logic_vector(15 downto 0);
         daq_crc_err_cnt         : std_logic_vector(7 downto 0);
+        not_in_table_cnt        : std_logic_vector(7 downto 0);
     end record;
     
     type t_trig_link_status_arr is array(integer range <>) of t_trig_link_status;    

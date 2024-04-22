@@ -8,8 +8,8 @@ from vfat_config import initialize_vfat_config, configureVfat, enableVfatchannel
 import datetime
 
 def vfat_bert(gem, system, oh_list, vfat_list, set_cal_mode, cal_dac, nl1a, runtime, l1a_bxgap, cl, calpulse):
-    scritps_gem_dir = get_befe_scripts_dir() + '/gem'
-    resultDir = scritps_gem_dir + "/results"
+    scripts_gem_dir = get_befe_scripts_dir() + '/gem'
+    resultDir = scripts_gem_dir + "/results"
     vfatDir = resultDir + "/vfat_data"
     try:
         os.makedirs(vfatDir) # create directory for VFAT data

@@ -15,7 +15,7 @@
         description="Trigger control">
     <node id="MODULE_RESET" address="0x0" permission="w"
           description="Trigger module reset"
-          fw_write_pulse_signal="reset_local"/>
+          fw_write_pulse_signal="reset_local"
           sw_ctrl_configure_set="0x1" sw_ctrl_start_set="0x1"/>
     <node id="SBIT_TEST_RESET" address="0x2" permission="w"
           description="Reset all the SBIT counters"
@@ -26,12 +26,30 @@
           fw_write_pulse_signal="reset_fifo"/>
   </node>
 
+  <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat sbit"
+        fw_signal="test_sbit0xs_count_me0"/>
+  <node id="TEST_SBIT0XE_COUNT_ME0" address="0x21" mask="0xffffffff" permission="r"
+        description="Test register to display count of sbit from particular OH vfat elink"
+        fw_signal="test_sbit0xe_count_me0"/>
+  <node id="TEST_SEL_OH_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
+        description="Select OH for sbit test"
+        fw_signal="test_sel_oh_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
+        description="Select VFAT for sbit test"
+        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
+        description="Select Elink for sbit test"
+        fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
+  <node id="TEST_SEL_SBIT_ME0" address="0x25" mask="0xffffffff" permission="w"
+        description="Select sbit for sbit test"
+        fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
 
-  <node id="OH${OH_CNT_ID}" address="0x30"
+  <node id="OH${OH_CNT_ID}" address="0x100"
 	description="rate of OR of all sbits for VFAT ${VFAT_CNT_ID} of OH ${OH_CNT_ID}"
 	generate="true"
 	generate_size="&NUM_OHS;"
-	generate_address_step="0x31"
+	generate_address_step="0x40"
 	generate_idx_var="OH_CNT_ID">
       <node id="CNT" address="0x20" description = "S-BIT Counters \\  Set CNT_PERSIST to 1 to accumulate. Otherwise the counters will automatically reset after a programmable time (default is 1 second). By default this time is 1 second, making these counters a rate counter in Hertz">
             <node id="VFAT${VFAT_CNT_ID}_SBITS" address="0x00" permission="r"
@@ -67,26 +85,7 @@
       </node>
   </node>
 
-  <node id="TEST_SBIT0XS_COUNT_ME0" address="0x20" mask="0xffffffff" permission="r"
-        description="Test register to display count of sbit from particular OH vfat sbit"
-        fw_signal="test_sbit0xs_count_me0"/>
-  <node id="TEST_SBIT0XE_COUNT_ME0" address="0x21" mask="0xffffffff" permission="r"
-        description="Test register to display count of sbit from particular OH vfat elink"
-        fw_signal="test_sbit0xe_count_me0"/>
-  <node id="TEST_SEL_OH_SBIT_ME0" address="0x22" mask="0xffffffff" permission="w"
-        description="Select OH for sbit test"
-        fw_signal="test_sel_oh_sbit_me0" fw_default="0x00000000"/>      
-  <node id="TEST_SEL_VFAT_SBIT_ME0" address="0x23" mask="0xffffffff" permission="w"
-        description="Select VFAT for sbit test"
-        fw_signal="test_sel_vfat_sbit_me0" fw_default="0x00000000"/>
-  <node id="TEST_SEL_ELINK_SBIT_ME0" address="0x24" mask="0xffffffff" permission="w"
-        description="Select Elink for sbit test"
-        fw_signal="test_sel_elink_sbit_me0" fw_default="0x00000000"/>
-  <node id="TEST_SEL_SBIT_ME0" address="0x25" mask="0xffffffff" permission="w"
-        description="Select sbit for sbit test"
-        fw_signal="test_sel_sbit_me0" fw_default="0x00000000"/>
-  
-  <node id="INJECT" address="0x100"
+  <node id="INJECT" address="0x400"
         description="S-bit injection using FIFOs to bypass VFATs">
     <node id="DATA_H" address="0x0" mask="0xffffffff" permission="rw"
           description="Upper bits of injected sbits into me0"
@@ -96,7 +95,7 @@
           fw_signal="sbit_inj_fifo_din(31 downto 0)" fw_default="0x00000000"/>
     <node id="READ_EN" address="0x2" permission="w"
           description="Enable signal to read fifo and inject sbits into me0"
-          fw_write_pulse_signal="inject_sbits_en"/>      
+          fw_write_pulse_signal="inject_sbits_en"/>
     <node id="WRITE_EN" address="0x3" permission="w"
           description="Enable signal to write sbits into fifo for injecting"
           fw_write_pulse_signal="load_sbits_en"/>
@@ -133,13 +132,11 @@
     </node>
   </node>
 
-
- 
-  <node id="OH${OH_CNT_ID}_BITSLIP" address="0x200" 
+  <node id="OH${OH_CNT_ID}_BITSLIP" address="0x500"
     description="slip count for bitslip of VFATs for mapping sbits of each elink"
     generate="true"
 	generate_size="&NUM_OHS;"
-	generate_address_step="0x30"
+	generate_address_step="0x40"
 	generate_idx_var="OH_CNT_ID">
     <node id="VFAT${VFAT_CNT_ID}" address="0x0"
           description="slip count for bitslip of VFAT${VFAT_CNT_ID}"
@@ -190,11 +187,11 @@
     </node>
   </node>
 
-  <node id="OH${OH_CNT_ID}_VFAT_DELAY" address="0x500" 
+  <node id="OH${OH_CNT_ID}_VFAT_DELAY" address="0x700"
     description="Bx count for delay of VFATs sbits of each elink"
     generate="true"
     generate_size="&NUM_OHS;"
-    generate_address_step="0x30"
+    generate_address_step="0x40"
     generate_idx_var="OH_CNT_ID">
     <node id="VFAT${VFAT_CNT_ID}" address="0x0"
           description="Bx count for delay of VFAT${VFAT_CNT_ID}"

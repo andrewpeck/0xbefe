@@ -34,3 +34,4 @@ csc/hdl/system/generated/csc_x2o_r1/link_monitor.vhd
 csc/hdl/tests/generated/csc_x2o_r1/csc_tests.vhd
 csc/hdl/daq/generated/csc_x2o_r1/daq.vhd
 common/hdl/misc/generated/csc_x2o_r1/promless_bram.vhd
+common/hdl/misc/generated/csc_x2o_r1/eth_switch.vhd

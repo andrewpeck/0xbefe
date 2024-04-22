@@ -1,5 +1,6 @@
 from gem.gem_utils import *
 from common.utils import get_befe_scripts_dir
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import cm
@@ -10,6 +11,7 @@ import warnings
 import copy
 
 plt.rcParams.update({"font.size": 22}) # Increase font size
+matplotlib.use('Agg')
 
 def getCalData(calib_path):
     slope_adc = {}
@@ -45,7 +47,7 @@ def DACToCharge(dac, slope_adc, intercept_adc, current_pulse_sf, vfat, mode):
                 slope = abs(slope_adc[vfat])
                 intercept = 0
     if slope==-9999 or intercept==-9999: # use average values
-        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using avergae values"%vfat + Colors.ENDC)
+        print (Colors.YELLOW + "ADC Cal data not present for VFAT%d, using average values"%vfat + Colors.ENDC)
         if mode=="voltage":
             slope = -0.22 # fC/DAC
             intercept = 56.1 # fC
@@ -81,8 +83,8 @@ if __name__ == "__main__":
     #    print(Colors.YELLOW + "Type can only be daq or sbit" + Colors.ENDC)
     #    sys.exit()
 
-    directoryName        = args.filename.removesuffix(".txt")
-    plot_filename_prefix = (directoryName.split("/"))[3]
+    directoryName        = args.filename.replace('.txt','')
+    plot_filename_prefix = (directoryName.split("/"))[-1]
     oh = plot_filename_prefix.split("_vfat")[0]
     file = open(args.filename)
 
@@ -122,7 +124,7 @@ if __name__ == "__main__":
         sys.exit()
 
     scripts_gem_dir = get_befe_scripts_dir() + '/gem'
-    calib_path = scripts_gem_dir + "results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
+    calib_path = scripts_gem_dir + "/results/vfat_data/vfat_calib_data/"+oh+"_vfat_calib_info_calDac.txt"
     slope_adc, intercept_adc = getCalData(calib_path)
 
     scurve_result = {}

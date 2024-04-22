@@ -49,7 +49,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting DAQ SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m voltage -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/daq_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/daq_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting DAQ Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting DAQ Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/crosstalk_ME0_OH0.pdf %s/daq_crosstalk.pdf"%(latest_dir, dataDir))
     else:
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit Crosstalk for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Crosstalk for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_crosstalk.py -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/crosstalk_ME0_OH0.pdf %s/sbit_crosstalk.pdf"%(latest_dir, dataDir))
     else:
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_noise_rate.py -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         if os.path.isdir(dataDir + "/sbit_noise_rate_results"):
             os.system("rm -rf " + dataDir + "/sbit_noise_rate_results")
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit Cluster SCurves for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster SCurves for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_analysis_scurve.py -c 0 -m current -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/scurve2Dhist_ME0_OH0.png %s/sbit_cluster_scurve_2D_hist.png"%(latest_dir, dataDir))
         os.system("cp %s/scurveENCdistribution_ME0_OH0.pdf %s/sbit_cluster_scurve_ENC.pdf"%(latest_dir, dataDir))
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     print (Colors.BLUE + "Plotting S-bit Cluster Noise Rate for all VFATs\n" + Colors.ENDC)
     logfile.write("Plotting S-bit Cluster Noise Rate for all VFATs\n\n")
     os.system("python3 plotting_scripts/vfat_plot_sbit_cluster_noise_rate.py -f %s"%latest_file)
-    latest_dir = latest_file.removesuffix(".txt")
+    latest_dir = latest_file.replace('.txt','')
     if os.path.isdir(latest_dir):
         os.system("cp %s/*_total_*.pdf %s/sbit_cluster_noise_rate_total.pdf"%(latest_dir, dataDir))
         os.system("cp %s/2d*.pdf %s/sbit_cluster_2d_threshold_noise_rate.pdf"%(latest_dir, dataDir))

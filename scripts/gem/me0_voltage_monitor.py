@@ -3,6 +3,7 @@ from time import sleep, time
 import sys
 import argparse
 import csv
+import matplotlib
 import matplotlib.pyplot as plt
 import os, glob
 import datetime
@@ -10,10 +11,13 @@ import numpy as np
 from common.utils import get_befe_scripts_dir
 from gem.me0_lpgbt_adc import *
 
+matplotlib.use('Agg')
+
 def main(system, oh_ver, oh_select, gbt_select, boss, run_time_min, niter, gain, plot):
 
     chip_id = read_chip_id(system, oh_ver)
     adc_calib = read_central_adc_calib_file()
+    adc_calib = check_chip_id_adc_calib(oh_ver, chip_id, adc_calib)
     junc_temp, junc_temp_unc = read_junc_temp(system, chip_id, adc_calib)
     vref_tune, vref_tune_unc = read_vref_tune(chip_id, adc_calib, junc_temp, junc_temp_unc)
     init_adc(oh_ver, vref_tune)

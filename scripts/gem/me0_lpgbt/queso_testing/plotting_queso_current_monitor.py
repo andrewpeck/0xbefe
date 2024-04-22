@@ -2,8 +2,11 @@ from turtle import color
 import pandas as pd
 import glob
 import os
+import matplotlib
 import matplotlib.pyplot as plt
 import argparse
+
+matplotlib.use('Agg')
 
 if __name__ == '__main__':
 
