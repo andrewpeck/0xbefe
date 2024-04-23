@@ -42,6 +42,20 @@ def set_phases(oh_select, phase_bitslip_list):
             phase = phase_bitslip_list[vfat][elink]["phase"]
             set_phase(oh_select, vfat, elink, phase)
 
+def find_aligned_phase_center(vfat, err_list, aligned_phases_center):
+    err_list_elink = {}
+    for elink in range(0, 9):
+        err_list_elink[elink] = err_list[elink].copy()
+    for elink in range(0, 9):
+        for phase in range(0, len(err_list_elink[elink])):
+            if err_list_elink[elink][phase] != 0:
+                for elink2 in range(0, 9):
+                    err_list_elink[elink2][phase] = err_list_elink[elink][phase]
+    for elink in range(0, 9):
+        center, width = find_phase_center(err_list_elink[elink])
+        if width >= 5:
+            aligned_phases_center[vfat][elink] = center
+
 def find_phase_center(err_list):
     lower_edge_min = -1
     upper_edge_max = 15
@@ -105,7 +119,7 @@ def find_phase_center(err_list):
         center = 14
     return center, width
 
-def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, single):
+def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, align_phases, single):
     
     queso_reset_node = gem_utils.get_backend_node("BEFE.GEM.GEM_TESTS.CTRL.QUESO_RESET")
     queso_bitslip_nodes = {}
@@ -236,11 +250,52 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, sin
         # Find best phase and bitslip
         print ("\nPhase Scan Results:")
         logfile_out.write("\nPhase Scan Results:\n")
+
+        aligned_phases_center = [[-9999 for elink in range(9)] for vfat in range(24)]
+        for vfat in vfat_list:
+            find_aligned_phase_center(vfat, prbs_min_err_list[vfat], aligned_phases_center)
+
         for vfat in queso_bitslip_nodes:
             centers = 9*[0]
             widths  = 9*[0]
             for elink in queso_bitslip_nodes[vfat]:
                 centers[elink], widths[elink] = find_phase_center(prbs_min_err_list[vfat][elink])
+                if not align_phases:
+                    if centers[elink] == 7 and (widths[elink]==15 or widths[elink]==14):
+                        if elink!=0:
+                            centers[elink] = centers[elink-1]
+                else:
+                    new_center = aligned_phases_center[vfat][elink]
+                    if new_center != -9999:
+                        if centers[elink] > new_center:
+                            if new_center != 14:
+                                bad_phase = -9999
+                                for p in range(new_center, centers[elink]+1):
+                                    if prbs_min_err_list[vfat][elink][p] != 0:
+                                        bad_phase = p
+                                        break
+                                if bad_phase == -9999:
+                                    centers[elink] = new_center + 1
+                                else:
+                                    centers[elink] = new_center
+                            else:
+                                centers[elink] = new_center
+                        elif centers[elink] < new_center:
+                            if new_center != 0:
+                                bad_phase = -9999
+                                for p in range(centers[elink], new_center+1):
+                                    if prbs_min_err_list[vfat][elink][p] != 0:
+                                        bad_phase = p
+                                        break
+                                if bad_phase == -9999:
+                                    centers[elink] = new_center - 1
+                                else:
+                                    centers[elink] = new_center
+                            else:
+                                centers[elink] = new_center
+                        else:
+                            centers[elink] = new_center
+
             print ("\nVFAT %02d :" %(vfat))
             logfile_out.write("\nVFAT %02d :\n" %(vfat))
             for elink in queso_bitslip_nodes[vfat]:
@@ -318,6 +373,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--phase", action="store", dest="phase", help="phase = Best value of the elinkRX bitslip")
     parser.add_argument("-b", "--bitslips", action="store", nargs="+", dest="bitslips", help="bitslips = Best value of the two elinkRX bitslip values")
     parser.add_argument("-f", "--phase_bitslip_file", action="store", dest="phase_bitslip_file", help="phase_bitslip_file = Text file with best value of the elinkRX phase and bitslip")
+    parser.add_argument("-a", "--align_phases", action="store_true", dest="align_phases", help="align_phases = whether to align phases of all elinks")
     parser.add_argument("-l", "--single", action="store_true", dest="single", help="single = if single bitslip scan is needed (when not using bitmasking)")
     args = parser.parse_args()
 
@@ -415,7 +471,7 @@ if __name__ == "__main__":
 
     # Scanning/setting bitslips
     try:
-        scan_set_phase_bitslip(args.system, int(args.ohid), vfat_list, phase_bitslip_list, args.single)
+        scan_set_phase_bitslip(args.system, int(args.ohid), vfat_list, phase_bitslip_list, args.align_phases, args.single)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
         rw_terminate()
