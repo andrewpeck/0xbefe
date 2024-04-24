@@ -15,13 +15,6 @@ create_clock -period 24.8 -name clock   [get_ports clock_p]
 # Iserdes constraints
 ################################################################################
 
-# keep a short between iserdes and the ffs
-set_max_delay 1.5 \
-    -from [get_cells gbt_inst/gbt_serdes/gbt_oversample/*/iserdes_a7.iserdes]
-
-set_max_delay 1.5 \
-    -from [get_cells trigger_inst/sbits/*trig_alignment*/*oversample*/*ise*/iserdes_a7.iserdes]
-
 # keep ISERDES resets synchronized for both gbt and sbits
 set_max_delay -datapath_only 4.0 \
     -to   [get_pins gbt_inst/gbt_serdes/gbt_oversample/ise*/iserdes_a7.iserdes/RST] \
