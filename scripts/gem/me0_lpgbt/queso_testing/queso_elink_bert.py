@@ -182,7 +182,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
             for elink in range(0, 9):
                 prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
                 if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
-                    err_str += "OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
+                    err_str += "    OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                     n_elink_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_elink_errors == 0:
@@ -193,18 +193,18 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         logfile.write(err_str + "\n")
 
     n_link_fec_errors = 0
-    err_str = Colors.RED + "  FEC errors on: "
+    err_str = Colors.RED + "  FEC errors on:\n"
     for oh_select in oh_gbt_vfat_map:
         for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
             fec_uplink_errors[oh_select][gbt] = read_backend_reg(fec_uplink_error_nodes[oh_select][gbt])
             if fec_uplink_errors[oh_select][gbt] != 0:
-                err_str += "OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                err_str += "    OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                 n_link_fec_errors += 1
             if gbt%2==0:
                 rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                 fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                 if fec_downlink_errors[oh_select][gbt] != 0:
-                    err_str += "OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                    err_str += "    OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                     n_link_fec_errors += 1
     err_str += "\n" + Colors.ENDC
     if n_link_fec_errors == 0:
@@ -225,14 +225,14 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
             n_elink_errors = 0
             print ("Checking PRBS and FEC errors: \n")
             logfile.write("Checking PRBS and FEC errors: \n\n")
-            err_str = Colors.RED + "  PRBS errors on: "
+            err_str = Colors.RED + "  PRBS errors on:\n"
             for oh_select in oh_gbt_vfat_map:
                 vfat_list = oh_gbt_vfat_map[oh_select]["VFAT"]
                 for vfat in vfat_list:
                     for elink in range(9):
                         prbs_errors[oh_select][vfat][elink]["n_errors"] = read_backend_reg(queso_prbs_nodes[oh_select][vfat][elink])
                         if prbs_errors[oh_select][vfat][elink]["n_errors"] != 0:
-                            err_str += "OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
+                            err_str += "    OH %d VFAT %d ELINK %d: %d errors\n"%(oh_select,vfat, elink, prbs_errors[oh_select][vfat][elink]["n_errors"])
                             n_elink_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_elink_errors == 0:
@@ -243,18 +243,18 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 logfile.write(err_str + "\n")
 
             n_link_fec_errors = 0
-            err_str = Colors.RED + "  FEC errors on: "
+            err_str = Colors.RED + "  FEC errors on:\n"
             for oh_select in oh_gbt_vfat_map:
                 for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
                     fec_uplink_errors[oh_select][gbt] = read_backend_reg(fec_uplink_error_nodes[oh_select][gbt])
                     if fec_uplink_errors[oh_select][gbt] != 0:
-                        err_str += "OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                        err_str += "    OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                         n_link_fec_errors += 1
                     if gbt%2==0:
                         rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                         fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                         if fec_downlink_errors[oh_select][gbt] != 0:
-                            err_str += "OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                            err_str += "    OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
                             n_link_fec_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_link_fec_errors == 0:
