@@ -53,20 +53,24 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     for queso in queso_dict:
         oh_ser_nr_list.append(queso_dict[queso])
     OHDir = dataDir+"/OH_SNs_"+"_".join(oh_ser_nr_list)
-    try:
-        os.makedirs(OHDir) # create directory for OHs under test
-    except FileExistsError: # skip if directory already exists
-        dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%OHDir + Colors.ENDC)
-        if dir_overwrite.lower() in ['y','yes']:
-            pass  
-        else:
-            sys.exit()
+
     now = str(datetime.datetime.now())[:16]
     now = now.replace(":", "_")
     now = now.replace(" ", "_")
     log_fn = OHDir+"/queso_elink_bert_log.txt"
-    logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_elink_bert_results.json"
+
+    try:
+        os.makedirs(OHDir) # create directory for OHs under test
+    except FileExistsError: # skip if directory already exists
+        if os.path.exists(log_fn) or os.path.exists(results_fn):
+            dir_overwrite = input(Colors.YELLOW + '\nDirectory %s already exists, do you want to overwrite files? >> '%OHDir + Colors.ENDC)
+            if dir_overwrite.lower() in ['y','yes']:
+                pass  
+            else:
+                sys.exit()
+
+    logfile = open(log_fn, "w")
 
     print (Colors.BLUE + "\nTests started for Batch: %s\n"%test_type + Colors.ENDC)
     print ("")
