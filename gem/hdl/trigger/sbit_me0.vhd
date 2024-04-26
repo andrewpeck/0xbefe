@@ -316,7 +316,7 @@ begin
 
     --== Raw S-bit testing features ==--
 
-    g_raw_sbit_test : if not g_ENABLE_RAW_SBIT_TEST generate
+    g_raw_sbit_test : if g_ENABLE_RAW_SBIT_TEST generate
 
         -- per eLink
         signal vfat3_sbit0xe_test_oh   : t_std64_array(23 downto 0);
