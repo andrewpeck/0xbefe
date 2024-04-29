@@ -503,7 +503,7 @@ begin
                 generic map(
                     CHK_MODE    => true,
                     INV_PATTERN => true,
-                    POLY_LENGHT => 31,
+                    POLY_LENGTH => 31,
                     POLY_TAP    => 28,
                     NBITS       => 32
                 )
@@ -545,7 +545,7 @@ begin
         generic map(
             CHK_MODE    => false,
             INV_PATTERN => true,
-            POLY_LENGHT => 31,
+            POLY_LENGTH => 31,
             POLY_TAP    => 28,
             NBITS       => 32
         )
