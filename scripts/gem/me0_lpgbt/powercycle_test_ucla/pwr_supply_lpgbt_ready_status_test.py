@@ -103,7 +103,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
     # Power cycle interations
     for n in range(0,niter):
         print ("Iteration: %d\n"%(n+1))
-
+        test_failed = False
         # Turn power supply on
         power_supply.enable_output()
         sleep(3)
@@ -129,6 +129,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_error_backend_ready_boss[gbt] += 1
+                test_failed = True
             else:
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
@@ -137,6 +138,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_boss[gbt] += 1
+                test_failed = True
             else:
                 print (Colors.GREEN + "  No FEC Errors" + Colors.ENDC)
 
@@ -154,11 +156,13 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
 
             if mode != mode_value:
                 n_error_mode_boss[gbt] += 1
+                test_failed = True
                 print (Colors.YELLOW + "  Incorrect mode: %d"%mode + Colors.ENDC)
             else:
                 print (Colors.GREEN + "  Correct mode: %d"%mode + Colors.ENDC)
             if pusmstate != ready_value:
                 n_error_pusm_ready_boss[gbt] += 1
+                test_failed = True
                 print (Colors.YELLOW + "  Incorrect PUSM State: %d"%pusmstate + Colors.ENDC)
             else:
                 print (Colors.GREEN + "  Correct PUSM State: %d"%pusmstate + Colors.ENDC)
@@ -172,6 +176,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
                 val = mpeek(reg)
                 if val != reg_list_boss[gbt][reg]:
                     n_error_reg_list_boss[gbt] += 1
+                    test_failed = True
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
         # Sub
@@ -186,6 +191,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if (link_ready!=1):
                 print (Colors.YELLOW + "  Link NOT READY" + Colors.ENDC)
                 n_error_backend_ready_sub[gbt] += 1
+                test_failed = True
             else:
                 print (Colors.GREEN + "  Link READY" + Colors.ENDC)
 
@@ -194,6 +200,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if n_fec_errors!=0:
                 print (Colors.YELLOW + "  FEC Errors: %d"%(n_fec_errors) + Colors.ENDC)
                 n_error_uplink_fec_sub[gbt] += 1
+                test_failed = True
             else:
                 print (Colors.GREEN + "  No FEC Errors" + Colors.ENDC)
 
@@ -213,11 +220,13 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
 
             if mode != mode_value:
                 n_error_mode_sub[gbt] += 1
+                test_failed = True
                 print (Colors.YELLOW + "  Incorrect mode: %d"%mode + Colors.ENDC)
             else:
                 print (Colors.GREEN + "  Correct mode: %d"%mode + Colors.ENDC)
             if pusmstate != ready_value:
                 n_error_pusm_ready_sub[gbt] += 1
+                test_failed = True
                 print (Colors.YELLOW + "  Incorrect PUSM State: %d"%pusmstate + Colors.ENDC)
             else:
                 print (Colors.GREEN + "  Correct PUSM State: %d"%pusmstate + Colors.ENDC)
@@ -231,6 +240,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
                 val = mpeek(reg)
                 if val != reg_list_sub[gbt][reg]:
                     n_error_reg_list_sub[gbt] += 1
+                    test_failed = True
                     print (Colors.YELLOW + "  Register 0x%02X value mismatch"%reg + Colors.ENDC)
 
         print ("")
@@ -241,6 +251,16 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
         while (power_supply.is_output_enabled()):
             sleep(0.5)
         print("Output is disabled")
+
+        while test_failed:
+            end_tests = input('\nWould you like to exit testing? >> ')
+            if end_tests.lower() in ['y','yes']:
+                print('\nTerminating Powercycle Test')
+                sys.exit()  
+            elif end_tests.lower() in ['n','no']:
+                test_failed = False
+            else:
+                print('Valid entries: y, yes, n, no')
 
     print ("\nEnd of powercycle iteration")
     print ("Number of iterations: %d\n"%niter)
