@@ -250,8 +250,7 @@ architecture gem_amc_arch of gem_amc is
     signal vfat3_sc_tx_empty            : std_logic;
     signal vfat3_sc_tx_oh_idx           : std_logic_vector(3 downto 0);
     signal vfat3_sc_tx_vfat_idx         : std_logic_vector(4 downto 0);
-    signal vfat3_sc_rx_data             : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-    signal vfat3_sc_rx_data_en          : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat3_sc_rx_data             : t_oh_vfat3_sc_rx_arr(g_NUM_OF_OHs - 1 downto 0);
     signal vfat3_sc_status              : t_vfat_slow_control_status;
 
     signal vfat3_daq_link_arr           : t_oh_vfat_daq_link_arr(g_NUM_OF_OHs - 1 downto 0);
@@ -405,7 +404,6 @@ begin
             tx_empty_o              => vfat3_sc_tx_empty,
             tx_oh_idx_o             => vfat3_sc_tx_oh_idx,
             tx_vfat_idx_o           => vfat3_sc_tx_vfat_idx,
-            rx_data_en_i            => vfat3_sc_rx_data_en,
             rx_data_i               => vfat3_sc_rx_data,
             status_o                => vfat3_sc_status,
             vfat_hdlc_address_arr_i => vfat_hdlc_address_arr
@@ -453,7 +451,6 @@ begin
                 vfat3_sc_tx_rd_en_o     => vfat3_sc_tx_rd_en_per_oh(i),
 
                 vfat3_sc_rx_data_o      => vfat3_sc_rx_data(i),
-                vfat3_sc_rx_data_en_o   => vfat3_sc_rx_data_en(i),
 
                 vfat3_daq_links_o       => vfat3_daq_link_arr(i),
 

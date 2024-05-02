@@ -44,8 +44,7 @@ entity vfat3_slow_control is
         tx_oh_idx_o             : out std_logic_vector(3 downto 0);
         tx_vfat_idx_o           : out std_logic_vector(4 downto 0);
 
-        rx_data_en_i            : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
-        rx_data_i               : in t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        rx_data_i               : in t_oh_vfat3_sc_rx_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- monitoring
         status_o                : out t_vfat_slow_control_status;
@@ -93,8 +92,7 @@ architecture vfat3_slow_control_arch of vfat3_slow_control is
     signal rx_error             : std_logic;
     signal rx_error_sync        : std_logic;
     signal rx_reg_value         : std_logic_vector(31 downto 0) := (others => '0');
-    signal rx_data              : std_logic;
-    signal rx_data_en           : std_logic;
+    signal rx_data              : t_vfat3_sc_rx;
 
     signal rx_packet_err_cnt    : std_logic_vector(15 downto 0) := (others => '0');
     signal rx_bitstuff_err_cnt  : std_logic_vector(15 downto 0) := (others => '0');
@@ -456,7 +454,6 @@ begin
             fsm_reset_i        => rx_reset_clk40,
             clk_40_i           => ttc_clk_i.clk_40,
             data_i             => rx_data,
-            data_en_i          => rx_data_en,
             hdlc_address_i     => hdlc_address,
             transaction_id_i   => std_logic_vector(transaction_id(7 downto 0)),
             is_write_i         => tx_is_write,
@@ -470,7 +467,6 @@ begin
             raw_last_reply_o   => rx_raw_last_reply
         );
 
-    rx_data_en <= rx_data_en_i(to_integer(unsigned(tx_oh_idx)))(to_integer(unsigned(tx_vfat_idx)));
     rx_data <= rx_data_i(to_integer(unsigned(tx_oh_idx)))(to_integer(unsigned(tx_vfat_idx)));
 
     i_vfat3_adc_cache : xpm_memory_spram

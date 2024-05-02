@@ -74,6 +74,16 @@ package gem_pkg is
 
     function get_vfat_hdlc_addresses(gem_station : integer) return t_std4_array;
 
+    type t_vfat3_sc_rx is record
+        data       : std_logic;
+        data_en    : std_logic;
+        header     : std_logic;
+    end record;
+
+    type t_vfat3_sc_rx_arr is array(integer range <>) of t_vfat3_sc_rx;
+
+    type t_oh_vfat3_sc_rx_arr is array(integer range <>) of t_vfat3_sc_rx_arr(23 downto 0);
+
     --========================--
     --== SBit cluster data  ==--
     --========================--

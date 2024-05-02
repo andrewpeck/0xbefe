@@ -60,8 +60,7 @@ entity optohybrid is
         vfat3_sc_tx_vfat_idx_i  : in std_logic_vector(4 downto 0);
         vfat3_sc_tx_rd_en_o     : out std_logic;
         
-        vfat3_sc_rx_data_o      : out std_logic_vector(23 downto 0);
-        vfat3_sc_rx_data_en_o   : out std_logic_vector(23 downto 0);
+        vfat3_sc_rx_data_o      : out t_vfat3_sc_rx_arr(23 downto 0);
         
         -- VFAT3 DAQ output
         vfat3_daq_links_o       : out t_vfat_daq_link_arr(23 downto 0);
@@ -229,7 +228,6 @@ begin
                 daq_event_done_o    => vfat3_daq_event_done(i),
 
                 slow_ctrl_data_o    => vfat3_sc_rx_data_o(i),
-                slow_ctrl_data_en_o => vfat3_sc_rx_data_en_o(i),
 
                 cnt_events_o        => vfat3_daq_cnt_evt_arr(i),
                 cnt_crc_errors_o    => vfat3_daq_cnt_crc_err_arr(i),

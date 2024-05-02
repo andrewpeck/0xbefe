@@ -37,8 +37,7 @@ entity vfat3_rx_link is
         daq_data_en_o       : out std_logic;
         daq_crc_error_o     : out std_logic;
         daq_event_done_o    : out std_logic;
-        slow_ctrl_data_o    : out std_logic;
-        slow_ctrl_data_en_o : out std_logic;
+        slow_ctrl_data_o    : out t_vfat3_sc_rx;
 
         -- counters
         cnt_events_o        : out std_logic_vector(15 downto 0);
@@ -112,8 +111,9 @@ begin
     daq_data_en_o <= daq_data_en and not mask_i;
     daq_crc_error_o <= event_done and not crc_ok and not mask_i;
     daq_event_done_o <= event_done and not mask_i;
-    slow_ctrl_data_o <= '1' when data_i = VFAT3_SC1_WORD else '0';
-    slow_ctrl_data_en_o <= '1' when (data_i = VFAT3_SC1_WORD or data_i = VFAT3_SC0_WORD) and (daq_data_en = '0') else '0';
+    slow_ctrl_data_o.data <= '1' when data_i = VFAT3_SC1_WORD else '0';
+    slow_ctrl_data_o.data_en <= '1' when (data_i = VFAT3_SC1_WORD or data_i = VFAT3_SC0_WORD) and (daq_data_en = '0') else '0';
+    slow_ctrl_data_o.header <= '1' when ((data_i = VFAT3_DAQ_HEADER_I) or (data_i = VFAT3_DAQ_HEADER_IW)) else '0';
 
     cnt_events_o <= std_logic_vector(cnt_events);
     cnt_crc_errors_o  <= std_logic_vector(cnt_crc_errors);

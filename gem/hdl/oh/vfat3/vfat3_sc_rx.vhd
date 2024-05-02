@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
--- 
+--
 -- Create Date:    00:33 2017-08-14
 -- Module Name:    VFAT3 SC RX
--- Description:    This module accepts VFAT3 slow control 1 bit serial stream and decodes incoming packets. It has to be reset before each packet and given the expected transaction ID. 
+-- Description:    This module accepts VFAT3 slow control 1 bit serial stream and decodes incoming packets. It has to be reset before each packet and given the expected transaction ID.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -20,33 +20,32 @@ entity vfat3_sc_rx is
     port(
         -- reset
         reset_i                 : in  std_logic;
-        fsm_reset_i				: in  std_logic; -- resets only the FSM, and not the error counters
+        fsm_reset_i             : in  std_logic; -- resets only the FSM, and not the error counters
 
         -- clocks
         clk_40_i                : in  std_logic;
-        
+
         -- serial input
-        data_i                  : in  std_logic;
-        data_en_i               : in  std_logic;
+        data_i                  : in  t_vfat3_sc_rx;
 
         -- control
         hdlc_address_i          : in  std_logic_vector(7 downto 0);
         transaction_id_i        : in  std_logic_vector(7 downto 0);
         is_write_i              : in  std_logic;
-        
+
         -- output
         error_o                 : out std_logic;
         packet_valid_o          : out std_logic;
         reg_value_o             : out std_logic_vector(31 downto 0);
-        
+
         -- monitoring
         bitstuff_err_cnt_o      : out std_logic_vector(15 downto 0);
         crc_err_cnt_o           : out std_logic_vector(15 downto 0);
         packet_err_cnt_o        : out std_logic_vector(15 downto 0);
-        
+
         -- debug
-        calc_crc_o              : out std_logic_vector(15 downto 0);              
-        raw_last_reply_o        : out std_logic_vector(95 downto 0)        
+        calc_crc_o              : out std_logic_vector(15 downto 0);
+        raw_last_reply_o        : out std_logic_vector(95 downto 0)
     );
 end vfat3_sc_rx;
 
@@ -54,7 +53,7 @@ architecture vfat3_sc_rx_arch of vfat3_sc_rx is
 
     constant HDLC_CONTROL   : std_logic_vector(7 downto 0) := x"03";
     constant IPBUS_VERSION  : std_logic_vector(3 downto 0) := x"2";
-    
+
     type state_t is (IDLE, RECEIVING, DONE, ERROR);
 
     -- fsm signals
@@ -62,12 +61,12 @@ architecture vfat3_sc_rx_arch of vfat3_sc_rx is
     signal set_bit_cnt      : integer range 0 to 11;
     signal packet_pos       : integer range 0 to 104;
     signal min_length       : integer range 0 to 96; -- expected length of the packet
-    signal had_first_zero	: std_logic;
+    signal had_first_zero   : std_logic;
 
     -- errors
-    signal crc_err          : std_logic; 
-    signal bitstuff_err     : std_logic; 
-    signal packet_err       : std_logic; 
+    signal crc_err          : std_logic;
+    signal bitstuff_err     : std_logic;
+    signal packet_err       : std_logic;
 
     -- frame data
     signal packet           : std_logic_vector(103 downto 0);
@@ -79,7 +78,7 @@ architecture vfat3_sc_rx_arch of vfat3_sc_rx is
     signal crc_din          : std_logic;
     signal crc_en           : std_logic;
     signal crc_init         : std_logic;
-    signal crc_latch		: std_logic;
+    signal crc_latch        : std_logic;
 
     -- monitoring
     signal crc_err_cnt      : std_logic_vector(15 downto 0);
@@ -89,11 +88,11 @@ architecture vfat3_sc_rx_arch of vfat3_sc_rx is
 begin
 
     --========= Some wiring =========--
-    
+
     crc_err_cnt_o <= crc_err_cnt;
     bitstuff_err_cnt_o <= bitstuff_err_cnt;
     packet_err_cnt_o <= packet_err_cnt;
-    
+
     raw_last_reply_o <= packet(95 downto 0);
     calc_crc_o <= packet_crc;
     error_o <= '1' when state = ERROR else '0';
@@ -122,55 +121,62 @@ begin
                 packet_err <= '0';
                 crc_en <= '0';
                 crc_init <= '0';
-                
+
                 if (crc_latch = '1') then
                     packet_crc <= crc;
                     crc_latch <= '0';
                 end if;
-                
-                if (data_en_i = '1') then
-                    
+
+                -- The slow-control stream from the VFAT3 can be interrupted by higher priority data
+                -- (e.g. DAQ packets), so the receiving FSM must act only on those slow-control words.
+                -- However, if the slow-control stream is interrupted by a DAQ packet at the very last
+                -- bit of the EOF, the EOF sequence is *not* completed. In such cases, the EOF is sent
+                -- from scratch before the next slow-control reply. As a workaround, we allow the DAQ
+                -- header to close a SC transaction if *all other conditions are met*. Additionally,
+                -- the EOF retransmision case is covered by imposing a minimum size to the reply packet.
+                if (data_i.data_en = '1') or (set_bit_cnt = 6 and data_i.data_en = '0' and packet_length >= min_length and data_i.header = '1') then
+
                     case state is
-    
+
                         -- waiting for a start of frame
                         when IDLE =>
-                            if ((had_first_zero = '1') and (set_bit_cnt = 6) and (data_i = '0')) then -- start of frame received (6 set bits followed by a 0)
+                            if ((had_first_zero = '1') and (set_bit_cnt = 6) and (data_i.data = '0')) then -- start of frame received (6 set bits followed by a 0)
                                 state <= RECEIVING;
                             end if;
-                            
+
                             packet_pos <= 0;
                             packet_length <= 0;
                             crc_init <= '1';
                             crc_latch <= '0';
                             packet_valid_o <= '0';
-                                                    
+
                         -- receiving an active frame
                         when RECEIVING =>
-                        	
+
                             -- if there are 5 set bits in a row, then next will be a stuffed zero which should be ignored
                             if (set_bit_cnt < 5) then
-                                packet(packet_pos) <= data_i;
-                                crc_din <= data_i;
+                                packet(packet_pos) <= data_i.data;
+                                crc_din <= data_i.data;
                                 crc_en <= '1';
-    
+
                                 packet_pos <= packet_pos + 1;
-                                
+
                                 -- byte boundary
                                 if (packet_pos = packet_length + 8) then
-                                	packet_length <= packet_pos;
-                                	crc_latch <= '1';
+                                    packet_length <= packet_pos;
+                                    crc_latch <= '1';
                                 end if;
-                                
+
                                 -- frame shouldn't be that long, go and wait for idle
                                 if (packet_pos = 103) then
                                     state <= ERROR;
                                     packet_err <= '1';
                                 end if;
-                                
+
                                 state <= RECEIVING;
-                                
-                            -- end of frame (EOF)
-                            elsif ((set_bit_cnt = 6) and (data_i = '0')) then
+
+                            -- end of frame (EOF) -- regular and "interrutped"
+                            elsif ((set_bit_cnt = 6) and ((data_i.data_en = '1' and data_i.data = '0') or (data_i.data_en = '0' and packet_length >= min_length and data_i.header = '1'))) then
 
                                 -- check the crc
                                 -- magic number here, found experimentally.. not sure why it's not 0000..
@@ -186,7 +192,7 @@ begin
                                     crc_init <= '1';
                                     state <= RECEIVING;
 
-                                -- if the packet is of expected length and various fields look as expected then great, otherwise shoot a packet error    
+                                -- if the packet is of expected length and various fields look as expected then great, otherwise shoot a packet error
                                 elsif ((packet(7 downto 0) = hdlc_address_i) and  -- HDLC address field check
                                        (packet(15 downto 8) = HDLC_CONTROL) and -- HDLC control field check
                                        (packet(47 downto 16) = IPBUS_VERSION & x"001" & transaction_id_i & "000" & is_write_i & x"0") -- IPbus header check
@@ -194,22 +200,22 @@ begin
                                     packet_valid_o <= '1';
                                     reg_value_o <= packet(79 downto 48);
                                     state <= DONE;
-                                
-                                -- if the packet contents are not as expected, flag this as a packet error                                    
+
+                                -- if the packet contents are not as expected, flag this as a packet error
                                 else
                                     packet_err <= '1';
                                     state <= ERROR;
                                 end if;
-    
+
                             -- if it's not EOF and we have more than 5 set bits in a row, there's something wrong -- go and wait in the error state
                             elsif (set_bit_cnt > 5) then
                                 state <= ERROR;
                                 bitstuff_err <= '1';
                             end if;
-                                                        
+
                         -- a place to stay after an error and wait for a reset
                         when ERROR =>
-                            
+
                             packet_valid_o <= '0';
                             crc_err <= '0';
                             bitstuff_err <= '0';
@@ -222,13 +228,13 @@ begin
                             packet_valid_o <= '1';
                             state <= DONE;
                             crc_latch <= '0';
-                            
-                        -- hmm    
+
+                        -- hmm
                         when others =>
                             state <= ERROR;
-                            
+
                     end case;
-                    
+
                 end if;
             end if;
         end if;
@@ -240,13 +246,13 @@ begin
     begin
         if (rising_edge(clk_40_i)) then
             if ((reset_i = '1') or (fsm_reset_i = '1')) then
-            	set_bit_cnt <= 0;
-            	had_first_zero <= '0';
+                set_bit_cnt <= 0;
+                had_first_zero <= '0';
             else
-                if (data_en_i = '1') then
-                    if (data_i = '0') then
-                    	set_bit_cnt <= 0;
-                    	had_first_zero <= '1';
+                if (data_i.data_en = '1') then
+                    if (data_i.data = '0') then
+                        set_bit_cnt <= 0;
+                        had_first_zero <= '1';
                     elsif (set_bit_cnt < 10) then
                         set_bit_cnt <= set_bit_cnt + 1;
                     end if;
@@ -267,7 +273,7 @@ begin
         );
 
     --========= Error counters =========--
-    
+
     i_packet_err_cnt : entity work.counter
         generic map(
             g_COUNTER_WIDTH  => 16,
