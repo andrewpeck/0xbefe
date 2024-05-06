@@ -2711,7 +2711,7 @@ if __name__ == "__main__":
                         break
                 for elink,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
-                    if threshold >= 100 or threshold == 0:
+                    if threshold >= 50 or threshold == 0:
                         status_list += [0]
                         bad_elinks += [elink]
                     else:
