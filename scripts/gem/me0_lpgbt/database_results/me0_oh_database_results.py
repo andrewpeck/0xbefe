@@ -140,10 +140,12 @@ if __name__ == '__main__':
                 elif test_type=="debug":
                     if int(oh_sn) not in range(1, 2019):
                         print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
-                        sys.exit()
-                if int(slot) > 4:
-                    print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
-                    sys.exit()
+                        options = input('Do you want to continue anyway? (y/n) >> ')
+                        if options.lower() in 'yes':
+                            pass
+                        else:
+                            sys.exit()
+
                 oh_sn_list.append(oh_sn)
                 if vtrxp_sn!=str(NULL):
                     if int(vtrxp_sn) not in range(1,1000000):
