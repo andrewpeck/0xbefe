@@ -207,12 +207,16 @@ if __name__=='__main__':
         if multiple_ohs:
             if i==0 or multiple_params:
                 options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+                while options not in batch_dict:
+                    print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
+                    options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+                batch = batch_dict[options]
         else:
             options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
-        while options not in batch_dict:
-            print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
-            options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
-        batch = batch_dict[options]
+            while options not in batch_dict:
+                print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
+                options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+            batch = batch_dict[options]
         
         if multiple_ohs:
             if i==0 or not one_for_all:
