@@ -22,6 +22,9 @@ if __name__=='__main__':
                         print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
                         sys.exit()
                 continue
+            elif not line.split():
+                # empty line
+                continue
             slot = line.split()[0]
             oh_sn = line.split()[1]
             vtrxp_sn = line.split()[2]
