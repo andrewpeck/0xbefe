@@ -33,6 +33,7 @@ entity link_rx_trigger_ge21 is
         resync_o            : out std_logic;
         sbit_overflow_o     : out std_logic;
         ecc_err_o           : out std_logic;
+        crc_err_o           : out std_logic := '0';
         oh_err_o            : out std_logic;
         protocol_err_o      : out std_logic
     );

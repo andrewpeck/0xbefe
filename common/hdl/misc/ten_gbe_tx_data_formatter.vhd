@@ -173,7 +173,7 @@ begin
                             word_idx         <= word_idx + 4;
 
                             -- end of packet (either due to end of event detection or a packet size limit)
-                            if (event_end_i = '1') or (word_idx = to_integer(unsigned(max_payload_words_i)) - 7) then
+                            if (event_end_i = '1') or (word_idx >= to_integer(unsigned(max_payload_words_i)) - 7) then
                                 event_rden <= '0';
 
                                 if (word_idx < to_integer(unsigned(min_payload_words_i)) - 4) then
