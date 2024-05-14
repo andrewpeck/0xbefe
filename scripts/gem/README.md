@@ -128,9 +128,10 @@ Once installed, initialize conda in your terminal by running the following comma
 $ conda init
 ```
 
-Now, create a new environment for running scripts with the following command.
+Now, create a new environment for running scripts with the one of the following commands.
 ```
-$ conda create -n cmsme0_env python=3.11 numpy matplotlib seaborn scipy pandas paramiko colorama awkward tqdm uproot lxml xmltodict
+$ conda create -f 0xbefe/scripts/resources/cmsme0_environment.yml
+$ conda create -n cmsme0_env python=3.11 numpy matplotlib seaborn scipy pandas paramiko colorama awkward tqdm uproot lxml xmltodict -c conda-forge
 ```
 This will create an environment called `cmsme0_env`, and install `python` version `3.11` (latest) along with some necessary packages. If `conda` fails to make the environment, try a different python version; `3.10` or `3.9`.
 
