@@ -104,6 +104,16 @@
           description="This counter is incremented whenever the BC0 marker value doesn't match between the two trigger links (GE1/1 only)"
           fw_signal="bc0_misalign_cnt(${OH_IDX})"
           sw_val_good="self == 0"/>
+    <node id="LINK0_CRC_ERR_CNT" address="0x3" mask="0x0000ffff" permission="r"
+          description="Count the number of CRC errors received on link 0 (this indicates an instable communication)"
+          fw_signal="crc_error_cnt(${OH_IDX})(15 downto 0)"
+          sw_val_good="self == 0"
+          sw_monitor_warn_min_threshold="1"/>
+    <node id="LINK1_CRC_ERR_CNT" address="0x3" mask="0xffff0000" permission="r"
+          description="Count the number of CRC errors received on link 1 (this indicates an instable communication)"
+          fw_signal="crc_error_cnt(${OH_IDX})(31 downto 16)"
+          sw_val_good="self == 0"
+          sw_monitor_warn_min_threshold="1"/>
     <node id="CLUSTER_COUNT_${CS_IDX}_RATE" address="0x10" permission="r"
           description="Rate of cluster size ${CS_IDX} (size 0 means no sbit clusters)"
           fw_signal="cluster_cnt_rate(${OH_IDX} * 9 + ${CS_IDX})"
@@ -717,10 +727,10 @@
               description="Ethertype (should be set to jumbo)"
               fw_signal="spy_gbe_ethertype" fw_default="0x7088"/>
         <node id="MIN_PAYLOAD_SIZE"      address="0x5"  mask="0x00003fff" permission="rw"
-              description="Minimum payload size in 16bit words (not including the header and trailer)"
+              description="Minimum payload size in 16bit words (excluding the local readout header and trailer, but including fillers)"
               fw_signal="spy_min_payload_words" fw_default="0x15"/>
         <node id="MAX_PAYLOAD_SIZE"      address="0x5"  mask="0x0fffc000" permission="rw"
-              description="Maximum payload size in 16bit words (not including the trailer and header)"
+              description="Maximum payload size in 16bit words (excluding the local readout header and trailer, and excluding fillers)"
               fw_signal="spy_max_payload_words" fw_default="0xfff"/>
         <node id="ENABLE_GENERATOR" address="0x5" mask="0x10000000" permission="rw"
               description="(10 GbE only) When set, the MAC-PCS core will send generated empty broadcast Ethernet frames. This is useful to test the Ethernet link"

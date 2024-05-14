@@ -35,6 +35,7 @@ entity trigger_input_processor is
         -- counters
         sbit_overflow_cnt_o : out std_logic_vector(31 downto 0);
         missed_comma_cnt_o  : out std_logic_vector(31 downto 0);
+        crc_error_cnt_o     : out std_logic_vector(31 downto 0);
         bc0_misalign_cnt_o  : out std_logic_vector(31 downto 0);
         link_overflow_cnt_o : out std_logic_vector(31 downto 0);
         link_underflow_cnt_o: out std_logic_vector(31 downto 0);
@@ -187,6 +188,17 @@ begin
             reset_i   => reset_i or reset_cnt_i,
             en_i      => link_status_i(i).missed_comma,
             count_o   => missed_comma_cnt_o(((i + 1) * 16) - 1 downto i * 16)
+        );
+
+        i_crc_error_cnt: entity work.counter
+        generic map(
+            g_COUNTER_WIDTH => 16
+        )
+        port map(
+            ref_clk_i => clk_i,
+            reset_i   => reset_i or reset_cnt_i,
+            en_i      => link_status_i(i).crc_error,
+            count_o   => crc_error_cnt_o(((i + 1) * 16) - 1 downto i * 16)
         );
 
         i_link_ovf_cnt: entity work.counter

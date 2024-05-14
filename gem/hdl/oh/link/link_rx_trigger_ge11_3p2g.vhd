@@ -33,6 +33,7 @@ entity link_rx_trigger_ge11_3p2g is
         sbit_cluster3_o     : out t_sbit_cluster;
         sbit_overflow_o     : out std_logic;
         bc0_marker_o        : out std_logic;
+        crc_err_o           : out std_logic := '0';
         
         missed_comma_err_o  : out std_logic
     );

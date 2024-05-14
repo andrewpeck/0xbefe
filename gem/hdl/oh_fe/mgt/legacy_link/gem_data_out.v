@@ -139,9 +139,10 @@ module   gem_data_out
       tx_frame[3] = 0;
    end
 
-
-   (* keep="true", max_fanout = "4" *)  reg [15:0] trg_tx_data [3:0] ;
-   (* keep="true", max_fanout = "4" *)  reg [1:0]  trg_tx_isk   [3:0];
+   reg [15:0] trg_tx_data [3:0];
+   reg [1:0]  trg_tx_isk  [3:0];
+   (* keep="true", max_fanout = "4" *) reg [15:0] trg_tx_data_r [3:0];
+   (* keep="true", max_fanout = "4" *) reg [1:0]  trg_tx_isk_r  [3:0];
 
    wire [55:0]       gem_link_data [N_MGTS-1:0];
 
@@ -260,46 +261,89 @@ module   gem_data_out
    wire gtxtest_reset = (gtxtest_cnt > 0 && gtxtest_cnt < 256) || (gtxtest_cnt > 511 && gtxtest_cnt < 768);
 
    //------------------------------------------------------------------------------
-   // Data framer
+   // Data framer + CRC Calculation
    //------------------------------------------------------------------------------
+
+   reg        crc_rst [3:0];
+   reg        crc_en  [3:0];
+   reg  [7:0] crc_r   [3:0];
+   wire [7:0] crc     [3:0];
 
    generate
       for (ilink=0; ilink < N_MGTS; ilink=ilink+1)
         begin: linkgen1
 
+           lfsr
+             #(
+               .LFSR_WIDTH(8),
+               .LFSR_POLY(8'h07),
+               .LFSR_CONFIG("GALOIS"),
+               .DATA_WIDTH(16),
+               .STYLE("LOOP")
+             )
+           u_crc_trig_link
+             (
+               // fill CRC bits with 0's
+               .data_in   (tx_frame[ilink] != 3'd4 ?  trg_tx_data[ilink] : {8'b0, trg_tx_data[ilink][7:0]}),
+               .state_in  (crc_r[ilink]),
+               .state_out (crc[ilink])
+             );
+
+           always @* begin
+              case (tx_frame[ilink])
+                3'd0: begin
+                   trg_tx_data [ilink] <= {gem_link_data[ilink][7:0], frame_sep[ilink]};
+                   trg_tx_isk  [ilink] <= 2'b01;
+                   crc_en      [ilink] <= 1'b1;
+                   crc_rst     [ilink] <= 1'b0;
+                end
+                3'd1: begin
+                   trg_tx_data [ilink] <= {gem_link_data[ilink][23:8]};
+                   trg_tx_isk  [ilink] <= 2'b00;
+                   crc_en      [ilink] <= 1'b1;
+                   crc_rst     [ilink] <= 1'b0;
+                end
+                3'd2: begin
+                   trg_tx_data [ilink] <= {gem_link_data[ilink][39:24]};
+                   trg_tx_isk  [ilink] <= 2'b00;
+                   crc_en      [ilink] <= 1'b1;
+                   crc_rst     [ilink] <= 1'b0;
+                end
+                3'd3: begin
+                   trg_tx_data [ilink] <= {gem_link_data[ilink][55:40]};
+                   trg_tx_isk  [ilink] <= 2'b00;
+                   crc_en      [ilink] <= 1'b1;
+                   crc_rst     [ilink] <= 1'b0;
+                end
+                3'd4: begin // for 200mhz only
+                   trg_tx_data [ilink] <= {crc[ilink], 8'b0};
+                   trg_tx_isk  [ilink] <= 2'b00;
+                   crc_en      [ilink] <= 1'b1;
+                   crc_rst     [ilink] <= 1'b1;
+                end
+                default: begin // should never happen
+                   trg_tx_data [ilink] <= 0;
+                   trg_tx_isk  [ilink] <= 2'b00;
+                   crc_en      [ilink] <= 1'b0;
+                   crc_rst     [ilink] <= 1'b1;
+                end
+              endcase
+             end
+
            always @(posedge usrclks[ilink]) begin
 
               if (reset || ~ready_sync) begin
-                 trg_tx_data[ilink]  <= 16'hFFFC;
-                 trg_tx_isk [ilink]  <= 2'b01;
+                 trg_tx_data_r[ilink] <= 16'hFFFC;
+                 trg_tx_isk_r [ilink] <= 2'b01;
+                 crc_r        [ilink] <= 8'hFF;
               end
               else begin
-                 case (tx_frame[ilink])
-                   3'd0: begin
-                      trg_tx_data[ilink] <= {gem_link_data[ilink][7:0] , frame_sep[ilink]};
-                      trg_tx_isk [ilink] <= 2'b01;
-                   end
-                   3'd1: begin
-                      trg_tx_data[ilink] <= {gem_link_data[ilink][23:8]};
-                      trg_tx_isk [ilink] <= 2'b00;
-                   end
-                   3'd2: begin
-                      trg_tx_data[ilink] <= {gem_link_data[ilink][39:24]};
-                      trg_tx_isk [ilink] <= 2'b00;
-                   end
-                   3'd3: begin
-                      trg_tx_data[ilink] <= {gem_link_data[ilink][55:40]};
-                      trg_tx_isk [ilink] <= 2'b00;
-                   end
-                   3'd4: begin // for 200mhz only
-                      trg_tx_data[ilink] <= 0;
-                      trg_tx_isk [ilink] <= 2'b00;
-                   end
-                   default: begin // should never happen
-                      trg_tx_data[ilink] <= 0;
-                      trg_tx_isk [ilink] <= 2'b00;
-                   end
-                 endcase
+                 trg_tx_data_r[ilink] <= trg_tx_data[ilink];
+                 trg_tx_isk_r [ilink] <= trg_tx_isk[ilink];
+                 if (crc_rst[ilink])
+                     crc_r[ilink] <= 8'hFF;
+                 else if (crc_en[ilink])
+                     crc_r[ilink] <= crc[ilink];
               end
            end
 
@@ -441,15 +485,15 @@ module   gem_data_out
 
               .sysclk_in                 (clock_40),
 
-              .gt0_txcharisk_i           (trg_tx_isk [0]),
-              .gt1_txcharisk_i           (trg_tx_isk [1]),
-              .gt2_txcharisk_i           (trg_tx_isk [2]),
-              .gt3_txcharisk_i           (trg_tx_isk [3]),
+              .gt0_txcharisk_i           (trg_tx_isk_r [0]),
+              .gt1_txcharisk_i           (trg_tx_isk_r [1]),
+              .gt2_txcharisk_i           (trg_tx_isk_r [2]),
+              .gt3_txcharisk_i           (trg_tx_isk_r [3]),
 
-              .gt0_txdata_i              (trg_tx_data[0]),
-              .gt1_txdata_i              (trg_tx_data[1]),
-              .gt2_txdata_i              (trg_tx_data[2]),
-              .gt3_txdata_i              (trg_tx_data[3]),
+              .gt0_txdata_i              (trg_tx_data_r[0]),
+              .gt1_txdata_i              (trg_tx_data_r[1]),
+              .gt2_txdata_i              (trg_tx_data_r[2]),
+              .gt3_txdata_i              (trg_tx_data_r[3]),
 
               .tx_fsm_reset_done         (tx_fsm_reset_done),
 
@@ -503,7 +547,7 @@ module   gem_data_out
          gtx_quad_inst
            (
             // rx loopback
-            .rxpowerdown_in   (rxpowerdown_in),
+            .rxpowerdown_in   ({2{rxpowerdown_in}}),
 
             .rx_notintable_0  (rx_notintable_0),
             .rx_notintable_1  (rx_notintable_1),
@@ -527,15 +571,15 @@ module   gem_data_out
             .txn_out           (trg_tx_n),
             .txp_out           (trg_tx_p),
 
-            .gtx0_txcharisk_in (trg_tx_isk [0]),
-            .gtx1_txcharisk_in (trg_tx_isk [1]),
-            .gtx2_txcharisk_in (trg_tx_isk [2]),
-            .gtx3_txcharisk_in (trg_tx_isk [3]),
+            .gtx0_txcharisk_in (trg_tx_isk_r [0]),
+            .gtx1_txcharisk_in (trg_tx_isk_r [1]),
+            .gtx2_txcharisk_in (trg_tx_isk_r [2]),
+            .gtx3_txcharisk_in (trg_tx_isk_r [3]),
 
-            .gtx0_txdata_in  (trg_tx_data[0]),
-            .gtx1_txdata_in  (trg_tx_data[1]),
-            .gtx2_txdata_in  (trg_tx_data[2]),
-            .gtx3_txdata_in  (trg_tx_data[3]),
+            .gtx0_txdata_in  (trg_tx_data_r[0]),
+            .gtx1_txdata_in  (trg_tx_data_r[1]),
+            .gtx2_txdata_in  (trg_tx_data_r[2]),
+            .gtx3_txdata_in  (trg_tx_data_r[3]),
 
             .tx_resetdone_o    (tx_fsm_reset_done),
             .gtx_tx_sync_done  (tx_sync_done),
@@ -581,7 +625,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[0]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_0),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_0)
     );
 
@@ -590,7 +634,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[1]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_1),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_1)
     );
 
@@ -599,7 +643,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[2]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_2),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_2)
     );
 
@@ -608,7 +652,7 @@ module   gem_data_out
       .ref_clk_i (usrclks[3]),
       .reset_i   (reset_i || notintable_cnt_reset),
       .en_i      (|rx_notintable_3),
-      .snap_i    (1),
+      .snap_i    (1'b1),
       .count_o   (cnt_notintable_3)
     );
 

@@ -28,78 +28,59 @@
                   fw_default="0x01234567"/>
         </node> <!--Loopback-->
 
-        <node id="SEM" address="0x3" description = "Connects to Outputs of the FPGA's built-in single event upset monitoring system">
-            <node id="CNT_SEM_CRITICAL" address="0x0" permission="r"
-                  mask="0x0000ffff"
-                  description="Counts of uncorrectable single event upsets"
-                  fw_cnt_reset_signal="reset or sem_cnt_reset"
-                  fw_cnt_en_signal="sem_uncorrectable_pulse"
-                  fw_cnt_snap_signal="cnt_snap"
-                  fw_signal="cnt_sem_uncorrectable"/>
-            <node id="CNT_SEM_CORRECTION" address="0x1" permission="r"
-                  mask="0xffff0000"
-                  description="Counts of corrected single event upsets"
-                  fw_cnt_reset_signal="reset or sem_cnt_reset"
-                  fw_cnt_en_signal="sem_correction_pulse"
-                  fw_cnt_snap_signal="cnt_snap"
-                  fw_signal="cnt_sem_correction"/>
+        <node id="SEM" address="0x3" description = "Connects to interfaces of the FPGA's built-in Single Event Upset monitoring system">
+            <node id="SEM_CNT_RESET" address="0x0" permission="w"
+                  description="Pulse to reset SEM counters"
+                  fw_write_pulse_signal="sem_cnt_reset"/>
+            <node id="SEM_STATE" address="0x1" permission="r"
+                  mask="0x3f"
+                  description="Current state of the SEM core (0x01 -- Idle, 0x02 -- Initialization, 0x04 -- Observation, 0x08 -- Correction, 0x10 -- Classification, 0x20 -- Injection, 0x3e -- Fatal error, (other) -- Unknown error)"
+                  fw_signal="sem_state"/>
+            <node id="SEM_ALIVE" address="0x1" permission="r"
+                  mask="0x100"
+                  description="Monitors whether or not the SEM heart is beating (defined only in the Observation state)"
+                  fw_signal="sem_alive"/>
             <node id="INJ_PULSE" address="0x2" permission="w"
-                  description="Pulse the sem error injection register"
-                  mask="0x1"
+                  description="Triggers the SEM error injection (see Xilinx SEM manual and INJ_ADDR_LSBS/INJ_ADDR_MSBS registers). Note this command works only in the Idle state!"
                   fw_write_pulse_signal="sem_inject_strobe"/>
             <node id="INJ_ADDR_LSBS" address="0x3" permission="rw"
-                  description="SEM Injection Address [31:0]"
+                  description="SEM error injection address [31:0]"
                   mask="0xffffffff"
                   fw_signal="sem_inject_address(31 downto 0)"
                   fw_default="0x0"/>
             <node id="INJ_ADDR_MSBS" address="0x4" permission="rw"
-                  description="SEM Injection Address [39:32]"
+                  description="SEM error injection address [39:32]"
                   mask="0xff"
                   fw_signal="sem_inject_address(39 downto 32)"
                   fw_default="0x0"/>
-            <node id="CNT_SEM_INJECTIONS" address="0x4" permission="r"
-                  mask="0xffff0000"
-                  description="Counts of completed injected sem errors"
+            <node id="CNT_SEM_INJECTION" address="0x5" permission="r"
+                  mask="0x0000ffff"
+                  description="Count of injected SEM errors (as reported by the SEM core FSM)"
                   fw_cnt_reset_signal="reset or sem_cnt_reset"
-                  fw_cnt_en_signal="sem_injection"
+                  fw_cnt_en_signal="sem_injection_pulse"
                   fw_cnt_snap_signal="cnt_snap"
                   fw_signal="cnt_sem_injection"/>
-            <node id="SEM_STATUS_INITIALIZATION" address="0x5" permission="r"
-                  mask="0x1"
-                  description=""
-                  fw_signal="sem_initialization"/>
-            <node id="SEM_STATUS_OBSERVATION" address="0x5" permission="r"
-                  mask="0x2"
-                  description=""
-                  fw_signal="sem_observation"/>
-            <node id="SEM_STATUS_CORRECTION" address="0x5" permission="r"
-                  mask="0x4"
-                  description=""
-                  fw_signal="sem_correction"/>
-            <node id="SEM_STATUS_CLASSIFICATION" address="0x5" permission="r"
-                  mask="0x8"
-                  description=""
-                  fw_signal="sem_classification"/>
-            <node id="SEM_STATUS_INJECTION" address="0x5" permission="r"
-                  mask="0x10"
-                  description=""
-                  fw_signal="sem_injection"/>
-            <node id="SEM_STATUS_ESSENTIAL" address="0x5" permission="r"
-                  mask="0x20"
-                  description=""
-                  fw_signal="sem_essential"/>
-            <node id="SEM_STATUS_UNCORRECTABLE" address="0x5" permission="r"
-                  mask="0x40"
-                  description=""
-                  fw_signal="sem_uncorrectable"/>
-            <node id="SEM_STATUS_IDLE" address="0x5" permission="r"
-                  mask="0x80"
-                  description=""
-                  fw_signal="sem_idle"/>
-            <node id="SEM_CNT_RESET" address="0x6" permission="w"
-                  description="Pulse to reset SEM counters"
-                  mask="0x1"
-                  fw_write_pulse_signal="sem_cnt_reset"/>
+            <node id="CNT_SEM_CORRECTION" address="0x5" permission="r"
+                  mask="0xffff0000"
+                  description="Count of Single Event Upsets observed for which a correction is/was attempted"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_en_signal="sem_correction_pulse"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_correction"/>
+            <node id="CNT_SEM_CORRECTABLE" address="0x6" permission="r"
+                  mask="0x0000ffff"
+                  description="Count of corrected Single Event Upsets"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_en_signal="sem_correctable_pulse"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_correctable"/>
+            <node id="CNT_SEM_UNCORRECTABLE" address="0x6" permission="r"
+                  mask="0xffff0000"
+                  description="Count of uncorrectable Single Event Upsets. Note that after the detection of an uncorrectable error, the SEM core stops observing and FPGA must be reset!"
+                  fw_cnt_reset_signal="reset or sem_cnt_reset"
+                  fw_cnt_en_signal="sem_uncorrectable_pulse"
+                  fw_cnt_snap_signal="cnt_snap"
+                  fw_signal="cnt_sem_uncorrectable"/>
         </node> <!--SEM-->
 
         <node id="VFAT" address="0xA" description = "Controls the 12 VFAT reset outputs from the FPGA">
