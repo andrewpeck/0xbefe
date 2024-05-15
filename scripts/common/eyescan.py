@@ -6,7 +6,7 @@ import time
 import sys
 import os
 import seaborn as sns
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from datetime import datetime
 
