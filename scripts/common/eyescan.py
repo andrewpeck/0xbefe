@@ -73,7 +73,11 @@ prescale_sel = {
     160: {6:0, 7:2, 8:5, 9:8,  10:12, 11:15, 12:18, 13:22, 14:25, 15:28}
 }
 
-result_base_dir_name = os.path.dirname(__file__) + "/../gem/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data_"
+resultsDir = get_befe_scripts_dir() + "/gem/results"
+uplinkDir  = resultsDir + "/me0_lpgbt_data/lpgbt_uplink_eye_scan_results"
+if not os.path.exists(uplinkDir):
+    os.makedirs(uplinkDir)
+result_base_dir_name = uplinkDir + "/eye_data_"
 custom_cmap = LinearSegmentedColormap.from_list("custom_blue_green_red", ["blue", "green", "red"])
 
 def eyescan_read_reg(mgt, reg_name):
