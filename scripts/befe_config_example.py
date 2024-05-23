@@ -157,7 +157,9 @@ CONFIG_ME0_GBT_VER = {
     0: [1, 1, 1, 1, 1, 1, 1, 1], # lpGBT ver for 8 GBTs for OH0
     1: [1, 1, 1, 1, 1, 1, 1, 1], # lpGBT ver for 8 GBTs for OH1
     2: [1, 1, 1, 1, 1, 1, 1, 1], # lpGBT ver for 8 GBTs for OH2
-    3: [1, 1, 1, 1, 1, 1, 1, 1]  # lpGBT ver for 8 GBTs for OH3
+    3: [1, 1, 1, 1, 1, 1, 1, 1],  # lpGBT ver for 8 GBTs for OH3
+    4: [1, 1, 1, 1, 1, 1, 1, 1],  # lpGBT ver for 8 GBTs for OH4
+    5: [1, 1, 1, 1, 1, 1, 1, 1]  # lpGBT ver for 8 GBTs for OH5
 }
 
 # =================================================================================================
