@@ -223,12 +223,12 @@ if __name__=='__main__':
 
         # Special tests         
         if test_type=="acceptance":
-            thermal_testing          = -9999
-            thermal_testing_pass     = -9999
-            power_cycle_testing      = -9999
-            power_cycle_testing_pass = -9999
-            link_rst_testing         = -9999
-            link_rst_testing_pass    = -9999
+            thermal_testing          = 0
+            thermal_testing_pass     = 0
+            power_cycle_testing      = 0
+            power_cycle_testing_pass = 0
+            link_rst_testing         = 0
+            link_rst_testing_pass    = 0
         else:
             if multiple_ohs:
                 if i==0 or not one_for_all:
