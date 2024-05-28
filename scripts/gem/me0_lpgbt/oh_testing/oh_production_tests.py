@@ -47,6 +47,9 @@ if __name__ == "__main__":
                     print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "acceptance" or debug' + Colors.ENDC)
                     sys.exit()
             continue
+        elif not line.split():
+            # empty line
+            continue
         slot = line.split()[0]
         slot_name = line.split()[1]
         geb_sn = line.split()[2]
@@ -444,7 +447,7 @@ if __name__ == "__main__":
             # uplink eye scan for boss gbt for current OH
             print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt)
-            os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt)
+            os.system("python3 %s/common/eyescan.py 8 16 [%d] > out.txt"%(get_befe_scripts_dir(),gbt))
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("cp %s %s/uplink_optical_eye_OH%s_GBT%s.pdf"%(latest_file, dataDir, oh_sn, gbt))
@@ -2711,7 +2714,7 @@ if __name__ == "__main__":
                         break
                 for elink,threshold in sbit_noise_elink.items():
                     threshold_list += [threshold]
-                    if threshold >= 100 or threshold == 0:
+                    if threshold >= 50 or threshold == 0:
                         status_list += [0]
                         bad_elinks += [elink]
                     else:

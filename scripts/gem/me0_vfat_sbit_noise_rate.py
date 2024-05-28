@@ -100,7 +100,7 @@ def vfat_sbit(gem, system, oh_select, vfat_list, sbit_list, step, runtime, s_bit
 
         # Looping over sbits
         for sbit in sbit_list:
-            if sbit == "all":
+            if sbit in ["all", "all_elink0", "all_elink1", "all_elink2", "all_elink3", "all_elink4", "all_elink5", "all_elink6", "all_elink7"]:
                 continue
             if verbose:
                 print ("  VFAT: %02d, Sbit: %d"%(vfat, sbit))

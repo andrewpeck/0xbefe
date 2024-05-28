@@ -47,7 +47,7 @@
 --   INV_PATTERN  : true : invert prbs pattern
 --                     in "generate mode" the generated prbs is inverted bit-wise at outputs
 --                     in "check mode" the input data are inverted before processing
---   POLY_LENGHT  : length of the polynomial (= number of shift register stages)
+--   POLY_LENGTH  : length of the polynomial (= number of shift register stages)
 --   POLY_TAP     : intermediate stage that is xor-ed with the last stage to generate to next prbs bit
 --   NBITS        : bus size of DATA_IN and DATA_OUT
 --
@@ -58,7 +58,7 @@
 --
 --   Set paramaters to the following values for a ITU-T compliant PRBS
 --------------------------------------------------------------------------------
--- POLY_LENGHT POLY_TAP INV_PATTERN  || nbr of   bit seq.   max 0      feedback
+-- POLY_LENGTH POLY_TAP INV_PATTERN  || nbr of   bit seq.   max 0      feedback
 --                                   || stages    length  sequence      stages
 --------------------------------------------------------------------------------
 --     7          6       false      ||    7         127      6 ni        6, 7
@@ -115,7 +115,7 @@ entity PRBS_ANY is
   generic (
     CHK_MODE    : boolean                := false;
     INV_PATTERN : boolean                := false;
-    POLY_LENGHT : natural range 2 to 63  := 7;
+    POLY_LENGTH : natural range 2 to 63  := 7;
     POLY_TAP    : natural range 1 to 62  := 6;
     NBITS       : natural range 1 to 512 := 4
     );
@@ -130,7 +130,7 @@ end PRBS_ANY;
 
 architecture PRBS_ANY of PRBS_ANY is
 
-  type prbs_type is array (NBITS downto 0) of std_logic_vector(1 to POLY_LENGHT);
+  type prbs_type is array (NBITS downto 0) of std_logic_vector(1 to POLY_LENGTH);
   signal prbs : prbs_type := (others => (others => '1'));
 
   signal data_in_i  : std_logic_vector(NBITS-1 downto 0);
@@ -143,10 +143,10 @@ begin
   data_in_i <= DATA_IN when INV_PATTERN = false else (not DATA_IN);
 
   g1 : for I in 0 to NBITS-1 generate
-    prbs_xor_a(I) <= prbs(I)(POLY_TAP) xor prbs(I)(POLY_LENGHT);
+    prbs_xor_a(I) <= prbs(I)(POLY_TAP) xor prbs(I)(POLY_LENGTH);
     prbs_xor_b(I) <= prbs_xor_a(I) xor data_in_i(I);
     prbs_msb(I+1) <= prbs_xor_a(I) when CHK_MODE = false else data_in_i(I);
-    prbs(I+1)     <= prbs_msb(I+1) & prbs(I)(1 to POLY_LENGHT-1);
+    prbs(I+1)     <= prbs_msb(I+1) & prbs(I)(1 to POLY_LENGTH-1);
   end generate;
 
   PRBS_GEN_01 : process (CLK)

@@ -126,6 +126,9 @@ if __name__ == "__main__":
             #         print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
             #         sys.exit()
             continue
+        elif not line.split():
+            # empty line
+            continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":

@@ -22,6 +22,9 @@ if __name__=='__main__':
                         print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
                         sys.exit()
                 continue
+            elif not line.split():
+                # empty line
+                continue
             slot = line.split()[0]
             oh_sn = line.split()[1]
             vtrxp_sn = line.split()[2]
@@ -53,10 +56,12 @@ if __name__=='__main__':
                 elif test_type=="debug":
                     if int(oh_sn) not in range(1, 2019):
                         print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
-                        sys.exit()
-                if int(slot) > 4:
-                    print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
-                    sys.exit()
+                        options = input('Do you want to continue anyway? (y/n) >> ')
+                        if options.lower() in 'yes':
+                            pass
+                        else:
+                            sys.exit()
+
                 oh_sn_list.append(oh_sn)
                 if vtrxp_sn!=str(NULL):
                     vtrxp_sn_list.append(vtrxp_sn)
@@ -205,15 +210,37 @@ if __name__=='__main__':
         if multiple_ohs:
             if i==0 or multiple_params:
                 options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+                while options not in batch_dict:
+                    print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
+                    options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+                batch = batch_dict[options]
         else:
             options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
-        while options not in batch_dict:
-            print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
-            options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
-        batch = batch_dict[options]
-        
-        if multiple_ohs:
-            if i==0 or not one_for_all:
+            while options not in batch_dict:
+                print('\nInvalid input! Valid entries are [%s]\n'%', '.join(batch_dict))
+                options = input('Enter BATCH for OH %s (%s): '%(oh_sn,batch_dict_str))
+            batch = batch_dict[options]
+
+        # Special tests         
+        if test_type=="acceptance":
+            thermal_testing          = -9999
+            thermal_testing_pass     = -9999
+            power_cycle_testing      = -9999
+            power_cycle_testing_pass = -9999
+            link_rst_testing         = -9999
+            link_rst_testing_pass    = -9999
+        else:
+            if multiple_ohs:
+                if i==0 or not one_for_all:
+                    thermal_testing = input('Was THERMAL TESTING performed on OH %s? (y/n) '%oh_sn)
+                    if thermal_testing.lower() in 'yes':
+                        thermal_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
+                        thermal_testing_pass = 1 if thermal_testing.lower() in 'yes' else 0
+                        thermal_testing = 1
+                    else:
+                        thermal_testing = 0
+                        thermal_testing_pass = 0
+            else:
                 thermal_testing = input('Was THERMAL TESTING performed on OH %s? (y/n) '%oh_sn)
                 if thermal_testing.lower() in 'yes':
                     thermal_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
@@ -222,17 +249,17 @@ if __name__=='__main__':
                 else:
                     thermal_testing = 0
                     thermal_testing_pass = 0
-        else:
-            thermal_testing = input('Was THERMAL TESTING performed on OH %s? (y/n) '%oh_sn)
-            if thermal_testing.lower() in 'yes':
-                thermal_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
-                thermal_testing_pass = 1 if thermal_testing.lower() in 'yes' else 0
-                thermal_testing = 1
+            if multiple_ohs:
+                if i==0 or not one_for_all:
+                    power_cycle_testing = input('Was POWER CYCLE TESTING performed on OH %s? (y/n) '%oh_sn)
+                    if power_cycle_testing.lower() in 'yes':
+                        power_cycle_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
+                        power_cycle_testing_pass = 1 if power_cycle_testing.lower() in 'yes' else 0
+                        power_cycle_testing = 1
+                    else:
+                        power_cycle_testing = 0
+                        power_cycle_testing_pass = 0
             else:
-                thermal_testing = 0
-                thermal_testing_pass = 0
-        if multiple_ohs:
-            if i==0 or not one_for_all:
                 power_cycle_testing = input('Was POWER CYCLE TESTING performed on OH %s? (y/n) '%oh_sn)
                 if power_cycle_testing.lower() in 'yes':
                     power_cycle_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
@@ -241,18 +268,18 @@ if __name__=='__main__':
                 else:
                     power_cycle_testing = 0
                     power_cycle_testing_pass = 0
-        else:
-            power_cycle_testing = input('Was POWER CYCLE TESTING performed on OH %s? (y/n) '%oh_sn)
-            if power_cycle_testing.lower() in 'yes':
-                power_cycle_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
-                power_cycle_testing_pass = 1 if power_cycle_testing.lower() in 'yes' else 0
-                power_cycle_testing = 1
-            else:
-                power_cycle_testing = 0
-                power_cycle_testing_pass = 0
 
-        if multiple_ohs:
-            if i==0 or not one_for_all:
+            if multiple_ohs:
+                if i==0 or not one_for_all:
+                    link_rst_testing = input('Was LINK RESET TESTING performed on OH %s? (y/n) '%oh_sn)
+                    if link_rst_testing.lower() in 'yes':
+                        link_rst_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
+                        link_rst_testing_pass = 1 if link_rst_testing.lower() in 'yes' else 0
+                        link_rst_testing = 1
+                    else:
+                        link_rst_testing = 0
+                        link_rst_testing_pass = 0
+            else:
                 link_rst_testing = input('Was LINK RESET TESTING performed on OH %s? (y/n) '%oh_sn)
                 if link_rst_testing.lower() in 'yes':
                     link_rst_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
@@ -261,65 +288,7 @@ if __name__=='__main__':
                 else:
                     link_rst_testing = 0
                     link_rst_testing_pass = 0
-        else:
-            link_rst_testing = input('Was LINK RESET TESTING performed on OH %s? (y/n) '%oh_sn)
-            if link_rst_testing.lower() in 'yes':
-                link_rst_testing = input('Did this board (OH %s) pass? (y/n) '%oh_sn)
-                link_rst_testing_pass = 1 if link_rst_testing.lower() in 'yes' else 0
-                link_rst_testing = 1
-            else:
-                link_rst_testing = 0
-                link_rst_testing_pass = 0
-        '''
-        if multiple_ohs:
-            if i==0 or not one_for_all:
-                uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
-                if uplink_eye_diagram.lower() in 'yes':
-                    while True:
-                        try:
-                            open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
-                            break
-                        except ValueError:
-                            print('Must enter a float for open eye fraction.')
-                    while True:
-                        try:
-                            open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
-                            break
-                        except ValueError:
-                            print('Must enter a float for open eye fraction.')
-                else:
-                    open_eye_fraction_M = open_eye_fraction_S = -9999
-            elif uplink_eye_diagram.lower() in 'yes':
-                while True:
-                    try:
-                        open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
-                        break
-                    except ValueError:
-                        print('Must enter a float for open eye fraction.')
-                while True:
-                    try:
-                        open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
-                        break
-                    except ValueError:
-                        print('Must enter a float for open eye fraction.')            
-        else:
-            uplink_eye_diagram = input('Was UPLINK EYE DIAGRAM performed on OH %s? (y/n) '%oh_sn)
-            if uplink_eye_diagram.lower() in 'yes':
-                while True:
-                    try:
-                        open_eye_fraction_M = float(input('Enter open eye fraction for OH %s Main lpGBT (float): '%oh_sn))
-                        break
-                    except ValueError:
-                        print('Must enter a float for open eye fraction.')
-                while True:
-                    try:
-                        open_eye_fraction_S = float(input('Enter open eye fraction for OH %s Secondary lpGBT (float): '%oh_sn))
-                        break
-                    except ValueError:
-                        print('Must enter a float for open eye fraction.')
-            else:
-                open_eye_fraction_M = open_eye_fraction_S = -9999
-        '''
+
         if multiple_ohs:
             if i==0 or not one_for_all:
                 vis_inspection = input('Did this board (OH %s) pass visual inspection with no shorts? (y/n) '%oh_sn)

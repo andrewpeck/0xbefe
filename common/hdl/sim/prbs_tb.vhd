@@ -28,7 +28,7 @@ begin
         generic map(
             CHK_MODE    => false,
             INV_PATTERN => false,
-            POLY_LENGHT => 11,
+            POLY_LENGTH => 11,
             POLY_TAP    => 9,
             NBITS       => 1
         )

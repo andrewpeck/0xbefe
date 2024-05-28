@@ -458,7 +458,7 @@ begin
       generic map (
         chk_mode    => false,
         inv_pattern => false,
-        poly_lenght => 7,
+        poly_length => 7,
         poly_tap    => 6,
         nbits       => 8
         )
