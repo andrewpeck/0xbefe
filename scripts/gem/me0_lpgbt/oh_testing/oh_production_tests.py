@@ -447,7 +447,7 @@ if __name__ == "__main__":
             # uplink eye scan for boss gbt for current OH
             print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt)
-            os.system("python3 %s/common/eyescan.py 8 16 [%d] > out.txt"%(get_befe_scripts_dir(),gbt))
+            os.system("python3 %s/gem/me0_uplink_eyescan.py 8 16 [%d] > out.txt"%(get_befe_scripts_dir(),gbt))
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("cp %s %s/uplink_optical_eye_OH%s_GBT%s.pdf"%(latest_file, dataDir, oh_sn, gbt))
@@ -463,7 +463,7 @@ if __name__ == "__main__":
             # uplink eye scan for sub gbt for current OH
             print (Colors.BLUE + "Running Uplink Eye diagram for lpGBT %d\n"%gbt_sub + Colors.ENDC)
             logfile.write("Running Uplink Eye diagram for lpGBT %d.\n"%gbt_sub)
-            os.system("python3 ../common/eyescan.py 8 16 [%d] > out.txt"%gbt_sub)
+            os.system("python3 %s/gem/me0_uplink_eyescan.py 8 16 [%d] > out.txt"%(get_befe_scripts_dir(), gbt_sub))
             list_of_files = glob.glob(scripts_gem_dir + "/results/me0_lpgbt_data/lpgbt_uplink_eye_scan_results/eye_data*.pdf")
             latest_file = max(list_of_files, key=os.path.getctime)
             os.system("cp %s %s/uplink_optical_eye_OH%s_GBT%s.pdf"%(latest_file, dataDir, oh_sn, gbt_sub))
