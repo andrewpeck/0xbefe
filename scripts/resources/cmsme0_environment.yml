@@ -1,4 +1,4 @@
-name: cmsme0_env_test
+name: cmsme0_env
 channels:
   - conda-forge
   - defaults
