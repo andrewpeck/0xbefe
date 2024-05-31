@@ -5,10 +5,6 @@ from boards.cvp13.cvp13_utils import *
 import time
 import sys
 import os
-import seaborn as sns
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-from datetime import datetime
 
 #based on https://support.xilinx.com/s/article/68785?language=en_US
 # this one is the same but for ultrascale (not plus) https://support.xilinx.com/s/article/66517?language=en_US
@@ -73,12 +69,7 @@ prescale_sel = {
     160: {6:0, 7:2, 8:5, 9:8,  10:12, 11:15, 12:18, 13:22, 14:25, 15:28}
 }
 
-resultsDir = get_befe_scripts_dir() + "/gem/results"
-uplinkDir  = resultsDir + "/me0_lpgbt_data/lpgbt_uplink_eye_scan_results"
-if not os.path.exists(uplinkDir):
-    os.makedirs(uplinkDir)
-result_base_dir_name = uplinkDir + "/eye_data_"
-custom_cmap = LinearSegmentedColormap.from_list("custom_blue_green_red", ["blue", "green", "red"])
+
 
 def eyescan_read_reg(mgt, reg_name):
     reg = EYESCAN_DRP_REGS[reg_name]
@@ -139,9 +130,7 @@ def eyescan_align(link):
             # realign
             print("Link %d: realigning, num errors in the center is %d, this is try #%d" % (link.idx, err, retries))
             eyescan_write_reg(mgt, "ES_HORZ_OFFSET", 0x880)
-            #write_reg("BEFE.MGTS.MGT%d.CTRL.RX_RESET_SEL"%mgt.idx, 1)
             mgt.set_eyescan_reset(1)
-            #write_reg("BEFE.MGTS.MGT%d.CTRL.RX_RESET_SEL"%mgt.idx, 0)
             eyescan_write_reg(mgt, "ES_HORZ_OFFSET", 0x800)
             mgt.set_eyescan_reset(0)
 
@@ -224,7 +213,7 @@ def eyescan_setup(links, ber_depth):
 
     return 2**(prescale + 1) * width
 
-def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, extra_info_print="", verbose=True, ber_depth=8):
+def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, extra_info_print="", verbose=True):
 
     print("Starting the scan")
 
@@ -290,31 +279,10 @@ def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, ext
             hi += 1
         vi += 1
         hi = 0
-    
-    eye_open_areas = []
-    ui_percentages = []
-    effective_h_range =  int((2**5 * 2 + 1) / step_h)
-    for li in range(len(result)):
-        cur_link_open = 0
-        for vi in range(len(result[li])):
-            cur_link_open_ui = 0
-            for hi in range(len(result[li][vi])):
-                if result[li][vi][hi] < 10**(-ber_depth):
-                    cur_link_open += 1
-                    cur_link_open_ui += 1
-            if vi == int(len(result[li]) / 2):
-                ui_percentages.append(cur_link_open_ui / effective_h_range)
-        eye_open_areas.append(cur_link_open)
-        sns.heatmap(result[li], cmap="jet")
-        # In final production, this script will be called with a single MGT at a time (i.e. li can only be 0)
-        plt.savefig(result_base_dir_name + datetime.now().strftime("%Y-%m-%d_%H_%M_%S") + ".pdf")
-        with open(result_base_dir_name + datetime.now().strftime("%Y-%m-%d_%H_%M_%S") + "_out.txt", "w") as file:
-            file.write("UI fraction: " + str(ui_percentages[0]))
 
-    print("Eye open areas for all links:", eye_open_areas)
-    print("Open UI percentage or all scanned links:", ui_percentages)
+
     print("DONE!")
-    
+
     return result
 
 def print_stat_eye(links, result, ber_depth):
@@ -525,7 +493,7 @@ if __name__ == '__main__':
             brightness = int(sys.argv[5])
         result = waveform_eyescan_go(links, num_bins, 0, brightness, horz_range=2.0)
     else:
-        result = stat_eyescan_go(links, num_bins, bits_per_sample_count, ber_depth=ber_depth)
+        result = stat_eyescan_go(links, num_bins, bits_per_sample_count)
     
-    #print_stat_eye(links, result, ber_depth)
+    print_stat_eye(links, result, ber_depth)
 
