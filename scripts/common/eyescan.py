@@ -5,6 +5,7 @@ from boards.cvp13.cvp13_utils import *
 import time
 import sys
 import os
+import math
 
 #based on https://support.xilinx.com/s/article/68785?language=en_US
 # this one is the same but for ultrascale (not plus) https://support.xilinx.com/s/article/66517?language=en_US
@@ -83,9 +84,23 @@ def eyescan_write_reg(mgt, reg_name, value):
     reg = EYESCAN_DRP_REGS[reg_name]
     addr = reg["addr"]
     val = mgt.drp_read(addr)
+    # print("addr %s read value %s" % (hex(addr), hex(val)))
+    # if (addr == 0x3c and val != 0x384 and val != 0x784):
+    #     bad_val = val
+    #     print("PROBLEM: 0x3c read unexpected value: %s, will try to read it 10 more times" % hex(val))
+    #     for i in range(10):
+    #         val = mgt.drp_read(addr)
+    #         print("    val: %s" % hex(val))
+    #     print("Read all DRP addresses and look for the bad value")
+    #     for a in range(0x28c):
+    #         v = mgt.drp_read(a)
+    #         if v == bad_val:
+    #             print("  Found the bad value at address %s = %s" % (hex(a), hex(v)))
+
     mask = reg["mask"]
     first_bit_pos = find_first_set_bit_pos(mask)
     val = (val & ~mask) | ((value << first_bit_pos) & mask)
+    # print("Writing %s to addr %s" % (hex(val), hex(addr)))
     mgt.drp_write(addr, val)
 
 def get_int_datawidth(mgt):
@@ -252,6 +267,12 @@ def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, ext
                 eyescan_write_reg(mgt, "ES_HORZ_OFFSET", 0x800 | h_val)
                 # FSM -> RESET
                 eyescan_write_reg(mgt, "ES_CONTROL", 1)
+                if eyescan_read_reg(mgt, "ES_CONTROL") != 1: # have seen this fail sometimes on CVP13...
+                    eyescan_write_reg(mgt, "ES_CONTROL", 1)
+                # # confirm that it's out of the wait state
+                # if (eyescan_read_reg(mgt, "ES_CONTROL_STATUS") & 0xe) != 0:
+                #     print("Link %d: Repeating run command because it's still in WAIT state!" % link.idx)
+                #     eyescan_write_reg(mgt, "ES_CONTROL", 1)
 
             li = 0
             for link in links:
@@ -262,7 +283,8 @@ def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, ext
                 while ((eyescan_read_reg(mgt, "ES_CONTROL_STATUS") & 0xf) >> 1) != 2:
                     time.sleep(0.001)
                     if (time.time() - t0 > 10.0):
-                        print("link %d this measurement is taking more than 10s, the ES_CONTROL_STATUS is %d" % (link.idx, eyescan_read_reg(mgt, "ES_CONTROL_STATUS")))
+                        print("link %d this measurement is taking more than 10s, the ES_CONTROL_STATUS is %d, ES_CONTROL reg is %d" % (link.idx, eyescan_read_reg(mgt, "ES_CONTROL_STATUS"), eyescan_read_reg(mgt, "ES_CONTROL")))
+
                         t0 = time.time()
 
                 # FSM -> WAIT
@@ -283,6 +305,8 @@ def stat_eyescan_go(links, num_steps, bits_per_sample_count, horz_range=1.5, ext
 
     print("DONE!")
 
+    # config = {"num_steps"}
+
     return result
 
 def print_stat_eye(links, result, ber_depth):
@@ -294,10 +318,10 @@ def print_stat_eye(links, result, ber_depth):
         li += 1
         print("Link %d:" % (link.idx))
         for vi in range(len(eye)):
-            line = ""
+            line = "%d: " % vi
             for hi in range(len(eye[vi])):
                 ber = eye[vi][hi]
-                line += "%.2f | " % ber
+                line += "%.2e | " % ber
             print(line)
 
     # #print with colored squares
@@ -349,16 +373,36 @@ def print_stat_eye(links, result, ber_depth):
                 eye = result[li + lii]
                 for hi in range(len(eye[vi])):
                     ber = eye[vi][hi]
-                    ber = ber * 2 if ber <= 0.5 else 1.0
-                    r = 0 if ber < 0.5 else int(255 * ((ber - 0.5) * 2))
-                    g = int(255 * (ber * 2)) if ber < 0.5 else int(255 * (1.0 - ((ber - 0.5) * 2)))
-                    b = int(255 * (1.0 - (ber * 2))) if ber < 0.5 else 0
+                    ber_log = -18 if ber == 0.0 else math.log10(ber) if ber <= 1.0 else 0
+                    ber_col = (ber_log * -1) / ber_depth
+                    if ber_col > 1.0:
+                        ber_col = 1.0
+                    ber_col = 1.0 - ber_col
+                    r = 0 if ber_col < 0.5 else int(255 * ((ber_col - 0.5) * 2))
+                    g = int(255 * (ber_col * 2)) if ber_col < 0.5 else int(255 * (1.0 - ((ber_col - 0.5) * 2)))
+                    b = int(255 * (1.0 - (ber_col * 2))) if ber_col < 0.5 else 0
                     char = "\33[38;2;%d;%d;%dm■ \033[0m" % (r, g, b)
                     # char = "Z" if ber < 0.0 else "." if ber == 0.0 else "-" if ber < 0.1 else "x"
                     line += char
                 line += "    "
             print(line)
         print("")
+
+def save_to_file(links, result, ber_depth, num_steps, horz_range):
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    f = open("eyescan_ber_%d_steps_%d_%s.txt" % (ber_depth, num_steps*2, timestr), "w")
+    for i in range(len(links)):
+        link = links[i]
+        f.write("link=%d\n" % link.idx)
+        f.write("horz_range=%.2f\n" % horz_range)
+        res = result[i]
+        for v in range(len(res)):
+            for h in range(len(res[0])):
+                comma = "" if h == len(res[0]) - 1 else ","
+                f.write("%.4e%s" % (res[v][h], comma))
+            f.write("\n")
+        #f.write("\n")
+    f.close()
 
 def waveform_eyescan_go(links, num_steps, stats_multiplier, brightness, horz_range=1.5):
 
@@ -440,7 +484,67 @@ def waveform_eyescan_go(links, num_steps, stats_multiplier, brightness, horz_ran
 
     return res_merged
 
+# this function just sets the offset sampler to a single position given by the horz_offset_fraction adn vert_offset_fraction, and monitors it for errors, printing each time it detects any errors
+def link_monitor(links, horz_offset_fraction, vert_offset_fraction, horz_range=1.5):
+    eyescan_setup(links, 6) # use the lowest BER floor so we can keep checking the error counts as frequently as possible, using 1e-6 usually results in prescale = 0, which translates to roughly 1ms run time on 4.8Gb/s links
+    MAX_V_OFFSET = 2**7
+    MAX_H_OFFSET = int(2**5 * horz_range)
+    h_pos = int(MAX_H_OFFSET * horz_offset_fraction)
+    v_pos = int(MAX_V_OFFSET * vert_offset_fraction)
+
+    errors = [0] * len(links)
+
+    # set the position
+    for link in links:
+        mgt = link.rx_mgt
+        eyescan_write_reg(mgt, "RX_EYESCAN_VS_NEG_DIR", 0)
+        eyescan_write_reg(mgt, "RX_EYESCAN_VS_CODE", v_pos)
+        eyescan_write_reg(mgt, "ES_HORZ_OFFSET", 0x800 | h_pos)
+
+    caption = "|"
+    separator = "|"
+    col_width = 16
+    for link in links:
+        caption += ("RX MGT %03d" % link.rx_mgt.idx).center(col_width) + "|"
+        separator += "=" * col_width + 1
+    print(separator)
+    print(caption)
+    print(separator)
+
+    while True:
+        err_found = False
+        highlight = [False] * len(links)
+        # FSM -> RESET
+        for li in range(len(links)):
+            link = links[li]
+            mgt = link.rx_mgt                    
+            eyescan_write_reg(mgt, "ES_CONTROL", 1)    
+            t0 = time.time()
+            while ((eyescan_read_reg(mgt, "ES_CONTROL_STATUS") & 0xf) >> 1) != 2:
+                time.sleep(0.00025)
+                if (time.time() - t0 > 0.1):
+                    print("link %d this measurement is taking more than 100ms, the ES_CONTROL_STATUS is %d" % (link.idx, eyescan_read_reg(mgt, "ES_CONTROL_STATUS")))
+                    t0 = time.time()
+
+            # FSM -> WAIT
+            eyescan_write_reg(mgt, "ES_CONTROL", 0)
+            # read the counters
+            # bits_checked = eyescan_read_reg(mgt, "ES_SAMPLE_COUNT") * bits_per_sample_count
+            err = eyescan_read_reg(mgt, "ES_ERROR_COUNT")
+            if err > 0:
+                errors[li] += err
+                err_found = True
+                highlight[li] = True
         
+        if err_found:
+            line = "|"
+            for li in range(len(links)):
+                if highlight[li]:
+                    line += "\033[91m"
+                line += ("%d" % errors[li]).center(col_width)
+                if highlight[li]:
+                    line += "\033[0m"
+                line += "|"
 
 
 
@@ -455,8 +559,27 @@ if __name__ == '__main__':
         print("    LINKS: this is a python expression resulting in a range or list of link indexes e.g. range(0, 60), or e.g. [2, 5, 7]")
         print("")
         print('e.g.: python3 common/eyescan.py 7 16 "[40, 41]"')
+        print("    MONITOR: if a word monitor is given as the first argument, instead of BER_DEPTH, then it will expect <HORZ_POS_FRACTION> <VERT_POS_FRACTION> <LINKS> as the following arguments")
+        print("    In this case, the offset sampler will just stay in a single position provided, and monitor it for errors, printing out any errors seen to the screen")
         sys.exit(0)
 
+    # special case for monitoring the links
+    if (sys.argv[1] == "monitor"):
+        horz_pos_fraction = float(sys.argv[2])
+        vert_pos_fraction = float(sys.argv[3])
+        link_indexes = list(eval(sys.argv[3]))
+        if len(link_indexes) == 0:
+            print("ERROR: no links given")
+            sys.exit(1)
+        links = befe_get_all_links()
+        links2 = []
+        for i in link_indexes:
+            links2.append(links[i])
+        links = links2
+        link_monitor(links, horz_pos_fraction, vert_pos_fraction)
+        sys.exit()
+
+    # normal eye scan
     ber_depth = int(sys.argv[1])
     if ber_depth < 6 or ber_depth > 15:
         print("ERROR: unsupported BER depth: only values between 6 and 15 are supported")
@@ -487,13 +610,19 @@ if __name__ == '__main__':
     # ber_depth = 7
     bits_per_sample_count = eyescan_setup(links, ber_depth)
     result = None
+    t0 = time.time()
     if len(sys.argv) > 4 and sys.argv[4] == "waveform":
         brightness = 2.5
         if len(sys.argv) > 5:
             brightness = int(sys.argv[5])
         result = waveform_eyescan_go(links, num_bins, 0, brightness, horz_range=2.0)
     else:
-        result = stat_eyescan_go(links, num_bins, bits_per_sample_count)
+        #horz_range = 1.5
+        horz_range = 1.0
+        result = stat_eyescan_go(links, num_bins, bits_per_sample_count, horz_range=horz_range)
+        save_to_file(links, result, ber_depth, num_bins, horz_range)
     
     print_stat_eye(links, result, ber_depth)
 
+    time_elapsed = time.time() - t0
+    print("Took %d seconds" % time_elapsed)
