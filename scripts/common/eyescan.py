@@ -6,6 +6,10 @@ import time
 import sys
 import os
 import math
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+from datetime import datetime
 
 #based on https://support.xilinx.com/s/article/68785?language=en_US
 # this one is the same but for ultrascale (not plus) https://support.xilinx.com/s/article/66517?language=en_US
@@ -69,8 +73,6 @@ prescale_sel = {
     128: {6:0, 7:2, 8:5, 9:9,  10:12, 11:15, 12:19, 13:22, 14:25, 15:29},
     160: {6:0, 7:2, 8:5, 9:8,  10:12, 11:15, 12:18, 13:22, 14:25, 15:28}
 }
-
-
 
 def eyescan_read_reg(mgt, reg_name):
     reg = EYESCAN_DRP_REGS[reg_name]
