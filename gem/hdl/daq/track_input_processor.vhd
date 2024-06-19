@@ -26,7 +26,8 @@ use work.board_config_package.all;
 
 entity track_input_processor is
 generic(
-    g_NUM_VFATS_PER_OH : integer
+    g_NUM_VFATS_PER_OH          : integer;
+    g_DATA_PROCESSOR_CLK_FREQ   : integer
 );
 port(
     -- Reset
@@ -386,8 +387,8 @@ begin
     -- InFIFO write rate counter
     i_infifo_write_rate : entity work.rate_counter
     generic map(
-        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(80_000_000, 32)),
-        g_COUNTER_WIDTH => 15
+        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(g_DATA_PROCESSOR_CLK_FREQ, 32)),
+        g_COUNTER_WIDTH => 21
     )
     port map(
         clk_i   => data_processor_clk_i,
@@ -399,8 +400,8 @@ begin
     -- EvtFIFO write rate counter
     i_evtfifo_write_rate : entity work.rate_counter
     generic map(
-        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(80_000_000, 32)),
-        g_COUNTER_WIDTH => 17
+        g_CLK_FREQUENCY => std_logic_vector(to_unsigned(g_DATA_PROCESSOR_CLK_FREQ, 32)),
+        g_COUNTER_WIDTH => 21
     )
     port map(
         clk_i   => data_processor_clk_i,

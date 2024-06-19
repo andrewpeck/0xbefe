@@ -963,7 +963,7 @@ begin
             GTREFCLK1            => refclks(1),
             GTRSVD               => "0000000000000000",
             GTRXRESET            => rx_init_i.gtrxreset,
-            GTRXRESETSEL         => '0',
+            GTRXRESETSEL         => rx_slow_ctrl_i.gtrxresetsel,
             GTSOUTHREFCLK0       => float_clk,
             GTSOUTHREFCLK1       => float_clk,
             GTTXRESET            => tx_init_i.gttxreset,

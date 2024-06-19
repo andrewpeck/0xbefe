@@ -16,21 +16,21 @@ def analyzeBxDiff(events):
                 vfatOhBxOffsets.append(vfat.bc - chamber.ohBc)
                 vfatAmcBxOffsets.append(vfat.bc - event.bxId)
 
-    # print "===================================================="
-    # print "OH BC - AMC BC histogram:"
-    # print ""
+    # print("====================================================")
+    # print("OH BC - AMC BC histogram:")
+    # print("")
     # histogram(ohAmcBxOffsets, -3564, 3564, 100)
     #
-    # print ""
-    # print "===================================================="
-    # print "VFAT BC - OH BC histogram:"
-    # print ""
+    # print("")
+    # print("====================================================")
+    # print("VFAT BC - OH BC histogram:")
+    # print("")
     # histogram(vfatOhBxOffsets, -3564, 3564, 100)
 
-    print ""
-    print "===================================================="
-    print "VFAT BC - AMC BC histogram:"
-    print ""
+    print("")
+    print("====================================================")
+    print("VFAT BC - AMC BC histogram:")
+    print("")
     # histogram(vfatAmcBxOffsets, -3564, 3564, 100)
     histogram(vfatAmcBxOffsets, -3564, 3564, 7130)
 
@@ -78,29 +78,29 @@ def analyzeBx(events):
                 if vfat.bc > 3564:
                     numVfatBxOvf += 1
 
-    print ""
-    print "===================================================="
-    print "AMC BC histogram:"
-    print ""
+    print("")
+    print("====================================================")
+    print("AMC BC histogram:")
+    print("")
     histogram(amcBxs, 0, 4095, 4096)
 
-    print "AMC BX Min: %d, AMC BX Max: %d, AMC BX > 3564: %d" % (amcBxMin, amcBxMax, numAmcBxOvf)
+    print("AMC BX Min: %d, AMC BX Max: %d, AMC BX > 3564: %d" % (amcBxMin, amcBxMax, numAmcBxOvf))
 
-    print ""
-    print "===================================================="
-    print "OH BC histogram:"
-    print ""
+    print("")
+    print("====================================================")
+    print("OH BC histogram:")
+    print("")
     histogram(ohBxs, 0, 4095, 4096)
 
-    print "OH BX Min: %d, OH BX Max: %d, OH BX > 3564: %d" % (ohBxMin, ohBxMax, numOhBxOvf)
+    print("OH BX Min: %d, OH BX Max: %d, OH BX > 3564: %d" % (ohBxMin, ohBxMax, numOhBxOvf))
 
-    print ""
-    print "===================================================="
-    print "VFAT BC histogram:"
-    print ""
+    print("")
+    print("====================================================")
+    print("VFAT BC histogram:")
+    print("")
     histogram(vfatBxs, 0, 4095, 4096)
 
-    print "VFAT BX Min: %d, VFAT BX Max: %d, VFAT BX > 3564: %d" % (vfatBxMin, vfatBxMax, numVfatBxOvf)
+    print("VFAT BX Min: %d, VFAT BX Max: %d, VFAT BX > 3564: %d" % (vfatBxMin, vfatBxMax, numVfatBxOvf))
 
 def analyzeVfatBxMatching(events):
 
@@ -133,12 +133,12 @@ def analyzeVfatBxMatching(events):
         elif numVfats > 1:
             numMatchingInEvent += 1
 
-    print ""
-    print "===================================================="
-    print "Number of events with matching VFAT BXs: %d" % numMatchingInEvent
-    print "Number of chamber events with matching VFAT BXs: %d" % numMatchingInChamber
-    print "Number of events with mismatching VFAT BXs: %d" % numMismatchInEvent
-    print "Number of chamber events with mismatching VFAT BXs: %d" % numMismatchInChamber
+    print("")
+    print("====================================================")
+    print("Number of events with matching VFAT BXs: %d" % numMatchingInEvent)
+    print("Number of chamber events with matching VFAT BXs: %d" % numMatchingInChamber)
+    print("Number of events with mismatching VFAT BXs: %d" % numMismatchInEvent)
+    print("Number of chamber events with mismatching VFAT BXs: %d" % numMismatchInChamber)
 
 def analyzeOhBxMatching(events):
 
@@ -168,12 +168,12 @@ def analyzeOhBxMatching(events):
         elif numOhs > 1:
             numMatchingEc += 1
 
-    print ""
-    print "===================================================="
-    print "Number of events with matching OH BXs: %d" % numMatchingBx
-    print "Number of events with matching OH ECs: %d" % numMatchingEc
-    print "Number of events with mismatching OH BXs: %d" % numMismatchingBx
-    print "Number of events with mismatching OH ECs: %d" % numMismatchingEc
+    print("")
+    print("====================================================")
+    print("Number of events with matching OH BXs: %d" % numMatchingBx)
+    print("Number of events with matching OH ECs: %d" % numMatchingEc)
+    print("Number of events with mismatching OH BXs: %d" % numMismatchingBx)
+    print("Number of events with mismatching OH ECs: %d" % numMismatchingEc)
 
 
 def analyzeNumVfats(events):
@@ -185,9 +185,9 @@ def analyzeNumVfats(events):
             numVfats.append(vfats)
 
 
-    print "===================================================="
-    print "Number of VFATs per event histogram:"
-    print ""
+    print("====================================================")
+    print("Number of VFATs per event histogram:")
+    print("")
     histogram(numVfats)
 
 
@@ -197,7 +197,7 @@ def analyzeNumChambers(events):
     for event in events:
         numChambers.append(len(event.chambers))
 
-    print "===================================================="
-    print "Number of chambers per event histogram:"
-    print ""
+    print("====================================================")
+    print("Number of chambers per event histogram:")
+    print("")
     histogram(numChambers, 0, 8, 8)

@@ -1,0 +1,8 @@
+sudo su -
+cd /sys/bus/pci/devices/0000\:05\:00.0/qdma/
+echo 2 > qmax
+exit
+cd ~/cvp13/dma_ip_drivers/QDMA/linux-kernel/bin
+sudo ./dma-ctl qdma05000 q add idx 0 mode st dir h2c
+sudo ./dma-ctl qdma05000 q start idx 0 dir h2c
+sudo ./dma-to-device -d /dev/qdma05000-ST-0 -s 32 -v

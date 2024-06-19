@@ -22,7 +22,7 @@ try:
 except:
     pass
 
-def prbs_control(links, prbs_mode):
+def prbs_control(links, prbs_mode, tx=True, rx=True):
     for link in links:
         link.set_prbs_mode(MgtTxRx.TX, prbs_mode)
         # if prbs_mode == 0:
@@ -63,15 +63,17 @@ def prbs_status(links):
     print(tf.generate_table(rows, cols, grid_style=DEFAULT_TABLE_GRID_STYLE))
 
 def prbs_error_monitor(links, filename, sleep_between_reads=1.0):
+    t0 = time.time()
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
-        links_row = []
+        links_row = ["time"]
         for link in links:
             links_row.append("link_%d" % link.idx)
         csvwriter.writerow(links_row)
         print("entering an infinite monitoring loop...")
         while True:
-            err_row = []
+            t = time.time() - t0
+            err_row = [t]
             for link in links:
                 err_row.append(link.get_prbs_err_cnt())
             csvwriter.writerow(err_row)

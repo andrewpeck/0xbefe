@@ -29,12 +29,12 @@ package project_config is
     --== Link configuration ==--
     --========================--
 
-    -- this configuration supports 1 full layer + two half layers (narrow only)
+    -- this configuration supports 4 wide GEBs
     -- the fiber connections are as follows:
-    -- layer 0 narrow: TX on QSFP0 channels 0&1 | RX on QSFP0 channels 0-3
-    -- layer 0 wide:   TX on QSFP0 channels 2&3 | RX on QSFP1 channels 0-3
-    -- layer 1 narrow: TX on QSFP1 channels 0&1 | RX on QSFP2 channels 0-3
-    -- layer 2 narrow: TX on QSFP2 channels 0&1 | RX on QSFP3 channels 0-3
+    -- layer 0 wide: TX on QSFP0 channels 0&1 | RX on QSFP0 channels 0-3
+    -- layer 1 wide: TX on QSFP0 channels 2&3 | RX on QSFP1 channels 0-3
+    -- layer 2 wide: TX on QSFP2 channels 0&1 | RX on QSFP2 channels 0-3
+    -- layer 3 wide: TX on QSFP2 channels 2&3 | RX on QSFP3 channels 0-3
     -- LDAQ:           TX on QSFP3 channel 0
 
     constant CFG_OH_LINK_CONFIG_ARR : t_oh_link_config_arr_arr := (
@@ -84,8 +84,8 @@ package project_config is
     constant CFG_TTC_LINKS : t_int_array(0 to 3) := (others => 0);   
 
     constant CFG_USE_TTC_GBTX_LINK  : boolean := false;
-    constant CFG_TTC_GBTX_LINK      : integer := 0;  
-    
+    constant CFG_TTC_GBTX_LINK      : integer := 0;   
+
     --================================--
     -- MGT configuration
     --================================--    

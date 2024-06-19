@@ -13,7 +13,7 @@ def bytesToWord(bytes, idx):
 def promless_load(bitfile_name, verify=True, promless_type=None):
 
     node_suffix = ""
-    if promless_type is not None and len(promless_type > 0):
+    if promless_type is not None and len(promless_type) > 0:
         node_suffix = "_" + promless_type
 
     fname = bitfile_name

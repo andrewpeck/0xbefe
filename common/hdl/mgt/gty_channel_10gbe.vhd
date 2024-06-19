@@ -9,6 +9,9 @@
 --                 Only QPLL mode is implemented at the moment, see QPLL implementation for refclk requirement
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- BEFE CONFIG TYPE MGT_10GBE
+-- BEFE CONFIG LINE RATE 10.3125
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -858,7 +861,7 @@ begin
             GTREFCLK1            => refclks(1),
             GTRSVD               => "0000000000000000",
             GTRXRESET            => rx_init_i.gtrxreset,
-            GTRXRESETSEL         => '0',
+            GTRXRESETSEL         => rx_slow_ctrl_i.gtrxresetsel,
             GTSOUTHREFCLK0       => float_clk,
             GTSOUTHREFCLK1       => float_clk,
             GTTXRESET            => tx_init_i.gttxreset,

@@ -21,8 +21,9 @@ use work.common_pkg.all;
 
 entity pipe is
     generic(
-        WIDTH   : integer;
-        DEPTH   : integer
+        WIDTH       : integer;
+        DEPTH       : integer;
+        INFER_SRL   : string := "yes"
     );
     port (
         clk_i               : in  std_logic;
@@ -37,7 +38,10 @@ architecture pipe_arch of pipe is
     type t_input_arr is array(integer range <>) of std_logic_vector(WIDTH - 1 downto 0);
     
     signal pipe     : t_input_arr(DEPTH - 1 downto 0) := (others => (others => '0'));
-    
+
+    attribute SHREG_EXTRACT : string;
+    attribute SHREG_EXTRACT of pipe : signal is INFER_SRL;
+
 begin
     
     g_null_pipe : if DEPTH = 0 generate

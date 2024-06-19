@@ -453,9 +453,9 @@ begin
                             err_eoe_not_found <= err_eoe_not_found;
                         end if;
                     else
-                        word64 <= (others => '0');
-                        eoe <= '0';
-                        eoe_countdown <= (others => '0');     
+                        word64 <= (others => '0'); --word64; --(others => '0');
+                        eoe <= '0'; --eoe; --'0';
+                        eoe_countdown <= (others => '0'); --eoe_countdown; --(others => '0');     
                         err_eoe_not_found <= err_eoe_not_found;                          
                     end if;
     

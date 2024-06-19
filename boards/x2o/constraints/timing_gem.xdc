@@ -19,6 +19,7 @@ set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks -of_
 set_clock_groups -asynchronous -group [get_clocks clk_100_framework_bd_clocks_0]  
 
 ### DEBUG CLK ###
+connect_debug_port dbg_hub/clk [get_nets ttc_clks\[clk_40\]]
 set_clock_groups -asynchronous -group [get_clocks {dbg_hub/*}]
 
 ### IPB CLKS ### 

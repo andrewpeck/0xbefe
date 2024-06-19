@@ -86,14 +86,23 @@ architecture Behavioral of tcds2 is
             probe_in12 : in  std_logic_vector(31 downto 0);
             probe_in13 : in  std_logic_vector(31 downto 0);
             probe_in14 : in  std_logic_vector(31 downto 0);
-            probe_in15 : in  std_logic_vector(31 downto 0);
             probe_out0 : out std_logic;
             probe_out1 : out std_logic;
             probe_out2 : out std_logic;
             probe_out3 : out std_logic;
-            probe_out4 : out std_logic;
-            probe_out5 : out std_logic;
-            probe_out6 : out std_logic
+            probe_out4 : out std_logic
+        );
+    end component;
+
+    component vio_tcds2_prbs
+        port(
+            clk        : in  std_logic;
+            probe_in0  : in  std_logic;
+            probe_in1  : in  std_logic_vector(31 downto 0);
+            probe_in2  : in  std_logic_vector(31 downto 0);
+            probe_out0 : out std_logic;
+            probe_out1 : out std_logic;
+            probe_out2 : out std_logic
         );
     end component;
 
@@ -142,6 +151,9 @@ architecture Behavioral of tcds2 is
     signal freq_clk40_cleaned   : std_logic_vector(31 downto 0);
     signal freq_oddr_c          : std_logic_vector(31 downto 0);
     signal freq_oddr_d          : std_logic_vector(31 downto 0);
+    
+    signal prbs_err_cnt         : std_logic_vector(31 downto 0) := (others => '0');
+    signal prbs_err_cnt_rst     : std_logic := '0';
         
 begin
 
@@ -375,6 +387,23 @@ begin
     ttc_clks_o <= ttc_clks;
 
     --=================================================
+    -- PRBS counter
+    --=================================================
+
+    i_prbs_err_cnt : entity work.counter
+        generic map(
+            g_COUNTER_WIDTH    => 32,
+            g_ALLOW_ROLLOVER   => false,
+            g_INCREMENT_STEP   => 1
+        )
+        port map(
+            ref_clk_i    => clk40_fabric,
+            reset_i      => prbs_err_cnt_rst,
+            en_i         => stat.prbschk_error,
+            count_o      => prbs_err_cnt
+        );
+
+    --=================================================
     -- Debug
     --=================================================
 
@@ -393,17 +422,25 @@ begin
             probe_in9  => stat.mgt_rx_ready,
             probe_in10 => stat.rx_frame_locked,
             probe_in11 => stat.rx_frame_unlock_count,
-            probe_in12 => stat.prbschk_unlock_count,
-            probe_in13 => freq_clk40_backplane,
-            probe_in14 => freq_clk40_fabric,
-            probe_in15 => freq_clk40_cleaned,
+            probe_in12 => freq_clk40_backplane,
+            probe_in13 => freq_clk40_fabric,
+            probe_in14 => freq_clk40_cleaned,
             probe_out0 => ctrl.mgt_reset_all, 
             probe_out1 => ctrl.mgt_reset_tx,  
             probe_out2 => ctrl.mgt_reset_rx,  
             probe_out3 => ctrl.link_test_mode,
-            probe_out4 => ctrl.prbsgen_reset, 
-            probe_out5 => ctrl.prbschk_reset,
-            probe_out6 => reset_local
+            probe_out4 => reset_local
+        );
+
+    i_vio_prbs : vio_tcds2_prbs
+        port map(
+            clk        => clk40_fabric,
+            probe_in0  => stat.prbschk_locked,
+            probe_in1  => stat.prbschk_unlock_count,
+            probe_in2  => prbs_err_cnt,
+            probe_out0 => ctrl.prbsgen_reset,
+            probe_out1 => ctrl.prbschk_reset,
+            probe_out2 => prbs_err_cnt_rst
         );
 
 end Behavioral;

@@ -232,7 +232,7 @@ architecture Behavioral of daq is
     signal l1afifo_prog_empty       : std_logic;
     signal l1afifo_prog_empty_wrclk : std_logic;
     signal l1afifo_near_full        : std_logic;
-    signal l1afifo_data_cnt         : std_logic_vector(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH - 1 downto 0);
+    signal l1afifo_data_cnt         : std_logic_vector(12 downto 0);
     signal l1afifo_near_full_cnt    : std_logic_vector(15 downto 0);
     signal l1a_gap_cntdown          : unsigned(7 downto 0) := (others => '0'); -- this is used to detect close L1As (meaning less than 1000ns apart)
     
@@ -247,7 +247,7 @@ architecture Behavioral of daq is
     signal daqfifo_prog_full        : std_logic;
     signal daqfifo_prog_empty       : std_logic;
     signal daqfifo_near_full        : std_logic;
-    signal daqfifo_data_cnt         : std_logic_vector(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0);
+    signal daqfifo_data_cnt         : std_logic_vector(18 downto 0);
     signal daqfifo_near_full_cnt    : std_logic_vector(15 downto 0);
             
     -- Last event spy fifo
@@ -569,8 +569,34 @@ begin
     -- DAQ output FIFO
     --================================--
 
-    g_daq_output_fifo_slink_rocket : if g_IS_SLINK_ROCKET generate 
-
+    g_daq_output_fifo_slink_rocket : if g_IS_SLINK_ROCKET generate
+        signal daq_gearbox_dout     : std_logic_vector(131 downto 0);
+        signal daq_gearbox_valid    : std_logic;
+        signal daq_gearbox_ovf      : std_logic;
+        signal daqfifo_full_tmp     : std_logic;
+    begin
+        
+        -- gear up: convert 64 bit width to 128 bits
+        i_daq_output_gearbox : entity work.gearbox
+            generic map(
+                g_IMPL_TYPE           => "FIFO",
+                g_INPUT_DATA_WIDTH    => 66,
+                g_OUTPUT_DATA_WIDTH   => 132,
+                g_HIGH_WORD_FIRST     => false,
+                g_REGISTER_OUTPUT     => false
+            )
+            port map(
+                reset_i     => reset_i,
+                wr_clk_i    => daq_clk_i,
+                rd_clk_i    => daq_clk_i,
+                din_i       => daqfifo_din,
+                valid_i     => daqfifo_wr_en,
+                dout_o      => daq_gearbox_dout,
+                valid_o     => daq_gearbox_valid,
+                overflow_o  => daq_gearbox_ovf,
+                underflow_o => open
+            );
+        
         i_daq_output_fifo : xpm_fifo_sync
             generic map(
                 FIFO_MEMORY_TYPE    => CFG_DAQ_OUTPUT_RAM_TYPE,
@@ -592,11 +618,11 @@ begin
                 sleep         => '0',
                 rst           => reset_daq,
                 wr_clk        => daq_clk_i,
-                wr_en         => daqfifo_wr_en,
-                din           => x"0000000000000000000" & "00" & daqfifo_din,
-                full          => daqfifo_full,
+                wr_en         => daq_gearbox_valid,
+                din           => x"000" & daq_gearbox_dout,
+                full          => daqfifo_full_tmp,
                 prog_full     => daqfifo_prog_full,
-                wr_data_count => daqfifo_data_cnt,
+                wr_data_count => daqfifo_data_cnt(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0),
                 overflow      => open, -- TODO: have to monitor this!
                 wr_rst_busy   => open,
                 almost_full   => open,
@@ -616,6 +642,8 @@ begin
                 sbiterr       => open,
                 dbiterr       => open
             );
+        
+        daqfifo_full <= daqfifo_full_tmp or daq_gearbox_ovf;
         
     end generate;
 
@@ -646,7 +674,7 @@ begin
                 din           => "000000" & daqfifo_din,
                 full          => daqfifo_full,
                 prog_full     => daqfifo_prog_full,
-                wr_data_count => daqfifo_data_cnt,
+                wr_data_count => daqfifo_data_cnt(CFG_DAQ_OUTPUT_DATA_CNT_WIDTH - 1 downto 0),
                 overflow      => open, -- TODO: have to monitor this!
                 wr_rst_busy   => open,
                 almost_full   => open,
@@ -773,7 +801,7 @@ begin
             dout          => l1afifo_dout,
             empty         => l1afifo_empty,
             prog_empty    => l1afifo_prog_empty,
-            rd_data_count => l1afifo_data_cnt,
+            rd_data_count => l1afifo_data_cnt(CFG_DAQ_L1AFIFO_DATA_CNT_WIDTH - 1 downto 0),
             underflow     => l1afifo_underflow,
             rd_rst_busy   => open,
             almost_empty  => open,
@@ -1511,6 +1539,8 @@ begin
 
                         daq_event_header <= '0';
                         daq_event_trailer <= '0';
+
+                        daq_event_data <= chamber_infifos(e_input_idx).dout; -- moved it here from inside the if-else to ease timing a bit
                                             
                         -- if there's no data from the current input (or a lone word)
                         if ((e_dav_mask(e_input_idx) = '0') or ((e_dav_mask(e_input_idx) = '1') and (chamber_evtfifos(e_input_idx).dout(23 downto 12) = x"001"))) then
@@ -1544,6 +1574,8 @@ begin
                                 daq_state <= FED_TRAILER_1;
                             
                             end if;
+                            
+                        -- data available in the current input, lets read it out
                         else
 
                             if chamber_evtfifos(e_input_idx).dout(4) = '1' then
@@ -1555,7 +1587,7 @@ begin
                             -- keep reading the input fifo
                             daq_event_write_en <= not e_payload_first_cycle;
                             spy_fifo_wr_en <= not e_payload_first_cycle;                        
-                            daq_event_data <= chamber_infifos(e_input_idx).dout;
+--                            daq_event_data <= chamber_infifos(e_input_idx).dout;
 
                             -- make sure to reset the read enables of the previous input
                             if (e_input_idx > 0) then
@@ -1804,7 +1836,7 @@ begin
             probe7  => chamber_evtfifos(0).rd_en,
             probe8  => chamber_evtfifos(0).underflow,
             probe9  => chamber_evtfifos(0).valid,
-            probe10 => chamber_evtfifos(0).data_cnt,
+            probe10 => chamber_evtfifos(0).data_cnt(11 downto 0),
             probe11 => reset_daq,
             probe12 => daq_enable,
             probe13 => std_logic_vector(to_unsigned(t_daq_state'pos(daq_state), 4)),

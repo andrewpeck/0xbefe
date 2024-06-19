@@ -5,10 +5,12 @@
 -- Create Date:    2021-06-02
 -- Module Name:    GTY_QPLL_ODMB57_157
 -- Description:    This is a wrapper for a GTY QPLL that can be used with an ODMB57 GTY channel.
---                 QPLL0 requires a 200MHz refclk
+--                 QPLL0 requires a 156.25MHz refclk
 --                 QPLL1 requires a 160MHz LHC freq refclck
 --                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- BEFE CONFIG TYPE QPLL_ODMB57_156
 
 library ieee;
 use ieee.std_logic_1164.all;

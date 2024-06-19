@@ -22,7 +22,7 @@ Top/ge11_x2o/project_config.vhd
 #Top/ge11_x2o/project_config_prod_test_10g.vhd
 #Top/ge11_x2o/project_config_prod_test_12p5g.vhd
 #Top/ge11_x2o/project_config_prod_test_25g.vhd
-boards/x2o/hdl/pkg/gem_vu13p_rev2_board_config_pkg.vhd
+boards/x2o/hdl/pkg/gem_vu13p_rev3_full_board_config_pkg.vhd
 boards/x2o/hdl/gem_x2o.vhd top=gem_x2o
 #boards/x2o/hdl/gem_x2o_prod_test.vhd top=gem_x2o
 

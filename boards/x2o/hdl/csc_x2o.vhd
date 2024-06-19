@@ -69,6 +69,7 @@ architecture csc_x2o_arch of csc_x2o is
             clk_50_o          : out std_logic;
             clk_100_o         : out std_logic;
             clk_125_o         : out std_logic;
+            clk_200_o         : out std_logic;
             user_axil_clk_o   : out std_logic;
             axi_reset_b_o     : out std_logic;
             user_axil_araddr  : out std_logic_vector(31 downto 0);
@@ -96,7 +97,7 @@ architecture csc_x2o_arch of csc_x2o is
     end component framework;
 
     -- constants
-    constant IPB_CLK_PERIOD_NS  : integer := 10;
+    constant IPB_CLK_PERIOD_NS  : integer := 20;
 
     -- resets
     signal usr_logic_reset      : std_logic;
@@ -161,6 +162,7 @@ architecture csc_x2o_arch of csc_x2o is
     signal clk_50               : std_logic;
     signal clk_100              : std_logic;
     signal clk_125              : std_logic;
+    signal clk_200              : std_logic;
     signal slink_mgt_ref_clk    : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
 
@@ -187,6 +189,7 @@ begin
             clk_50_o          => clk_50,
             clk_100_o         => clk_100,
             clk_125_o         => clk_125,
+            clk_200_o         => clk_200,
             user_axil_clk_o   => axil_clk,
             user_axil_awaddr  => axil_m2s.awaddr,
             user_axil_awprot  => axil_m2s.awprot,
@@ -221,7 +224,8 @@ begin
             g_USR_BLOCK_SEL_BIT_BOT => 24,
             g_DEBUG => true,
             g_IPB_CLK_ASYNC => false,
-            g_IPB_TIMEOUT => 6000
+            g_IPB_TIMEOUT => 6000,
+            g_REPORT_AXI_ERRORS => false
         )
         port map(
             axi_aclk_i     => axil_clk,
@@ -261,10 +265,11 @@ begin
     g_x2o_rev1 : if CFG_BOARD_TYPE = x"4" generate 
         i_ttc_clks : entity work.ttc_clocks
             generic map(
-                g_CLK_STABLE_FREQ           => 100_000_000,
+                g_CLK_STABLE_FREQ           => 50_000_000,
                 g_GEM_STATION               => 1,
                 g_LPGBT_2P56G_LOOPBACK_TEST => false,
-                g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)
+                g_TXPROGDIVCLK_USED         => not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq),
+                g_INST_BUFG_GT              => false
             )
             port map(
                 clk_stable_i        => axil_clk,
@@ -289,7 +294,7 @@ begin
                 mgt_rx_p_i          => tcds2_mgt_rx_p,
                 mgt_rx_n_i          => tcds2_mgt_rx_n,
                 mgt_refclk_320_i    => refclk1(CFG_TCDS2_MGT_REFCLK1),
-                clk40_cleaned_i     => refclk1_fabric(7),
+                clk40_cleaned_i     => refclk1_fabric(3), --refclk1_fabric(7) -- use 7 for X2O v2, and 3 for X2O v3
                 clk_backplane_p_i   => tcds2_backplane_clk_p,
                 clk_backplane_n_i   => tcds2_backplane_clk_n,
                 clk40_out_pri_p_o   => lmk_refclk_0_p,
@@ -313,7 +318,8 @@ begin
             g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 10,
+            g_STABLE_CLK_PERIOD => 20,
+            g_DATA_REG_STAGES   => 6,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
@@ -350,33 +356,36 @@ begin
             ipb_miso_o           => ipb_sys_miso_arr(C_IPB_SYS_SLV.mgt)
         );
 
---    --================================--
---    -- SLink Rocket
---    --================================--
---
---    i_slink_rocket : entity work.slink_rocket
---        generic map(
---            g_NUM_CHANNELS      => CFG_NUM_SLRS,
---            g_LINE_RATE         => "25.78125",
---            q_REF_CLK_FREQ      => "156.25",
---            g_MGT_TYPE          => "GTY",
---            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
---        )
---        port map(
---            reset_i          => '0',
---            clk_stable_100_i => clk_100,
---            mgt_ref_clk_i    => slink_mgt_ref_clk,
---
---            daqlink_to_daq_o => daqlink_to_daq,
---            daq_to_daqlink_i => daq_to_daqlink,
---
---            ipb_reset_i      => ipb_reset,
---            ipb_clk_i        => ipb_clk,
---            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
---            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
---        );
---
---    slink_mgt_ref_clk <= refclk0(24);
+    --================================--
+    -- SLink Rocket
+    --================================--
+
+    i_slink_rocket : entity work.slink_rocket
+        generic map(
+            g_NUM_CHANNELS      => CFG_NUM_SLRS,
+            g_LINE_RATE         => "25.78125",
+            q_REF_CLK_FREQ      => "156.25",
+            g_MGT_TYPE          => "GTY",
+            g_REG_STAGES        => 8,
+            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+        )
+        port map(
+            reset_i          => '0',
+            clk_stable_100_i => clk_100,
+            mgt_ref_clk_i    => slink_mgt_ref_clk,
+
+            daq_to_daqlink_i => daq_to_daqlink,
+            daqlink_to_daq_o => daqlink_to_daq,
+            
+            ipb_reset_i      => ipb_reset,
+            ipb_clk_i        => ipb_clk,
+            ipb_mosi_i       => ipb_sys_mosi_arr(C_IPB_SYS_SLV.slink),
+            ipb_miso_o       => ipb_sys_miso_arr(C_IPB_SYS_SLV.slink)
+        );
+
+--    slink_mgt_ref_clk <= refclk0(24); -- rev1?
+    slink_mgt_ref_clk <= refclk0(6); -- rev2/3 Q128
+--    slink_mgt_ref_clk <= refclk0(7); -- rev2 Q129
 
     --================================--
     -- PROMless
@@ -392,6 +401,8 @@ begin
             g_NUM_CHANNELS => CFG_NUM_SLRS,
             g_MAX_SIZE_BYTES   => 5_570_560,
             g_MEMORY_PRIMITIVE => "ultra",
+            g_INPUT_REG_STAGES => 6,
+            g_OUTPUT_REG_STAGES => 6,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
@@ -413,6 +424,8 @@ begin
             g_NUM_CHANNELS => CFG_NUM_SLRS,
             g_MAX_SIZE_BYTES   => 3_342_336,
             g_MEMORY_PRIMITIVE => "ultra",
+            g_INPUT_REG_STAGES => 6,
+            g_OUTPUT_REG_STAGES => 6,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
@@ -549,7 +562,7 @@ begin
                 g_NUM_GBT_LINKS     => CFG_NUM_GBT_LINKS(slr),
                 g_NUM_IPB_SLAVES    => C_NUM_IPB_SLAVES,
                 g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS,
-                g_DAQLINK_CLK_FREQ  => 100_000_000,
+                g_DAQLINK_CLK_FREQ  => 100_000_000, --142_857_140, --200_000_000,
                 g_USE_SLINK_ROCKET  => true,
                 g_EXT_TTC_RECEIVER  => true
             )
@@ -663,12 +676,16 @@ begin
         -- spy link TX mapping
         g_spy_link_tx : if CFG_USE_SPY_LINK_TX(slr) generate
             csc_spy_usrclk <= mgt_tx_usrclk_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx);
-            g_spy_links : for spy in 0 to CFG_SPY_LINKS'length(1) - 1 generate
-                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
-                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
-                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
-                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
-            end generate;
+--            g_spy_links : for spy in 0 to CFG_SPY_LINKS'length(1) - 1 generate
+--                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
+--                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
+--                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
+--                mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(spy)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
+--            end generate;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx).txdata(15 downto 0) <= csc_spy_tx_data.txdata;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx).txcharisk(1 downto 0) <= csc_spy_tx_data.txcharisk;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx).txchardispval(1 downto 0) <= csc_spy_tx_data.txchardispval;
+            mgt_tx_data_arr(CFG_FIBER_TO_MGT_MAP(CFG_SPY_LINKS(slr)(0)).tx).txchardispmode(1 downto 0) <= csc_spy_tx_data.txchardispmode;
         end generate;
 
         -- no spy link TX

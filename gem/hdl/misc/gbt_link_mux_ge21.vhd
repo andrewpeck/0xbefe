@@ -160,9 +160,9 @@ begin
 
         fpga_tx_data_arr(i) <= oh_fpga_tx_data_arr_i(i)(7 downto 0);
 
-        real_gbt_tx_data(i * 2 + 0)(79 downto 72) <=  fpga_tx_data_arr(i);
+        real_gbt_tx_data(i * 2 + 0)(79 downto 72) <= x"c3"; --fpga_tx_data_arr(i);
 
-        real_gbt_tx_data(i * 2 + 0)(63 downto 48) <= promless_tx_data_shuffle;
+        real_gbt_tx_data(i * 2 + 0)(63 downto 48) <= promless_tx_data_shuffle(15 downto 8) & (promless_tx_data_shuffle(7 downto 0) or fpga_tx_data_arr(i)); --promless_tx_data_shuffle;
 
         g_OH_v1: if g_OH_VERSION < 2 generate
             real_gbt_tx_data(i * 2 + 1)(79 downto 48) <= (others => '0');
@@ -188,14 +188,14 @@ begin
             real_gbt_tx_data(i * 2 + 0)(31 downto 24) <= vfat3_tx_data_arr_i(i)(10);
             real_gbt_tx_data(i * 2 + 1)(55 downto 48) <= vfat3_tx_data_arr_i(i)(9);
             real_gbt_tx_data(i * 2 + 0)(47 downto 40) <= vfat3_tx_data_arr_i(i)(8);
-            real_gbt_tx_data(i * 2 + 1)(71 downto 64) <= vfat3_tx_data_arr_i(i)(7);
-            real_gbt_tx_data(i * 2 + 0)(39 downto 32) <= vfat3_tx_data_arr_i(i)(6);
+            real_gbt_tx_data(i * 2 + 1)(71 downto 64) <= (others => '0'); --vfat3_tx_data_arr_i(i)(7);
+            real_gbt_tx_data(i * 2 + 0)(39 downto 32) <= vfat3_tx_data_arr_i(i)(6) or vfat3_tx_data_arr_i(i)(7); --vfat3_tx_data_arr_i(i)(6);
             real_gbt_tx_data(i * 2 + 1)(39 downto 32) <= vfat3_tx_data_arr_i(i)(5);
             real_gbt_tx_data(i * 2 + 0)(23 downto 16) <= vfat3_tx_data_arr_i(i)(4);
             real_gbt_tx_data(i * 2 + 1)(47 downto 40) <= vfat3_tx_data_arr_i(i)(3);
             real_gbt_tx_data(i * 2 + 0)(7 downto 0) <= vfat3_tx_data_arr_i(i)(2);
-            real_gbt_tx_data(i * 2 + 1)(79 downto 72) <= vfat3_tx_data_arr_i(i)(1);
-            real_gbt_tx_data(i * 2 + 0)(15 downto 8) <= vfat3_tx_data_arr_i(i)(0);
+            real_gbt_tx_data(i * 2 + 1)(79 downto 72) <= x"c3"; --vfat3_tx_data_arr_i(i)(1);
+            real_gbt_tx_data(i * 2 + 0)(15 downto 8) <= vfat3_tx_data_arr_i(i)(0) or vfat3_tx_data_arr_i(i)(1);
 	    
         end generate;
 

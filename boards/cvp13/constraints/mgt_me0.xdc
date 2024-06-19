@@ -37,21 +37,25 @@ set_clock_groups -group [get_clocks qsfp0_refclk1] -asynchronous
 ################  Location  ##################
 ##############################################
 
+# quad 228
 set_property LOC GTYE4_CHANNEL_X1Y32 [get_cells {i_mgts/g_channels[0].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y33 [get_cells {i_mgts/g_channels[1].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y34 [get_cells {i_mgts/g_channels[2].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y35 [get_cells {i_mgts/g_channels[3].g_chan_*/i_gty_channel}]
 
+# quad 229
 set_property LOC GTYE4_CHANNEL_X1Y36 [get_cells {i_mgts/g_channels[4].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y37 [get_cells {i_mgts/g_channels[5].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y38 [get_cells {i_mgts/g_channels[6].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y39 [get_cells {i_mgts/g_channels[7].g_chan_*/i_gty_channel}]
 
+# quad 232
 set_property LOC GTYE4_CHANNEL_X1Y48 [get_cells {i_mgts/g_channels[8].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y49 [get_cells {i_mgts/g_channels[9].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y50 [get_cells {i_mgts/g_channels[10].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y51 [get_cells {i_mgts/g_channels[11].g_chan_*/i_gty_channel}]
 
+# quad 233
 set_property LOC GTYE4_CHANNEL_X1Y52 [get_cells {i_mgts/g_channels[12].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y53 [get_cells {i_mgts/g_channels[13].g_chan_*/i_gty_channel}]
 set_property LOC GTYE4_CHANNEL_X1Y54 [get_cells {i_mgts/g_channels[14].g_chan_*/i_gty_channel}]

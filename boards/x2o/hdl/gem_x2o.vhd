@@ -65,6 +65,7 @@ architecture gem_x2o_arch of gem_x2o is
             clk_50_o          : out std_logic;
             clk_100_o         : out std_logic;
             clk_125_o         : out std_logic;
+            clk_200_o         : out std_logic;
             user_axil_clk_o   : out std_logic;
             axi_reset_b_o     : out std_logic;
             user_axil_araddr  : out std_logic_vector(31 downto 0);
@@ -92,7 +93,7 @@ architecture gem_x2o_arch of gem_x2o is
     end component framework;
 
     -- constants
-    constant IPB_CLK_PERIOD_NS  : integer := 10;
+    constant IPB_CLK_PERIOD_NS  : integer := 20;
 
     -- resets
     signal gem_reset_powerup    : std_logic_vector(CFG_NUM_GEM_BLOCKS - 1 downto 0);
@@ -160,6 +161,7 @@ architecture gem_x2o_arch of gem_x2o is
     signal clk_50               : std_logic;
     signal clk_100              : std_logic;
     signal clk_125              : std_logic;
+    signal clk_200              : std_logic;
     signal slink_mgt_ref_clk    : std_logic;
     signal board_id             : std_logic_vector(15 downto 0);
 
@@ -184,6 +186,7 @@ begin
             clk_50_o          => clk_50,
             clk_100_o         => clk_100,
             clk_125_o         => clk_125,
+            clk_200_o         => clk_200,
             user_axil_clk_o   => axil_clk,
             user_axil_awaddr  => axil_m2s.awaddr,
             user_axil_awprot  => axil_m2s.awprot,
@@ -247,9 +250,10 @@ begin
     g_x2o_rev1 : if CFG_BOARD_TYPE = x"4" generate 
         i_ttc_clks : entity work.ttc_clocks
             generic map(
-                g_CLK_STABLE_FREQ           => 100_000_000,
+                g_CLK_STABLE_FREQ           => 50_000_000,
                 g_GEM_STATION               => CFG_GEM_STATION(0),
-                g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq))
+                g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)),
+                g_INST_BUFG_GT              => false
             )
             port map(
                 clk_stable_i        => axil_clk,
@@ -274,7 +278,7 @@ begin
                 mgt_rx_p_i          => tcds2_mgt_rx_p,
                 mgt_rx_n_i          => tcds2_mgt_rx_n,
                 mgt_refclk_320_i    => refclk1(CFG_TCDS2_MGT_REFCLK1),
-                clk40_cleaned_i     => refclk1_fabric(7),
+                clk40_cleaned_i     => refclk1_fabric(3), --refclk1_fabric(7) -- use 7 for X2O v2, and 3 for X2O v3
                 clk_backplane_p_i   => tcds2_backplane_clk_p,
                 clk_backplane_n_i   => tcds2_backplane_clk_n,
                 clk40_out_pri_p_o   => lmk_refclk_0_p,
@@ -298,7 +302,8 @@ begin
             g_NUM_REFCLK1       => CFG_NUM_REFCLK1,
             g_NUM_CHANNELS      => CFG_MGT_NUM_CHANNELS,
             g_LINK_CONFIG       => CFG_MGT_LINK_CONFIG,
-            g_STABLE_CLK_PERIOD => 10,
+            g_DATA_REG_STAGES   => 16, --8, -- TODO: this should be made a per-channel parameter in the link config
+            g_STABLE_CLK_PERIOD => 20,
             g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
         )
         port map(
@@ -345,6 +350,7 @@ begin
 --            g_LINE_RATE         => "25.78125",
 --            q_REF_CLK_FREQ      => "156.25",
 --            g_MGT_TYPE          => "GTY",
+--            g_REG_STAGES        => 8,
 --            g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
 --        )
 --        port map(
@@ -362,7 +368,7 @@ begin
 --        );
 --
 ----    slink_mgt_ref_clk <= refclk0(24); -- rev1?
---    slink_mgt_ref_clk <= refclk0(6); -- rev2 Q128
+--    slink_mgt_ref_clk <= refclk0(6); -- rev2/3 Q128
 ----    slink_mgt_ref_clk <= refclk0(7); -- rev2 Q129
 
     --================================--
@@ -388,26 +394,26 @@ begin
             );
     end generate;
 
-    --================================--
-    -- TTC TX module
-    --================================--
-
-    g_ttc_tx: if CFG_USE_TTC_TX_LINK generate 
-        i_ttc_tx : entity work.ttc_tx
-            generic map(
-                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
-            )
-            port map(
-                reset_i      => '0',
-                ttc_clocks_i => ttc_clks,
-                ttc_cmds_i   => ttc_cmds,
-                ttc_data_o   => ttc_tx_mgt_data,
-                ipb_reset_i  => ipb_reset,
-                ipb_clk_i    => ipb_clk,
-                ipb_miso_o   => ipb_sys_miso_arr(C_IPB_SYS_SLV.ttc_tx),
-                ipb_mosi_i   => ipb_sys_mosi_arr(C_IPB_SYS_SLV.ttc_tx)
-            );
-    end generate;
+--    --================================--
+--    -- TTC TX module
+--    --================================--
+--
+--    g_ttc_tx: if CFG_USE_TTC_TX_LINK generate 
+--        i_ttc_tx : entity work.ttc_tx
+--            generic map(
+--                g_IPB_CLK_PERIOD_NS => IPB_CLK_PERIOD_NS
+--            )
+--            port map(
+--                reset_i      => '0',
+--                ttc_clocks_i => ttc_clks,
+--                ttc_cmds_i   => ttc_cmds,
+--                ttc_data_o   => ttc_tx_mgt_data,
+--                ipb_reset_i  => ipb_reset,
+--                ipb_clk_i    => ipb_clk,
+--                ipb_miso_o   => ipb_sys_miso_arr(C_IPB_SYS_SLV.ttc_tx),
+--                ipb_mosi_i   => ipb_sys_mosi_arr(C_IPB_SYS_SLV.ttc_tx)
+--            );
+--    end generate;
                 
     --================================--
     -- Board System registers
@@ -529,7 +535,7 @@ begin
                 led_l1a_o               => open,
                 led_trigger_o           => open,
     
-                daq_data_clk_i          => axil_clk,
+                daq_data_clk_i          => clk_100,
                 daq_data_clk_locked_i   => '1',
                 daq_to_daqlink_o        => daq_to_daqlink(slr),
                 daqlink_to_daq_i        => daqlink_to_daq(slr),

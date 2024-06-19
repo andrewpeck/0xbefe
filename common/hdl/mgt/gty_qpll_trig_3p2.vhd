@@ -10,6 +10,9 @@
 --                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- BEFE CONFIG TYPE QPLL_3P2G
+-- BEFE CONFIG IGNORE QPLL1
+
 library ieee;
 use ieee.std_logic_1164.all;
 

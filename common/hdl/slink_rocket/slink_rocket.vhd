@@ -25,6 +25,7 @@ entity slink_rocket is
         g_LINE_RATE             : string := "25.78125";   --possible choices are 15.66 or 25.78125
         q_REF_CLK_FREQ          : string := "322.265625"; --possible choices are 156.25 or 322.265625 
         g_MGT_TYPE              : string := "GTY";        -- possible choices are GTY or GTH or GTH_KU
+        g_REG_STAGES            : integer := 0; -- setting this to non-zero value will place additional flipflops on the daq_to_daqlink_i and daqlink_to_daq_o signals
         g_IPB_CLK_PERIOD_NS     : integer
     );
     port(
@@ -215,17 +216,49 @@ begin
         );
     
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
-        
-        daqlink_to_daq_o(chan).backpressure <= backpressure(chan);
-        daqlink_to_daq_o(chan).ready <= link_up(chan);
-        daqlink_to_daq_o(chan).disperr_cnt <= (others => '0');
-        daqlink_to_daq_o(chan).notintable_cnt <= (others => '0');
+        signal daq_to_daqlink_pipe  : std_logic_vector(130 downto 0);
+        signal daqlink_to_daq_pipe  : std_logic_vector(1 downto 0);
+    begin
     
         fed_clk(chan) <= daq_to_daqlink_i(chan).event_clk;
-        daq_data(chan) <= daq_to_daqlink_i(chan).event_data;
-        daq_data_head(chan) <= daq_to_daqlink_i(chan).event_header;
-        daq_data_trail(chan) <= daq_to_daqlink_i(chan).event_trailer;
-        daq_data_we(chan) <= daq_to_daqlink_i(chan).event_valid;
+        
+        -- DAQ to DAQLINK
+        
+        i_daq_to_daqlink_pipe : entity work.pipe
+            generic map(
+                WIDTH     => 131,
+                DEPTH     => g_REG_STAGES,
+                INFER_SRL => "no"
+            )
+            port map(
+                clk_i  => fed_clk(chan),
+                data_i => daq_to_daqlink_i(chan).event_valid & daq_to_daqlink_i(chan).event_trailer & daq_to_daqlink_i(chan).event_header & daq_to_daqlink_i(chan).event_data,
+                data_o => daq_to_daqlink_pipe
+            );
+
+        daq_data(chan) <= daq_to_daqlink_pipe(127 downto 0);
+        daq_data_head(chan) <= daq_to_daqlink_pipe(128);
+        daq_data_trail(chan) <= daq_to_daqlink_pipe(129);
+        daq_data_we(chan) <= daq_to_daqlink_pipe(130);
+
+        -- DAQLINK TO DAQ
+        
+        i_daqlink_to_daq_pipe : entity work.pipe
+            generic map(
+                WIDTH     => 2,
+                DEPTH     => g_REG_STAGES,
+                INFER_SRL => "no"
+            )
+            port map(
+                clk_i  => fed_clk(chan),
+                data_i => link_up(chan) & backpressure(chan),
+                data_o => daqlink_to_daq_pipe
+            );
+
+        daqlink_to_daq_o(chan).backpressure <= daqlink_to_daq_pipe(0);
+        daqlink_to_daq_o(chan).ready <= daqlink_to_daq_pipe(1);
+        daqlink_to_daq_o(chan).disperr_cnt <= (others => '0');
+        daqlink_to_daq_o(chan).notintable_cnt <= (others => '0');
         
         ------------ slink inst ------------
         
@@ -376,7 +409,7 @@ begin
                 gen_evt_cnt <= (others => '0');
             else
                 
-                if or_reduce(link_up or gen_ignore_chans(g_NUM_CHANNELS - 1 downto 0)) = '1' and or_reduce(backpressure or gen_ignore_chans(g_NUM_CHANNELS - 1 downto 0))= '0' then 
+                if or_reduce(((link_up and (not backpressure))) or gen_ignore_chans(g_NUM_CHANNELS - 1 downto 0)) = '1' then 
                     
                     case gen_state is
                         

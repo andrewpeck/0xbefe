@@ -1062,7 +1062,8 @@ begin
 
         i_track_input_processor : entity work.track_input_processor
         generic map (
-            g_NUM_VFATS_PER_OH          => g_NUM_VFATS_PER_OH
+            g_NUM_VFATS_PER_OH          => g_NUM_VFATS_PER_OH,
+            g_DATA_PROCESSOR_CLK_FREQ   => 80_000_000
         )
         port map
         (

@@ -290,6 +290,9 @@ begin
     --================================--
     
     g_channels : for chan in 0 to g_NUM_CHANNELS - 1 generate
+        signal tx_pll_locked    : std_logic;
+        signal rx_pll_locked    : std_logic;
+    begin
 
         --================================--
         -- Common things for all MGT types
@@ -304,17 +307,37 @@ begin
         
         tx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).txusrclk2;
         rx_usrclk_arr_o(chan) <= chan_clks_in_arr(chan).rxusrclk2;
-                
-        status_arr_o(chan).tx_reset_done <= tx_reset_done_arr(chan);
-        status_arr_o(chan).rx_reset_done <= rx_reset_done_arr(chan);
-        status_arr_o(chan).tx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.tx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.tx_qpll_01); 
-        status_arr_o(chan).rx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.rx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.rx_qpll_01); 
-        status_arr_o(chan).rxbufstatus <= rx_status_arr(chan).rxbufstatus;
-        status_arr_o(chan).rxclkcorcnt <= rx_status_arr(chan).rxclkcorcnt;
-        status_arr_o(chan).rxchanisaligned <= rx_status_arr(chan).rxchanisaligned;
 
         tx_reset_arr_o(chan) <= reset_i or ctrl_arr_i(chan).txreset or sc_tx_reset_arr(chan);
         rx_reset_arr_o(chan) <= reset_i or ctrl_arr_i(chan).rxreset or sc_rx_reset_arr(chan);
+        
+        ------------------------ status ------------------------
+
+        tx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.tx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.tx_qpll_01); 
+        rx_pll_locked <= cpll_status_arr(chan).cplllock when not g_LINK_CONFIG(chan).mgt_type.rx_use_qpll else qpll_status_arr(chan).qplllock(g_LINK_CONFIG(chan).mgt_type.rx_qpll_01); 
+
+        i_txresetdone_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => clk_stable_i, data_i(0) => tx_reset_done_arr(chan), data_o(0) => status_arr_o(chan).tx_reset_done);
+
+        i_rxresetdone_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => clk_stable_i, data_i(0) => rx_reset_done_arr(chan), data_o(0) => status_arr_o(chan).rx_reset_done);
+
+        i_tx_pll_lock_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => clk_stable_i, data_i(0) => tx_pll_locked, data_o(0) => status_arr_o(chan).tx_pll_locked);
+
+        i_rx_pll_lock_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => clk_stable_i, data_i(0) => rx_pll_locked, data_o(0) => status_arr_o(chan).rx_pll_locked);
+
+        i_rxbufstatus_pipe : entity work.pipe generic map(WIDTH => 3, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => chan_clks_in_arr(chan).rxusrclk2, data_i => rx_status_arr(chan).rxbufstatus, data_o => status_arr_o(chan).rxbufstatus);
+            
+        i_rxclkcorcnt_pipe : entity work.pipe generic map(WIDTH => 2, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => chan_clks_in_arr(chan).rxusrclk2, data_i => rx_status_arr(chan).rxclkcorcnt, data_o => status_arr_o(chan).rxclkcorcnt);
+            
+        i_rxchanalign_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_DATA_REG_STAGES, INFER_SRL => "no")
+            port map(clk_i => chan_clks_in_arr(chan).rxusrclk2, data_i(0) => rx_status_arr(chan).rxchanisaligned, data_o(0) => status_arr_o(chan).rxchanisaligned);
+            
+        --------------------------------------------------------        
 
         --===================================================--
         -- TX multi-lane phase alignment signal assignments
@@ -1470,7 +1493,7 @@ begin
         g_qpll_lpgbt : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_LPGBT generate
             
             g_sync_refclk : if is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) generate                
-                i_qpll_lpgbt : entity work.gty_qpll_lpgbt
+                i_qpll_lpgbt : entity work.gty_qpll1_lpgbt
                     generic map(
                         g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
                         g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
@@ -1515,23 +1538,43 @@ begin
 
         g_qpll_trig_3p2 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_3P2G generate
             
-            i_qpll_trig_3p2 : entity work.gty_qpll_trig_3p2
-                generic map(
-                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
-                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
-                )
-                port map(
-                    clk_stable_i => clk_stable_i,
-                    refclks_i    => chan_clks_in_arr(chan).refclks,
-                    ctrl_i       => qpll_ctrl_arr(chan),
-                    clks_o       => qpll_clks_tmp_arr(chan),
-                    status_o     => qpll_status_tmp_arr(chan),
-                    drp_clk_i    => drp_clk,
-                    drp_i        => qpll_drp_mosi_arr(chan),
-                    drp_o        => qpll_drp_miso_arr(chan)
-                );
+            g_sync_refclk : if is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) generate                
+                i_qpll_trig_3p2 : entity work.gty_qpll_trig_3p2
+                    generic map(
+                        g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                        g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                    )
+                    port map(
+                        clk_stable_i => clk_stable_i,
+                        refclks_i    => chan_clks_in_arr(chan).refclks,
+                        ctrl_i       => qpll_ctrl_arr(chan),
+                        clks_o       => qpll_clks_tmp_arr(chan),
+                        status_o     => qpll_status_tmp_arr(chan),
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
+                    );
+            end generate;
+
+            g_async_refclk : if g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 generate                
+                i_qpll_trig_3p2 : entity work.gty_qpll_trig_3p2_156p25_ref
+                    generic map(
+                        g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                        g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                    )
+                    port map(
+                        clk_stable_i => clk_stable_i,
+                        refclks_i    => chan_clks_in_arr(chan).refclks,
+                        ctrl_i       => qpll_ctrl_arr(chan),
+                        clks_o       => qpll_clks_tmp_arr(chan),
+                        status_o     => qpll_status_tmp_arr(chan),
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
+                    );
+            end generate;
             
-            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 3.2Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) or g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "Trigger 3.2Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency and not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
 
@@ -1541,23 +1584,43 @@ begin
 
         g_qpll_trig_4p0 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL_4P0G generate
             
-            i_qpll_trig_4p0 : entity work.gty_qpll_trig_4p0
-                generic map(
-                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
-                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
-                )
-                port map(
-                    clk_stable_i => clk_stable_i,
-                    refclks_i    => chan_clks_in_arr(chan).refclks,
-                    ctrl_i       => qpll_ctrl_arr(chan),
-                    clks_o       => qpll_clks_tmp_arr(chan),
-                    status_o     => qpll_status_tmp_arr(chan),
-                    drp_clk_i    => drp_clk,
-                    drp_i        => qpll_drp_mosi_arr(chan),
-                    drp_o        => qpll_drp_miso_arr(chan)
-                );
-            
-            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 4.0Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            g_sync_refclk : if is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) generate                
+                i_qpll_trig_4p0 : entity work.gty_qpll_trig_4p0
+                    generic map(
+                        g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                        g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                    )
+                    port map(
+                        clk_stable_i => clk_stable_i,
+                        refclks_i    => chan_clks_in_arr(chan).refclks,
+                        ctrl_i       => qpll_ctrl_arr(chan),
+                        clks_o       => qpll_clks_tmp_arr(chan),
+                        status_o     => qpll_status_tmp_arr(chan),
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
+                    );
+            end generate;
+
+            g_async_refclk : if g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 generate                
+                i_qpll_trig_4p0 : entity work.gty_qpll_trig_4p0_156p25_ref
+                    generic map(
+                        g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                        g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                    )
+                    port map(
+                        clk_stable_i => clk_stable_i,
+                        refclks_i    => chan_clks_in_arr(chan).refclks,
+                        ctrl_i       => qpll_ctrl_arr(chan),
+                        clks_o       => qpll_clks_tmp_arr(chan),
+                        status_o     => qpll_status_tmp_arr(chan),
+                        drp_clk_i    => drp_clk,
+                        drp_i        => qpll_drp_mosi_arr(chan),
+                        drp_o        => qpll_drp_miso_arr(chan)
+                    );
+            end generate;
+
+            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) or g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 report "Trigger 4.0Gb/s type MGT has tx refclk frequency that is not 4 x LHC frequency and not 156.25MHz, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
 
@@ -1584,6 +1647,32 @@ begin
                 );
 
             assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 3.2Gb/s + GBTX type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
+
+        --================================================--
+        -- Trigger 4.0Gb/s on QPLL0 and GBTX on QPLL1 
+        --================================================--
+
+        g_qpll0_trig_4p0_qpll1_gbtx : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_4P0G_QPLL1_GBTX generate
+            
+            i_qpll0_trig_4p0_qpll1_gbtx : entity work.gty_qpll0_trig_4p0_qpll1_gbtx
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+
+            assert is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq) report "Trigger 4.0Gb/s + GBTX type MGT has tx refclk frequency that is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
 
@@ -1823,10 +1912,10 @@ begin
             
         end generate;
 
-        --========================================--
+        --==================================================--
         -- RX: Trigger 3.2Gbps QPLL0 with 160MHz LHC refclk
         -- TX: 10GbE QPLL1 with 156.25MHz refclk
-        --========================================--
+        --==================================================--
 
         g_qpll0_trig_3p2_qpll1_10gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_TRIG_3P2_QPLL1_10GBE generate
             
@@ -1847,6 +1936,33 @@ begin
                 );
 
             assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "TRIG_3P2_RX_10GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
+            
+        end generate;
+
+        --==================================================--
+        -- RX: Trigger 4.0Gbps QPLL0 with 160MHz LHC refclk
+        -- TX: 10GbE QPLL1 with 156.25MHz refclk
+        --==================================================--
+
+        g_qpll0_trig_4p0_qpll1_10gbe_156 : if g_LINK_CONFIG(chan).qpll_inst_type = QPLL0_TRIG_4P0_QPLL1_10GBE generate
+            
+            i_qpll0_trig_4p0_qpll1_10gbe : entity work.gty_qpll0_trig_4p0_qpll1_10gbe
+                generic map(
+                    g_QPLL0_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll0_refclk_01,
+                    g_QPLL1_REFCLK_01 => g_LINK_CONFIG(chan).mgt_type.qpll1_refclk_01
+                )
+                port map(
+                    clk_stable_i => clk_stable_i,
+                    refclks_i    => chan_clks_in_arr(chan).refclks,
+                    ctrl_i       => qpll_ctrl_arr(chan),
+                    clks_o       => qpll_clks_tmp_arr(chan),
+                    status_o     => qpll_status_tmp_arr(chan),
+                    drp_clk_i    => drp_clk,
+                    drp_i        => qpll_drp_mosi_arr(chan),
+                    drp_o        => qpll_drp_miso_arr(chan)
+                );
+
+            assert g_LINK_CONFIG(chan).mgt_type.tx_refclk_freq = 156_250_000 and is_refclk_160_lhc(g_LINK_CONFIG(chan).mgt_type.rx_refclk_freq) report "TRIG_4P0_RX_10GBE_TX MGT has tx refclk frequency that is not 156.25MHz, or rx refclk frequency is not 4 x LHC frequency, we don't have a QPLL type for other refclk frequencies" severity failure;
             
         end generate;
 
@@ -1958,7 +2074,7 @@ begin
             )
             port map(
                 clk_stable_i         => clk_stable_i,
-                channel_reset_done_i => rx_reset_done_arr(chan),
+                channel_reset_done_i => rx_reset_done_arr(chan) and not rx_slow_ctrl_arr(chan).rxphalignreset,
                 mgt_syncallin_o      => rx_init_arr(chan).rxsyncallin,
                 mgt_syncin_o         => rx_init_arr(chan).rxsyncin,
                 mgt_syncmode_o       => rx_init_arr(chan).rxsyncmode,

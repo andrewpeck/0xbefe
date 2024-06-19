@@ -321,7 +321,8 @@ begin
         generic map(
             g_GEM_STATION               => 1,
             g_LPGBT_2P56G_LOOPBACK_TEST => false,
-            g_CLK_STABLE_FREQ           => 100_000_000
+            g_CLK_STABLE_FREQ           => 100_000_000,
+            g_INST_BUFG_GT              => false
         )
         port map(
             clk_stable_i        => axil_clk,

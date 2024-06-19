@@ -105,15 +105,27 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
     end function get_txrx_clk25_div;  
     
     -- selects various std_logic_vector parameters based on if we're using a CPLL or a QPLL
-    function get_slv_param(param_name : string; use_qpll : boolean) return std_logic_vector is
+    function get_slv_param(param_name : string; use_qpll : boolean; qpll01 : integer) return std_logic_vector is
     begin
         if use_qpll then
             if param_name = "PCIE_BUFG_DIV_CTRL" then
-                return "0011010100000000";
+                if qpll01 = 0 then
+                    return "0011010100000000";
+                else
+                    return "0001000000000000";
+                end if;
             elsif param_name = "PCIE_PLL_SEL_MODE_GEN12" then
-                return "10";
+                if qpll01 = 0 then
+                    return "10";
+                else
+                    return "11";
+                end if;
             elsif param_name = "PCIE_PLL_SEL_MODE_GEN3" then
-                return "10";
+                if qpll01 = 0 then
+                    return "10";
+                else
+                    return "11";
+                end if;
             end if;
         else
             if param_name = "PCIE_BUFG_DIV_CTRL" then
@@ -129,9 +141,9 @@ architecture gty_channel_lpgbt_arch of gty_channel_lpgbt is
 
     constant TX_CLK25_DIV               : integer := get_txrx_clk25_div(g_TX_REFCLK_FREQ);
     constant RX_CLK25_DIV               : integer := get_txrx_clk25_div(g_RX_REFCLK_FREQ);
-    constant PCIE_BUFG_DIV_CTRL         : std_logic_vector(15 downto 0) := get_slv_param("PCIE_BUFG_DIV_CTRL", g_RX_USE_QPLL);
-    constant PCIE_PLL_SEL_MODE_GEN12    : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN12", g_RX_USE_QPLL);
-    constant PCIE_PLL_SEL_MODE_GEN3     : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL);
+    constant PCIE_BUFG_DIV_CTRL         : std_logic_vector(15 downto 0) := get_slv_param("PCIE_BUFG_DIV_CTRL", g_RX_USE_QPLL, g_TX_QPLL_01); -- not sure if this param is related to TX or RX, just giving it the TX, actually this param probably doesn't matter at all, but ok, doing it just to be safe because of course it's not documented
+    constant PCIE_PLL_SEL_MODE_GEN12    : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN12", g_RX_USE_QPLL, g_TX_QPLL_01); -- not sure if this param is related to TX or RX, just giving it the TX, actually this param probably doesn't matter at all, but ok, doing it just to be safe because of course it's not documented
+    constant PCIE_PLL_SEL_MODE_GEN3     : std_logic_vector(1 downto 0) := get_slv_param("PCIE_PLL_SEL_MODE_GEN3", g_RX_USE_QPLL, g_TX_QPLL_01); -- not sure if this param is related to TX or RX, just giving it the TX, actually this param probably doesn't matter at all, but ok, doing it just to be safe because of course it's not documented
 
 
     -- clocking
@@ -343,9 +355,9 @@ begin
             CLK_COR_SEQ_2_ENABLE         => "1111",
             CLK_COR_SEQ_2_USE            => "FALSE",
             CLK_COR_SEQ_LEN              => 1,
-            CPLL_CFG0                    => "0000001111111110",
-            CPLL_CFG1                    => "0000000000101001",
-            CPLL_CFG2                    => "0000001000000011",
+            CPLL_CFG0                    => "0000000111111010", -- used to be "0000001111111110", probably for CPLL config, now just replaced with whatever was here for QPLL config (shouldn't matter because CPLL is powered down, but who knows)
+            CPLL_CFG1                    => "0000000000101011", -- used to be "0000000000101001", probably for CPLL config, now just replaced with whatever was here for QPLL config (shouldn't matter because CPLL is powered down, but who knows)
+            CPLL_CFG2                    => "0000000000000010", -- used to be "0000001000000011", probably for CPLL config, now just replaced with whatever was here for QPLL config (shouldn't matter because CPLL is powered down, but who knows)
             CPLL_CFG3                    => "0000000000000000",
             CPLL_FBDIV                   => 4, -- keep
             CPLL_FBDIV_45                => 4, -- keep
@@ -903,7 +915,7 @@ begin
             GTREFCLK1            => refclks(1),
             GTRSVD               => "0000000000000000",
             GTRXRESET            => rx_init_i.gtrxreset,
-            GTRXRESETSEL         => '0',
+            GTRXRESETSEL         => rx_slow_ctrl_i.gtrxresetsel,
             GTSOUTHREFCLK0       => float_clk,
             GTSOUTHREFCLK1       => float_clk,
             GTTXRESET            => tx_init_i.gttxreset,

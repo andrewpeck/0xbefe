@@ -41,6 +41,9 @@ entity mgt_slow_control is
         
         mgt_clks_arr_i          : in  t_mgt_clk_in_arr(g_NUM_CHANNELS - 1 downto 0);
 
+--        txoutclk_freq_arr_i     : in  t_std32_array(g_NUM_CHANNELS - 1 downto 0);
+--        rxoutclk_freq_arr_i     : in  t_std32_array(g_NUM_CHANNELS - 1 downto 0);
+
         tx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         rx_reset_arr_o          : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
         cpll_reset_arr_o        : out std_logic_vector(g_NUM_CHANNELS - 1 downto 0);
@@ -153,7 +156,7 @@ begin
             generic map(
                 g_COUNTER_WIDTH  => 32,
                 g_ALLOW_ROLLOVER => false,
-                g_INPUT_REG_STAGES => 1
+                g_INPUT_REG_STAGES => 4
             )
             port map(
                 ref_clk_i => mgt_clks_arr_i(chan).rxusrclk2,
@@ -179,7 +182,7 @@ begin
             generic map(
                 g_COUNTER_WIDTH    => 32,
                 g_ALLOW_ROLLOVER   => false,
-                g_INPUT_REG_STAGES => 1
+                g_INPUT_REG_STAGES => 4
             )
             port map(
                 ref_clk_i => mgt_clks_arr_i(chan).rxusrclk2,

@@ -1,4 +1,4 @@
-GEN:ge21_x2o_devel:
+generate_project:ge21_x2o_devel:
     extends: .generate_project
     variables:
       extends: .vars

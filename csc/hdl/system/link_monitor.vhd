@@ -135,7 +135,7 @@ begin
     g_dmbs : for i in 0 to g_NUM_OF_DMBs - 1 generate
         
         g_dmb_fibers : for f in 0 to g_DMB_CONFIG_ARR(i).num_fibers - 1 generate
-            signal dmb_rx_usrclk    : std_logic;
+            signal dmb_rx_usrclk        : std_logic;
         begin
 
             g_dmb_clk : if g_DMB_CONFIG_ARR(i).dmb_type = DMB or g_DMB_CONFIG_ARR(i).dmb_type = ODMB generate

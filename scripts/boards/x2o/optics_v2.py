@@ -177,6 +177,16 @@ def set_qsfp_rx_amplitude(qsfp, amplitude):
     qsfp.select()
     qsfp.set_rx_output_amplitude([amplitude]*4)
 
+def dump_regs(qsfp):
+    qsfp.select()
+    for page in [0, 2]:
+        f = open("./qsfp_cage_%d_regs_page%d.txt" % (qsfp.cage, page), "w")
+        start_addr = 0 if page == 0 else 128
+        for addr in range(start_addr, 256):
+            val = qsfp.read_reg(page, addr)
+            f.write("%s: %s\n" % (hex_padded(addr, 1), hex_padded(val, 1)))
+        f.close()
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-o',
@@ -251,6 +261,11 @@ if __name__ == '__main__':
                         '--disable_tx',
                         dest='disable_tx',
                         help="Disable TX on the given cage or channel: if only one number is provided, that whole cage will be switched off, and if two numbers separated by a comma are provided then only one channel will be turned off")
+
+    parser.add_argument('-d',
+                        '--dump',
+                        dest='dump',
+                        help="Read all the registers and dump them to to dump.txt")
 
     args = parser.parse_args()
 
@@ -346,5 +361,14 @@ if __name__ == '__main__':
         else:
             print("Disable TX on cage %d" % cage)
             x2o_disable_tx(qsfps[cage])
+
+    if args.dump is not None:
+        cage = int(args.dump)
+        if cage not in qsfps:
+            print_red("Cannot dump regs on cage %d, because there's no QSFP installed in that cage" % cage)
+        else:
+            print("Dumping registers from cage %d" % cage)
+            dump_regs(qsfps[cage])
+
 
     x2o_optics(qsfps, show_opts=args.show_opts, show_other=True)

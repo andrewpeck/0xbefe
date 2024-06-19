@@ -230,7 +230,8 @@ begin
             g_CLK_STABLE_FREQ           => 100_000_000,
             g_GEM_STATION               => CFG_GEM_STATION(0),
             g_LPGBT_2P56G_LOOPBACK_TEST => false,
-            g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)) 
+            g_TXPROGDIVCLK_USED         => (CFG_GEM_STATION(0) = 0 and not is_refclk_160_lhc(CFG_MGT_LPGBT.tx_refclk_freq)) or (CFG_GEM_STATION(0) > 0 and not is_refclk_160_lhc(CFG_MGT_GBTX.tx_refclk_freq)),
+            g_INST_BUFG_GT              => false 
         )
         port map(
             clk_stable_i        => clk100,

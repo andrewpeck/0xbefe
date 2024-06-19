@@ -26,6 +26,7 @@ entity lpgbt is
         g_RX_ENCODING           : integer := FEC5;
         g_RESET_MGT_ON_EVEN     : integer := 0;
         g_USE_RX_SYNC_FIFOS     : boolean := true; -- when set to true the MGT RX data will be taken through a FIFO to transfer to rx_word_common_clk_i before even connecting to LpGBT RX core (this will cause RX latency to not be deterministic, but it's useful if all rx_word_clk_arr_i clocks cannot be put on BUFGs, and will synthesize even if they're on BUFHs, while it would be very tight if not using the FIFOs). When false, rx_word_common_clk_i is not used
+        g_SYNC_FIFO_PIPE_DEPTH  : integer := 6;    -- if set to a non-zero values, this number of flip flops will be added between the RX sync FIFO output and the LpGBT RX modules
         g_USE_RX_CORRECTION_CNT : boolean := true
     );
     port(
@@ -249,7 +250,11 @@ begin
 
         gen_use_rx_sync_fifos : if g_USE_RX_SYNC_FIFOS generate
 
-            signal had_unf : std_logic;
+            signal had_unf              : std_logic;
+            signal rx_mgt_data_sync_tmp : t_std33_array(g_NUM_LINKS - 1 downto 0); -- top bit is header flag, and lower 32 bits is mgt data
+            signal rx_sync_valid_tmp    : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+            signal rx_sync_ovf_tmp      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
+            signal rx_sync_unf_tmp      : std_logic_vector(g_NUM_LINKS - 1 downto 0);
 
         begin
 
@@ -269,11 +274,21 @@ begin
                     rd_clk_i    => rx_word_common_clk_i,
                     din_i       => rx_header_flag(i) & rx_mgt_data(i),
                     valid_i     => '1',
-                    dout_o      => rx_mgt_data_sync(i),
-                    valid_o     => rx_sync_valid(i),
-                    overflow_o  => rx_sync_ovf(i),
-                    underflow_o => rx_sync_unf(i)
+                    dout_o      => rx_mgt_data_sync_tmp(i),
+                    valid_o     => rx_sync_valid_tmp(i),
+                    overflow_o  => rx_sync_ovf_tmp(i),
+                    underflow_o => rx_sync_unf_tmp(i)
                 );
+
+            -- add some pipe on the outputs of the FIFO to relax the placement
+            i_rx_mgt_data_sync_pipe : entity work.pipe generic map(WIDTH => 33, DEPTH => g_SYNC_FIFO_PIPE_DEPTH, INFER_SRL => "no")
+                port map(clk_i => rx_word_common_clk_i, data_i => rx_mgt_data_sync_tmp(i), data_o => rx_mgt_data_sync(i));
+            i_rx_sync_valid_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_SYNC_FIFO_PIPE_DEPTH, INFER_SRL => "no")
+                port map(clk_i => rx_word_common_clk_i, data_i(0) => rx_sync_valid_tmp(i), data_o(0) => rx_sync_valid(i));
+            i_rx_sync_ovf_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_SYNC_FIFO_PIPE_DEPTH, INFER_SRL => "no")
+                port map(clk_i => rx_word_common_clk_i, data_i(0) => rx_sync_ovf_tmp(i), data_o(0) => rx_sync_ovf(i));
+            i_rx_sync_unf_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_SYNC_FIFO_PIPE_DEPTH, INFER_SRL => "no")
+                port map(clk_i => rx_word_common_clk_i, data_i(0) => rx_sync_unf_tmp(i), data_o(0) => rx_sync_unf(i));
 
             i_gbt_rx_sync_ovf_latch : entity work.latch
                 port map(

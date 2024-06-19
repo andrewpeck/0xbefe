@@ -133,26 +133,26 @@
     <node id="LINK0_OVERFLOW_CNT" address="0xa3" mask="0x0000ffff" permission="r"
           description="Count of overflow occurances in the sync FIFO for link 0"
           fw_signal="link_overflow_cnt(${OH_IDX})(15 downto 0)"
-          sw_val_good="self == 0"
-          sw_val_warn="self &lt; 10"
+          sw_val_warn="self &gt; 0"
+          sw_val_bad="self &gt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_OVERFLOW_CNT" address="0xa3" mask="0xffff0000" permission="r"
           description="Count of overflow occurances in the sync FIFO for link 1"
           fw_signal="link_overflow_cnt(${OH_IDX})(31 downto 16)"
-          sw_val_good="self == 0"
-          sw_val_warn="self &lt; 10"
+          sw_val_warn="self &gt; 0"
+          sw_val_bad="self &gt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK0_UNDERFLOW_CNT" address="0xa4" mask="0x0000ffff" permission="r"
           description="Count of underflow occurances in the sync FIFO for link 0"
           fw_signal="link_underflow_cnt(${OH_IDX})(15 downto 0)"
-          sw_val_good="self == 0"
-          sw_val_warn="self &lt; 10"
+          sw_val_warn="self &gt; 0"
+          sw_val_bad="self &gt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK1_UNDERFLOW_CNT" address="0xa4" mask="0xffff0000" permission="r"
           description="Count of underflow occurances in the sync FIFO for link 1"
           fw_signal="link_underflow_cnt(${OH_IDX})(31 downto 16)"
-          sw_val_good="self == 0"
-          sw_val_warn="self &lt; 10"
+          sw_val_warn="self &gt; 0"
+          sw_val_bad="self &gt; 10"
           sw_monitor_error_min_threshold="1"/>
     <node id="LINK0_NOT_IN_TABLE_CNT" address="0xa5" mask="0x0000ffff" permission="r"
           description="Count of 8b10b not_in_table errors for link 0"
@@ -1101,17 +1101,18 @@
             fw_signal="input_status_arr(${OH_IDX}).evtfifo_near_full_cnt"
             sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_warn="self > 100"/>
-      <node id="VFAT_BLOCK_RATE"  address="0x6"  mask="0x00007fff" permission="r"
+      <node id="VFAT_BLOCK_RATE"  address="0x6"  mask="0x001fffff" permission="r"
             description="Rate of VFAT blocks (192bit words) being written to Input FIFO in Hz (multiply by 192 to get bitrate)"
             fw_signal="input_status_arr(${OH_IDX}).infifo_wr_rate"
-            sw_to_string="'%.2fMb/s' % ((float(self) * 192.0) / 1000000.0)"
+            sw_units="MHz"
             sw_val_neutral="(read_reg('BEFE.GEM.DAQ.CONTROL.INPUT_ENABLE_MASK') >> ${OH_IDX}) &amp; 1 == 0"
             sw_val_good="self &lt;= 1333333"
             sw_val_warn="self &gt; 1333333"
             sw_val_bad="self &gt; 1500000"/> <!-- warn at 80%, bad at 90% (max is 320Mb/s) -->
-      <node id="EVT_RATE"  address="0x6"  mask="0xffff8000" permission="r"
+      <node id="EVT_RATE"  address="0xa"  mask="0x001fffff" permission="r"
             description="Rate of events being written to Event FIFO in Hz"
-            fw_signal="input_status_arr(${OH_IDX}).evtfifo_wr_rate"/>
+            fw_signal="input_status_arr(${OH_IDX}).evtfifo_wr_rate"
+            sw_units="MHz"/>
       <node id="MAX_EOE_TIMER"         address="0x7" mask="0x00ffffff" permission="r"
             description="Units = clock cycles @ 80MHz.
                          This indicates the maximum amount of time that event
@@ -1188,7 +1189,7 @@
           fw_signal="gbt_link_status_arr_i(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT}).gbt_prbs_err_cnt"/>
 
     <node id="GBT${GBT}_TX_PHASE" address="0x0" mask="0x0007f000" permission="rw"
-          description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX chip. Valid values: 0-119."
+          description="This register sets the number of bitslips to use on the GBT TX frame, which in turn determines the 40MHz clock phase on the GBTX/LpGBT chip. Valid values are 0-119 for GBTX links and 0-63 for LpGBT links."
           generate="true" generate_size="&NUM_GBTS_PER_OH;" generate_address_step="0x1" generate_idx_var="GBT"
           fw_signal="gbt_tx_bitslip_arr(${OH_IDX} * g_NUM_GBTS_PER_OH + ${GBT})" fw_default="0b0000000"/>
 

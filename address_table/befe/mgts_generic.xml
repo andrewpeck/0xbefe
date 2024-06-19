@@ -62,6 +62,14 @@
       <node id="RX_LOW_POWER_MODE" address="0x5" mask="0x00000040" permission="rw"
             description="Setting this to 1 enables the RX LPM (this controls RXLPMEN). NOTE: THIS MUST ALWAYS BE SET TO 1 FOR GOOD RX PERFORMANCE WITH 8b10b ENCODING."
             fw_signal="rx_slow_ctrl_arr(${MGT}).rxlpmen" fw_default="0b1"/>
+      <node id="RX_RESET_SEL" address="0x5" mask="0x00000080" permission="rw"
+            description="This is connected to MGT port GTRXRESETSEL, and should normally be set to 0 to enable the automatic RX reset sequence.
+                         If this is set to 1, then all RX channel modules have to be reset manually.
+                         This setting may be useful e.g. when one wants to only reset the eyescan module and not affect the other parts of the channel"
+            fw_signal="rx_slow_ctrl_arr(${MGT}).gtrxresetsel" fw_default="0b0"/>
+      <node id="RX_PHALIGN_RESET" address="0x5" mask="0x00000100" permission="rw"
+            description="This is a latching reset of the RX phase alignment FSM"
+            fw_signal="rx_slow_ctrl_arr(${MGT}).rxphalignreset" fw_default="0b0"/>
       <node id="TX_DIFF_CTRL" address="0x6" mask="0x0000001f" permission="rw"
             description="Conrtols the differential swing amplitude, is directly wired to the TXDIFFCTRL port of the MGT, refer to the MGT manual for units."
             fw_signal="tx_slow_ctrl_arr(${MGT}).txdiffctrl" fw_default="0b11000"/>
@@ -172,9 +180,19 @@
             description="Frequency of the refclk1 used by this MGT"
             fw_signal="channel_refclk_arr_i(${MGT}).gtrefclk1_freq"
             sw_units="MHz"/>
-      <node id="EYESCAN_ERROR_CNT" address="0x1" permission="r"
+      <node id="EYESCAN_ERROR_CNT" address="0x4" permission="r"
             description="Eyescan error counter"
             fw_signal="es_err_cnt_arr(${MGT})"/>
+<!--
+      <node id="TXOUTCLK_FREQ" address="0x5" permission="r"
+            description="Frequency of the txoutclk coming out of this MGT"
+            fw_signal="txoutclk_freq_arr_i(${MGT})"
+            sw_units="MHz"/>
+      <node id="RXOUTCLK_FREQ" address="0x6" permission="r"
+            description="Frequency of the rxoutclk coming out of this MGT"
+            fw_signal="rxoutclk_freq_arr_i(${MGT})"
+            sw_units="MHz"/>
+-->
     </node>
 
     <node id="CONFIG" address="0x30">
@@ -185,7 +203,7 @@
       <node id="QPLL_INST_TYPE" address="0x3" mask="0x00003f00" permission="r"
             description="QPLL type instantiation associated with this link index. Note: QPLL control only works on channels which have this set to a non-zero value."
             fw_signal="std_logic_vector(to_unsigned(t_mgt_qpll_type'POS(g_LINK_CONFIG(${MGT}).qpll_inst_type), 6))"
-            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX', 'QPLL_4P0G']"/>
+            sw_enum="['QPLL_NULL', 'QPLL_GBTX', 'QPLL_LPGBT', 'QPLL_ODMB57_200', 'QPLL_ODMB57_156', 'QPLL_DMB_GBE_156', 'QPLL_GBE_156', 'QPLL_3P2G', 'QPLL0_3P2G_QPLL1_GBTX', 'QPLL0_LPGBT_QPLL1_GBE', 'QPLL0_LPGBT_QPLL1_10GBE', 'QPLL_10GBE_156', 'QPLL0_DMB_QPLL1_10GBE_156', 'QPLL_25GBE_156', 'QPLL0_TRIG_3P2_QPLL1_10GBE', 'QPLL0_10GBE_QPLL1_GBTX', 'QPLL_4P0G', 'QPLL0_4P0G_QPLL1_GBTX', 'QPLL0_TRIG_4P0_QPLL1_10GBE']"/>
       <node id="CPLL_REFCLK_01" address="0x0" mask="0x00000100" permission="r"
             description="Indicates whether this MGT channel CPLL is using refclk0 or refclk1"
             fw_signal="'1' when g_LINK_CONFIG(${MGT}).mgt_type.cpll_refclk_01 = 1 else '0'"/>

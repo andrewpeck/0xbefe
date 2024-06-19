@@ -131,22 +131,24 @@ class bus(object):
 
 
     #wrap every command to create a time delay
-    def __getattr__(self, name):
-        success=False
-        attempt_cnt = 0
-        while not success and attempt_cnt < self.max_retries:
-            attempt_cnt += 1
-            #select page
-            try:
-                result = getattr(self.bus,name)
-
-            except:
-                time.sleep(self.delay)
-                success=False
-            else:
-                success=True
-
-        return result
+#    def __getattr__(self, name):
+#        success=False
+#        attempt_cnt = 0
+#        while not success and attempt_cnt < self.max_retries:
+#            attempt_cnt += 1
+#            #select page
+#            try:
+#                result = getattr(self.bus,name)
+#
+#            except:
+#                time.sleep(self.delay)
+#                success=False
+#                print("FAIL on getattr %s" % name)
+#                result = name
+#            else:
+#                success=True
+#
+#        return result
 
 
 #Our custom Lattice firmware for Octopus
@@ -3052,37 +3054,76 @@ class qsfp_module(x2o_base):
             # .. | ..
             # 28 | 29
             self.map_qsfp_exp_addr = [
-                [1, 0x24], # Cage 0
-                [1, 0x3e], # Cage 1
-                [1, 0x3d], # Cage 2
-                [1, 0x3b], # Cage 3
-                [1, 0x39], # Cage 4
-                [1, 0x36], # Cage 5
-                [0, 0x29], # Cage 6
-                [0, 0x2b], # Cage 7
-                [0, 0x30], # Cage 8
-                [0, 0x32], # Cage 9
-                [0, 0x38], # Cage 10
-                [0, 0x3a], # Cage 11
-                [0, 0x3c], # Cage 12
-                [0, 0x3d], # Cage 13
-                [0, 0x3f], # Cage 14
-                [1, 0x3f], # Cage 15
-                [1, 0x26], # Cage 16
-                [1, 0x27], # Cage 17
-                [1, 0x3a], # Cage 18
-                [1, 0x38], # Cage 19
-                [1, 0x35], # Cage 20
-                [0, 0x2e], # Cage 21
-                [0, 0x2f], # Cage 22
-                [0, 0x31], # Cage 23
-                [0, 0x33], # Cage 24
-                [0, 0x39], # Cage 25
-                [0, 0x3b], # Cage 26
-                [0, 0x27], # Cage 27
-                [0, 0x25], # Cage 28
-                [0, 0x24], # Cage 29
+                [1, 0x3f], # GEM/CSC cage 0  Alex cage number 15
+                [1, 0x24], # GEM/CSC cage 1  Alex cage number 0
+                [1, 0x26], # GEM/CSC cage 2  Alex cage number 16
+                [1, 0x3e], # GEM/CSC cage 3  Alex cage number 1
+                [1, 0x27], # GEM/CSC cage 4  Alex cage number 17
+                [1, 0x3d], # GEM/CSC cage 5  Alex cage number 2
+                [1, 0x3a], # GEM/CSC cage 6  Alex cage number 18
+                [1, 0x3b], # GEM/CSC cage 7  Alex cage number 3
+                [1, 0x38], # GEM/CSC cage 8  Alex cage number 19
+                [1, 0x39], # GEM/CSC cage 9  Alex cage number 4
+                [1, 0x35], # GEM/CSC cage 10 Alex cage number 20
+                [1, 0x36], # GEM/CSC cage 11 Alex cage number 5
+                [0, 0x2e], # GEM/CSC cage 12 Alex cage number 21
+                [0, 0x29], # GEM/CSC cage 13 Alex cage number 6
+                [0, 0x2f], # GEM/CSC cage 14 Alex cage number 22
+                [0, 0x2b], # GEM/CSC cage 15 Alex cage number 7
+                [0, 0x31], # GEM/CSC cage 16 Alex cage number 23
+                [0, 0x30], # GEM/CSC cage 17 Alex cage number 8
+                [0, 0x33], # GEM/CSC cage 18 Alex cage number 24
+                [0, 0x32], # GEM/CSC cage 19 Alex cage number 9
+                [0, 0x39], # GEM/CSC cage 20 Alex cage number 25
+                [0, 0x38], # GEM/CSC cage 21 Alex cage number 10
+                [0, 0x3b], # GEM/CSC cage 22 Alex cage number 26
+                [0, 0x3a], # GEM/CSC cage 23 Alex cage number 11
+                [0, 0x27], # GEM/CSC cage 24 Alex cage number 27
+                [0, 0x3c], # GEM/CSC cage 25 Alex cage number 12
+                [0, 0x25], # GEM/CSC cage 26 Alex cage number 28
+                [0, 0x3d], # GEM/CSC cage 27 Alex cage number 13
+                [0, 0x24], # GEM/CSC cage 28 Alex cage number 29
+                [0, 0x3f], # GEM/CSC cage 29 Alex cage number 14
             ]
+
+            # this map is used in the C library, which has cages 0-14 going from top to bottom on the right column, and cages 15-29 going top to bottom on the left col
+            # 15 | 0
+            # 16 | 1
+            # 17 | 2
+            # .. | ..
+            # 29 | 14
+            # self.map_qsfp_exp_addr = [
+            #     [1, 0x24], # Cage 0
+            #     [1, 0x3e], # Cage 1
+            #     [1, 0x3d], # Cage 2
+            #     [1, 0x3b], # Cage 3
+            #     [1, 0x39], # Cage 4
+            #     [1, 0x36], # Cage 5
+            #     [0, 0x29], # Cage 6
+            #     [0, 0x2b], # Cage 7
+            #     [0, 0x30], # Cage 8
+            #     [0, 0x32], # Cage 9
+            #     [0, 0x38], # Cage 10
+            #     [0, 0x3a], # Cage 11
+            #     [0, 0x3c], # Cage 12
+            #     [0, 0x3d], # Cage 13
+            #     [0, 0x3f], # Cage 14
+            #     [1, 0x3f], # Cage 15
+            #     [1, 0x26], # Cage 16
+            #     [1, 0x27], # Cage 17
+            #     [1, 0x3a], # Cage 18
+            #     [1, 0x38], # Cage 19
+            #     [1, 0x35], # Cage 20
+            #     [0, 0x2e], # Cage 21
+            #     [0, 0x2f], # Cage 22
+            #     [0, 0x31], # Cage 23
+            #     [0, 0x33], # Cage 24
+            #     [0, 0x39], # Cage 25
+            #     [0, 0x3b], # Cage 26
+            #     [0, 0x27], # Cage 27
+            #     [0, 0x25], # Cage 28
+            #     [0, 0x24], # Cage 29
+            # ]
 
         else:
             raise Exception("Unsupported QSFP module revision %d" % revision)

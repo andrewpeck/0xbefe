@@ -137,13 +137,13 @@ package gem_pkg is
         evtfifo_full               : std_logic;
         evtfifo_underflow          : std_logic;
         evtfifo_near_full_cnt      : std_logic_vector(15 downto 0);
-        evtfifo_wr_rate            : std_logic_vector(16 downto 0);
+        evtfifo_wr_rate            : std_logic_vector(20 downto 0);
         infifo_empty               : std_logic;
         infifo_near_full           : std_logic;
         infifo_full                : std_logic;
         infifo_underflow           : std_logic;
         infifo_near_full_cnt       : std_logic_vector(15 downto 0);
-        infifo_wr_rate             : std_logic_vector(14 downto 0);
+        infifo_wr_rate             : std_logic_vector(20 downto 0);
         tts_state                  : std_logic_vector(3 downto 0);
         err_event_too_big          : std_logic;
         err_evtfifo_full           : std_logic;

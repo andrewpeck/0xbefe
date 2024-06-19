@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x72C61D5C7E5D0B74",
+      "boundary_crc": "0x67DC0E266CCF04ED",
       "device": "xcvu13p-fsga2577-1-e",
       "name": "framework",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
@@ -62,13 +62,13 @@
           },
           "CLK_DOMAIN": {
             "value": "framework_bd_clocks_0_clk_50",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "DATA_WIDTH": {
             "value": "32"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "HAS_BRESP": {
@@ -229,10 +229,10 @@
           },
           "CLK_DOMAIN": {
             "value": "framework_bd_clocks_0_clk_50",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "FREQ_TOLERANCE_HZ": {
@@ -275,6 +275,31 @@
           },
           "FREQ_HZ": {
             "value": "125000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "ip_prop"
+          }
+        }
+      },
+      "clk_200_o": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "framework_bd_clocks_0_clk_50",
+            "value_src": "ip_prop"
+          },
+          "FREQ_HZ": {
+            "value": "142857142"
           },
           "FREQ_TOLERANCE_HZ": {
             "value": "0",
@@ -648,6 +673,18 @@
           "CLKOUT3_USED": {
             "value": "true"
           },
+          "CLKOUT4_JITTER": {
+            "value": "182.124"
+          },
+          "CLKOUT4_PHASE_ERROR": {
+            "value": "204.239"
+          },
+          "CLKOUT4_REQUESTED_OUT_FREQ": {
+            "value": "142.85714"
+          },
+          "CLKOUT4_USED": {
+            "value": "true"
+          },
           "CLK_OUT1_PORT": {
             "value": "clk_50"
           },
@@ -656,6 +693,9 @@
           },
           "CLK_OUT3_PORT": {
             "value": "clk_125"
+          },
+          "CLK_OUT4_PORT": {
+            "value": "clk_200"
           },
           "MMCM_CLKFBOUT_MULT_F": {
             "value": "32.000"
@@ -675,11 +715,14 @@
           "MMCM_CLKOUT2_DIVIDE": {
             "value": "8"
           },
+          "MMCM_CLKOUT3_DIVIDE": {
+            "value": "7"
+          },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "5"
           },
           "NUM_OUT_CLKS": {
-            "value": "3"
+            "value": "4"
           },
           "OPTIMIZE_CLOCKING_STRUCTURE_EN": {
             "value": "true"
@@ -746,17 +789,6 @@
           "GT_TX_POLARITY": {
             "value": "\"0\""
           }
-        },
-        "ports": {
-          "axi_clk": {
-            "type": "clk",
-            "direction": "O",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "156250000"
-              }
-            }
-          }          
         }
       }
     },
@@ -861,29 +893,35 @@
           "proc_sys_reset/aux_reset_in"
         ]
       },
-      "bd_clocks_clk_50": {
-        "ports": [
-          "bd_clocks/clk_50",
-          "clk_50_o"
-        ]
-      },
       "bd_clocks_clk_100": {
         "ports": [
-          "bd_clocks/clk_100",
-          "clk_100_o",
+          "bd_clocks/clk_50",
           "user_axil_clk_o",
           "axi_chip2chip/m_aclk",
           "axi_interconnect_0/ACLK",
           "axi_interconnect_0/S00_ACLK",
           "axi_interconnect_0/M00_ACLK",
           "proc_sys_reset/slowest_sync_clk",
-          "xpm_cdc_gen_0/dest_clk"
+          "xpm_cdc_gen_0/dest_clk",
+          "clk_50_o"
+        ]
+      },
+      "bd_clocks_clk_101": {
+        "ports": [
+          "bd_clocks/clk_100",
+          "clk_100_o"
         ]
       },
       "bd_clocks_clk_125": {
         "ports": [
           "bd_clocks/clk_125",
           "clk_125_o"
+        ]
+      },
+      "bd_clocks_clk_200": {
+        "ports": [
+          "bd_clocks/clk_200",
+          "clk_200_o"
         ]
       },
       "c2c_reset_fsm_0_c2c_channel_up": {

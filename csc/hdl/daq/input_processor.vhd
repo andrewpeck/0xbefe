@@ -37,13 +37,13 @@ port(
     infifo_empty_o              : out std_logic;
     infifo_valid_o              : out std_logic;
     infifo_underflow_o          : out std_logic;
-    infifo_data_cnt_o           : out std_logic_vector(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0);
+    infifo_data_cnt_o           : out std_logic_vector(15 downto 0);
     evtfifo_dout_o              : out std_logic_vector(59 downto 0);
     evtfifo_rd_en_i             : in std_logic;
     evtfifo_empty_o             : out std_logic;
     evtfifo_valid_o             : out std_logic;
     evtfifo_underflow_o         : out std_logic;
-    evtfifo_data_cnt_o          : out std_logic_vector(CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH - 1 downto 0);
+    evtfifo_data_cnt_o          : out std_logic_vector(11 downto 0);
 
     -- Input data
     input_clk_i                 : in std_logic;
@@ -112,6 +112,7 @@ architecture input_processor_arch of input_processor is
     signal infifo_almost_full       : std_logic := '0';
     signal infifo_empty             : std_logic := '0';
     signal infifo_underflow         : std_logic := '0';
+    signal infifo_data_cnt          : std_logic_vector(15 downto 0) := (others => '0');
 
     -- Event FIFO
     signal evtfifo_din              : std_logic_vector(59 downto 0) := (others => '0');
@@ -123,6 +124,7 @@ architecture input_processor_arch of input_processor is
     signal evtfifo_almost_full      : std_logic := '0';
     signal evtfifo_empty            : std_logic := '0';
     signal evtfifo_underflow        : std_logic := '0';
+    signal evtfifo_data_cnt         : std_logic_vector(11 downto 0) := (others => '0');
 
     -- Link processor
     signal lp_word_pos              : integer range 0 to 3 := 0; -- position in 64bit word
@@ -229,7 +231,7 @@ begin
             dout          => infifo_dout_o,
             empty         => infifo_empty,
             prog_empty    => infifo_prog_empty,
-            rd_data_count => infifo_data_cnt_o,
+            rd_data_count => infifo_data_cnt(CFG_DAQ_INFIFO_DATA_CNT_WIDTH - 1 downto 0),
             underflow     => infifo_underflow,
             rd_rst_busy   => open,
             almost_empty  => open,
@@ -250,6 +252,7 @@ begin
 
     infifo_empty_o <= infifo_empty;
     infifo_underflow_o <= infifo_underflow;
+    infifo_data_cnt_o <= infifo_data_cnt;
 
     -- Event FIFO
     i_event_fifo : xpm_fifo_async
@@ -288,7 +291,7 @@ begin
             dout          => evtfifo_dout_o,
             empty         => evtfifo_empty,
             prog_empty    => evtfifo_prog_empty,
-            rd_data_count => evtfifo_data_cnt_o,
+            rd_data_count => evtfifo_data_cnt(CFG_DAQ_EVTFIFO_DATA_CNT_WIDTH - 1 downto 0),
             underflow     => evtfifo_underflow,
             rd_rst_busy   => open,
             almost_empty  => open,
@@ -309,6 +312,7 @@ begin
 
     evtfifo_empty_o <= evtfifo_empty;
     evtfifo_underflow_o <= evtfifo_underflow;
+    evtfifo_data_cnt_o <= evtfifo_data_cnt;
 
     -- Check for underflows
     process(fifo_rd_clk_i)
@@ -332,7 +336,7 @@ begin
     i_infifo_write_rate : entity work.rate_counter
     generic map(
         g_CLK_FREQUENCY => std_logic_vector(to_unsigned(g_INPUT_CLK_FREQ, 32)),
-        g_COUNTER_WIDTH => 15
+        g_COUNTER_WIDTH => 30
     )
     port map(
         clk_i   => input_clk_i,
@@ -345,7 +349,7 @@ begin
     i_evtfifo_write_rate : entity work.rate_counter
     generic map(
         g_CLK_FREQUENCY => std_logic_vector(to_unsigned(g_INPUT_CLK_FREQ, 32)),
-        g_COUNTER_WIDTH => 17
+        g_COUNTER_WIDTH => 20
     )
     port map(
         clk_i   => input_clk_i,

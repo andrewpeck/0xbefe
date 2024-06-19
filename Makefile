@@ -24,7 +24,7 @@ else
 TIMECMD = time -p
 endif
 
-PROJECT_LIST = $(patsubst %/,%,$(patsubst Top/%,%,$(dir $(dir $(shell find Top/ -name hog.conf)))))
+PROJECT_LIST = $(patsubst %/,%,$(patsubst Top/%,%,$(dir $(dir $(shell find -L Top/ -name hog.conf)))))
 CREATE_LIST = $(addprefix create_,$(PROJECT_LIST))
 IMPL_LIST = $(addprefix impl_,$(PROJECT_LIST))
 IMPL_ONLY_LIST = $(addprefix impl_only_,$(PROJECT_LIST))

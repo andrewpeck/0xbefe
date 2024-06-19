@@ -116,7 +116,8 @@ architecture csc_fed_arch of csc_fed is
     component vio_csc_debug_link_select
         port(
             clk        : in  std_logic;
-            probe_out0 : out std_logic_vector(5 downto 0)
+            probe_out0 : out std_logic_vector(5 downto 0);
+            probe_out1 : out std_logic_vector(5 downto 0)
         );
     end component;
     
@@ -155,6 +156,7 @@ architecture csc_fed_arch of csc_fed is
     --== GBT ==--
     signal gbt_tx_data_arr              : t_gbt_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_rx_data_arr              : t_gbt_frame_array(g_NUM_GBT_LINKS - 1 downto 0);
+    signal gbt_rx_data_widebus_arr      : t_std32_array(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_rx_valid_arr             : std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_link_status_arr          : t_gbt_link_status_arr(g_NUM_GBT_LINKS - 1 downto 0);
     signal gbt_ready_arr                : std_logic_vector(g_NUM_GBT_LINKS - 1 downto 0);
@@ -196,6 +198,8 @@ architecture csc_fed_arch of csc_fed is
     signal dbg_dmb_link_select          : integer range 0 to g_NUM_OF_DMBs - 1 := 0;
     signal dbg_dmb_rx_data              : t_mgt_16b_rx_data;
     signal dbg_dmb_rx_status            : t_mgt_status;
+    
+    signal dbg_gbt_link_select_slv      : std_logic_vector(5 downto 0) := (others => '0');
 
 begin
 
@@ -447,7 +451,7 @@ begin
             rx_bitslip_auto_i           => (others => '1'),
             rx_data_valid_arr_o         => gbt_rx_valid_arr,
             rx_data_arr_o               => gbt_rx_data_arr,
-            rx_data_widebus_arr_o       => open,
+            rx_data_widebus_arr_o       => gbt_rx_data_widebus_arr,
 
             mgt_status_arr_i            => gbt_status_arr_i,
             mgt_ctrl_arr_o              => gbt_ctrl_arr_o,
@@ -514,7 +518,7 @@ begin
 
     i_fpga_loader_alct : entity work.promless_fpga_loader
         generic map(
-            g_LOADER_CLK_80_MHZ => true
+            g_LOADER_CLK_80_MHZ => false
         )
         port map(
             reset_i          => reset_i,
@@ -535,7 +539,8 @@ begin
     i_vio_dbg_link_select : vio_csc_debug_link_select
         port map(
             clk        => dmb_rx_usrclk_i,
-            probe_out0 => dbg_dmb_link_sel_slv
+            probe_out0 => dbg_dmb_link_sel_slv,
+            probe_out1 => dbg_gbt_link_select_slv
         );
 
     process(dmb_rx_usrclk_i)
@@ -612,4 +617,32 @@ begin
             tx_data_i => spy_tx_data_o
         );
 
+
+    g_gbt_debug: if false generate
+        signal dbg_gbt_tx_data              : std_logic_vector(83 downto 0);
+        signal dbg_gbt_rx_data              : std_logic_vector(83 downto 0);
+        signal dbg_gbt_wide_rx_data         : std_logic_vector(31 downto 0);
+        signal dbg_gbt_link_status          : t_gbt_link_status;
+    begin
+        -- select the GBT link to debug
+        dbg_gbt_tx_data               <= gbt_tx_data_arr(to_integer(unsigned(dbg_gbt_link_select_slv)));
+        dbg_gbt_rx_data               <= gbt_rx_data_arr(to_integer(unsigned(dbg_gbt_link_select_slv)));
+        dbg_gbt_wide_rx_data          <= gbt_rx_data_widebus_arr(to_integer(unsigned(dbg_gbt_link_select_slv)));
+        dbg_gbt_link_status           <= gbt_link_status_arr(to_integer(unsigned(dbg_gbt_link_select_slv)));
+    
+        i_ila_gbt : ila_gbt
+            port map(
+                clk     => ttc_clocks_i.clk_40,
+                probe0  => dbg_gbt_tx_data,
+                probe1  => dbg_gbt_rx_data,
+                probe2  => dbg_gbt_wide_rx_data,
+                probe3  => dbg_gbt_link_status.gbt_tx_gearbox_ready,
+                probe4  => dbg_gbt_link_status.gbt_rx_ready,
+                probe5  => dbg_gbt_link_status.gbt_rx_header_locked,
+                probe6  => dbg_gbt_link_status.gbt_rx_gearbox_ready,
+                probe7  => dbg_gbt_link_status.gbt_rx_correction_flag,
+                probe8  => dbg_gbt_link_status.gbt_rx_num_bitslips(5 downto 0)
+            );
+    end generate;
+        
 end csc_fed_arch;

@@ -490,11 +490,12 @@ begin
 
         me0_cluster: entity work.sbit_me0
             generic map(
-                g_NUM_OF_OHs 	    => g_NUM_OF_OHs,
-                g_NUM_VFATS_PER_OH  => g_NUM_VFATS_PER_OH,
-                g_DISABLE_CLUSTERS  => g_DISABLE_ME0_CLUSTERS,
-                g_IPB_CLK_PERIOD_NS => g_IPB_CLK_PERIOD_NS,
-                g_DEBUG             => CFG_DEBUG_SBIT_ME0
+                g_NUM_OF_OHs 	       => g_NUM_OF_OHs,
+                g_NUM_VFATS_PER_OH     => g_NUM_VFATS_PER_OH,
+                g_ENABLE_RAW_SBIT_TEST => false,
+                g_DISABLE_CLUSTERS     => true,
+                g_IPB_CLK_PERIOD_NS    => g_IPB_CLK_PERIOD_NS,
+                g_DEBUG                => CFG_DEBUG_SBIT_ME0
             )
             port map(
                 reset_i             => reset,

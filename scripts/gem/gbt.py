@@ -568,6 +568,36 @@ def downloadConfig(ohIdx, gbtIdx, filename):
     f.close()
     return ret
 
+def gbt_config_loopback(oh, gbt):
+    station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
+    
+    if NODE_IC_ADDR is None:
+        initGbtRegAddrs()
+    selectGbt(oh, gbt)
+
+    if station > 0:
+        writeGbtRegAddrs(29, 0x17)
+        writeGbtRegAddrs(30, 0x17)
+        writeGbtRegAddrs(31, 0x17)
+    elif station == 0:
+        gbt_version = get_config("CONFIG_ME0_GBT_VER")[oh][gbt]
+        if gbt_version == 0:
+            writeGbtRegAddrs(0x119, 0x36) # enable loopback on groups 0 and 1
+            writeGbtRegAddrs(0x11a, 0x36)  # enable loopback on groups 2 and 3
+            writeGbtRegAddrs(0x11b, 0x36)  # enable loopback on groups 4 and 5
+            writeGbtRegAddrs(0x11c, 0x06)  # enable loopback on group 6
+        elif gbt_version == 1:
+            writeGbtRegAddrs(0x129, 0x36)  # enable loopback on groups 0 and 1
+            writeGbtRegAddrs(0x12a, 0x36)  # enable loopback on groups 2 and 3
+            writeGbtRegAddrs(0x12b, 0x36)  # enable loopback on groups 4 and 5
+            writeGbtRegAddrs(0x12c, 0x06)  # enable loopback on group 6
+        else:
+            print("Unknown LpGBT version %d (should be 0 or 1" % gbt_version)
+            sys.exit()
+    else:
+        print("ERROR: unsupported GEM station = %d" % station)
+        # sys.exit()
+
 def destroyConfig(ohIdx, gbtIdx):
     gem_station = read_reg("BEFE.GEM.GEM_SYSTEM.RELEASE.GEM_STATION")
     gbt_ver = get_config("CONFIG_ME0_GBT_VER")[ohIdx][gbtIdx]

@@ -75,7 +75,7 @@ class Amc13(object):
         # pad with zeros if necessary to align to 64bit boundary
         while len(str) % 8 != 0:
             if verbose:
-                print "adding a zero at the end of the string to align to 64bit boundary"
+                print("adding a zero at the end of the string to align to 64bit boundary")
             str += '\0'
 
         words = struct.unpack("%dQ" % int(len(str) / 8), str)
@@ -133,16 +133,16 @@ class Amc13(object):
         print_cyan("--------------------------------------")
         print_green_red("Header marker1: %s" % hex_padded(self.headerMarker1, 0.5), self.headerMarker1, 0x5)
         print_green_red("Header marker2: %s" % hex_padded(self.headerMarker2, 0.5), self.headerMarker2, 0x0)
-        print "Event type: %s" % hex_padded(self.eventType, 0.5)
-        print "FED ID: %s" % hex_padded(self.fedId, 1.5)
-        print "Number of AMCs: %d" % self.numberAmcs
-        print "L1A ID: %d" % self.l1aId
-        print "BX ID: %d" % self.bxId
-        print "Orbit ID: %d" % self.orbitId
+        print("Event type: %s" % hex_padded(self.eventType, 0.5))
+        print("FED ID: %s" % hex_padded(self.fedId, 1.5))
+        print("Number of AMCs: %d" % self.numberAmcs)
+        print("L1A ID: %d" % self.l1aId)
+        print("BX ID: %d" % self.bxId)
+        print("Orbit ID: %d" % self.orbitId)
 
-        print "AMC block data:"
+        print("AMC block data:")
         for i in range(self.numberAmcs):
-            print "    Slot %d, size = %d" % (self.amcIds[i], self.amcBlockSizes[i])
+            print("    Slot %d, size = %d" % (self.amcIds[i], self.amcBlockSizes[i]))
 
 
     def printAmc13Trailer(self):
@@ -151,8 +151,8 @@ class Amc13(object):
         print_cyan("--------------------------------------")
         print_green_red("Trailer marker: %s" % hex_padded(self.trailerMarker, 0.5), self.trailerMarker, 0xa)
         print_green_red("TTS state: %s" % hex_padded(self.ttsState, 0.5), self.ttsState, 0x8)
-        print "Event status: %s" % hex_padded(self.eventStatus, 0.5)
-        print "Event length: %d" % self.eventLength
+        print("Event status: %s" % hex_padded(self.eventStatus, 0.5))
+        print("Event length: %d" % self.eventLength)
 
 
     def printEvent(self):
@@ -210,7 +210,7 @@ class GemAmc(object):
         # pad with zeros if necessary to align to 64bit boundary
         while len(str) % 8 != 0:
             if verbose:
-                print "adding a zero at the end of the string to align to 64bit boundary"
+                print("adding a zero at the end of the string to align to 64bit boundary")
             str += '\0'
 
         words = struct.unpack("%dQ" % int(len(str) / 8), str)
@@ -254,14 +254,14 @@ class GemAmc(object):
         print_cyan("--------------------------------------")
         print_cyan("AMC Header")
         print_cyan("--------------------------------------")
-        print "Format version: %d" % self.formatVersion
-        print "AMC number: %d" % self.amcNum
-        print "Board ID: %s" % hex_padded(self.boardId, 2)
-        print "L1A ID: %d" % self.l1aId
-        print "Orbit ID: %d" % self.orbitId
-        print "BX ID: %d" % self.bxId
-        print "Run type: %d" % self.runType
-        print "Run params: %s" % hex_padded(self.runParams, 3)
+        print("Format version: %d" % self.formatVersion)
+        print("AMC number: %d" % self.amcNum)
+        print("Board ID: %s" % hex_padded(self.boardId, 2))
+        print("L1A ID: %d" % self.l1aId)
+        print("Orbit ID: %d" % self.orbitId)
+        print("BX ID: %d" % self.bxId)
+        print("Run type: %d" % self.runType)
+        print("Run params: %s" % hex_padded(self.runParams, 3))
 
     def unpackGemEventHeader(self, words, idx, verbose=False):
         self.davList = (words[idx] >> 40) & 0xffffff
@@ -279,8 +279,8 @@ class GemAmc(object):
         print_cyan("--------------------------------------")
         print_cyan("GEM Event Header")
         print_cyan("--------------------------------------")
-        print "DAV count: %d" % self.davCount
-        print "DAV list: %s" % hex_padded(self.davList, 3)
+        print("DAV count: %d" % self.davCount)
+        print("DAV list: %s" % hex_padded(self.davList, 3))
         print_green_red("Buffer status: %s" % hex_padded(self.bufStatus, 3), self.bufStatus, 0)
         print_green_red("TTS state: %s" % hex_padded(self.ttsState, 1), self.ttsState, 8)
         print_green_red("Premature EOE reached: %r" % self.prematureEoeReached, self.prematureEoeReached, False)
@@ -330,7 +330,7 @@ class GemAmc(object):
         print_cyan("--------------------------------------")
         print_green_red("L1A ID in the trailer: %d" % self.l1aIdTrail, self.l1aIdTrail, self.l1aId & 0xff)
         if idx == -1:
-            print "Total 64bit word count: %d" % self.wordCnt
+            print("Total 64bit word count: %d" % self.wordCnt)
         else:
             print_green_red("Total 64bit word count: %d" % self.wordCnt, self.wordCnt, idx)
 
@@ -450,9 +450,9 @@ class GemChamber(object):
         print_cyan("    --------------------------------------")
         print_cyan("    Chamber #%d Event Header" % self.chamberIdx)
         print_cyan("    --------------------------------------")
-        print "    Zero-suppressed word count: %d" % self.zsWordCnt
-        print "    Input ID: %d" % self.inputId
-        print "    VFAT word count: %d" % self.vfatWordCnt
+        print("    Zero-suppressed word count: %d" % self.zsWordCnt)
+        print("    Input ID: %d" % self.inputId)
+        print("    VFAT word count: %d" % self.vfatWordCnt)
         print_green_red("    Event FIFO full: %r" % self.evtFifoFull, self.evtFifoFull, False)
         print_green_red("    Input FIFO full: %r" % self.inFifoFull, self.inFifoFull, False)
         print_green_red("    L1A FIFO full: %r" % self.l1aFifoFull, self.l1aFifoFull, False)
@@ -562,16 +562,16 @@ class GemVfat2(object):
         print_cyan("        VFAT Block #%d" % self.vfatIdx)
         print_cyan("        --------------------------------------")
         print_green_red("        BC: %d" % self.bc, self.bc, self.chamber.event.bxId)
-        print "        EC: %d" % self.ec
-        print "        Chip ID: %s" % hex_padded(self.chipId, 1.5)
+        print("        EC: %d" % self.ec)
+        print("        Chip ID: %s" % hex_padded(self.chipId, 1.5))
         print_green_red("        Marker: %s" % hex_padded(self.marker, 1.5), self.marker, 0xace)
         print_green_red("        Hamming error: %r" % self.hammingErr, self.hammingErr, False)
         print_green_red("        Almost full: %r" % self.almostFull, self.almostFull, False)
         print_green_red("        SEU logic: %r" % self.seuLogic, self.seuLogic, False)
         print_green_red("        SEU I2C: %r" % self.seuI2C, self.seuI2C, False)
-        print "        Channel data: %s" % hex_padded(self.chanData, 16)
-        print "        Number of hit channels: %d" % self.numHits
-        print "        CRC: %s" % hex_padded(self.crc, 2)
+        print("        Channel data: %s" % hex_padded(self.chanData, 16))
+        print("        Number of hit channels: %d" % self.numHits)
+        print("        CRC: %s" % hex_padded(self.crc, 2))
 
 class GemVfat3(object):
 
@@ -619,13 +619,13 @@ class GemVfat3(object):
         print_cyan("        --------------------------------------")
         print("        Position: %d" % self.position)
         print_green_red("        BC: %s" % hex_padded(self.bc, 2), self.bc, self.chamber.event.bxId + 1)
-        print "        EC: %s" % hex_padded(self.ec, 1)
+        print("        EC: %s" % hex_padded(self.ec, 1))
         print_green_red("        Header: %s" % hex_padded(self.header, 1), self.header, 0x1e)
         print_green_red("        Warning: %r" % self.warning, self.warning, False)
         print_green_red("        CRC error: %r" % self.crcError, self.crcError, False)
-        print "        Channel data: %s" % hex_padded(self.chanData, 16)
-        print "        Number of hit channels: %d" % self.numHits
-        print "        CRC: %s" % hex_padded(self.crc, 2)
+        print("        Channel data: %s" % hex_padded(self.chanData, 16))
+        print("        Number of hit channels: %d" % self.numHits)
+        print("        CRC: %s" % hex_padded(self.crc, 2))
 
     def hasError(self, verbose):
         if (self.bc != self.chamber.event.bxId + 1) or (self.header != 0x1e) or self.warning or self.crcError:
@@ -681,10 +681,10 @@ def main():
         countNonZero = True
     if "print_error" in command:
         printError = True
-        print "Will print errors"
+        print("Will print errors")
         evtNumToPrint = int(sys.argv[3])
         if evtNumToPrint >= 0:
-            print "Will start printing errors only after event #%d" % evtNumToPrint
+            print("Will start printing errors only after event #%d" % evtNumToPrint)
 
     events = []
     i = 0
@@ -698,7 +698,7 @@ def main():
         if IS_MINIDAQ_FORMAT:
             evtHeaderSize = readInitRecord(f, VERBOSE)
 
-        print "File size = %d bytes" % fileSize
+        print("File size = %d bytes" % fileSize)
 
         while True:
             if f.tell() >= fileSize - 1:
@@ -722,10 +722,10 @@ def main():
                         print("Print the whole event? (y/n)")
                         yn = raw_input()
                         if (yn == "y"):
-                            print ""
-                            print ""
-                            print "======================================================================================"
-                            print ""
+                            print("")
+                            print("")
+                            print("======================================================================================")
+                            print("")
                             event.printEvent()
 
                         print("Do you want to continue? (y/n)")
@@ -745,7 +745,7 @@ def main():
 
                 i += 1
 
-            #print "Read event #%d ending at byte %d" % (i, f.tell())
+            #print("Read event #%d ending at byte %d" % (i, f.tell()))
 
         f.close()
 
@@ -776,16 +776,16 @@ def readInitRecord(f, verbose=False):
     f.read(initRecordSize - 34) # finish reading the init block
 
     if verbose:
-        print ""
-        print "====================================================="
-        print "INIT MESSAGE"
-        print "====================================================="
-        print "code = %s" % hex_padded(code, 1)
-        print "size = %d" % initRecordSize
-        print "protocol = %s" % hex_padded(protocol, 1)
-        print "run number = %d" % runNumber
-        print "init header size = %d" % initHeaderSize
-        print "event header size = %d" % evtHeaderSize
+        print("")
+        print("=====================================================")
+        print("INIT MESSAGE")
+        print("=====================================================")
+        print("code = %s" % hex_padded(code, 1))
+        print("size = %d" % initRecordSize)
+        print("protocol = %s" % hex_padded(protocol, 1))
+        print("run number = %d" % runNumber)
+        print("init header size = %d" % initHeaderSize)
+        print("event header size = %d" % evtHeaderSize)
 
     return evtHeaderSize
 
@@ -809,27 +809,27 @@ def readEvtRecord(f, fileSize, evtHeaderSize, verbose=False, debug=False, evtNum
     fedBlockSize = len(fedData)
 
     if verbose:
-        print ""
-        print "====================================================="
-        print "EVENT MESSAGE (event #%d)" % evtNum
-        print "====================================================="
-        print "start idx = %s" % hex_padded(startIdx, 4)
-        print "code = %s" % hex_padded(code, 1)
-        print "size = %d" % size
-        print "protocol = %s" % hex_padded(protocol, 1)
-        print "run number = %d" % runNumber
-        print "event number = %d" % evtNumber
+        print("")
+        print("=====================================================")
+        print("EVENT MESSAGE (event #%d)" % evtNum)
+        print("=====================================================")
+        print("start idx = %s" % hex_padded(startIdx, 4))
+        print("code = %s" % hex_padded(code, 1))
+        print("size = %d" % size)
+        print("protocol = %s" % hex_padded(protocol, 1))
+        print("run number = %d" % runNumber)
+        print("event number = %d" % evtNumber)
 
-        print "compressed event blob size = %d" % fedBlockSizeCompressed
-        print "compressed event blob idx: %s" % hex_padded(compressedEvtBlobIdx, 4)
+        print("compressed event blob size = %d" % fedBlockSizeCompressed)
+        print("compressed event blob idx: %s" % hex_padded(compressedEvtBlobIdx, 4))
 
-        print "decompressed event blob size = %d" % fedBlockSize
+        print("decompressed event blob size = %d" % fedBlockSize)
 
         if debug:
-            print "----------------------------------------------"
-            print "FED data:"
+            print("----------------------------------------------")
+            print("FED data:")
             printHexBlock64BigEndian(fedData, fedBlockSize)
-            print "----------------------------------------------"
+            print("----------------------------------------------")
 
         print_cyan("**********************************************")
 
@@ -853,18 +853,18 @@ def readAmc13Evt(f, fileSize, verbose=False, debug=False, evtNum=-1):
     fedData = f.read(fedBlockSize)
 
     if verbose:
-        print ""
-        print "====================================================="
-        print "EVENT MESSAGE (event #%d)" % evtNum
-        print "====================================================="
-        print "start idx = %s" % hex_padded(startIdx, 4)
-        print "fed block size = %d" % fedBlockSize
+        print("")
+        print("=====================================================")
+        print("EVENT MESSAGE (event #%d)" % evtNum)
+        print("=====================================================")
+        print("start idx = %s" % hex_padded(startIdx, 4))
+        print("fed block size = %d" % fedBlockSize)
 
         if debug:
-            print "----------------------------------------------"
-            print "FED data:"
+            print("----------------------------------------------")
+            print("FED data:")
             printHexBlock64BigEndian(fedData, fedBlockSize)
-            print "----------------------------------------------"
+            print("----------------------------------------------")
 
         print_cyan("**********************************************")
 
@@ -895,7 +895,7 @@ def readNumber(f, numBytes):
 
 def printHexBlock64BigEndian(str, length):
     fedBytes = struct.unpack("%dB" % length, str)
-    # print "length: %d, str length: %d, num of 8 byte words: %d" % (len(fedBytes), len(str), int(math.ceil(length / 8.0)))
+    # print("length: %d, str length: %d, num of 8 byte words: %d" % (len(fedBytes), len(str), int(math.ceil(length / 8.0))))
     for i in range(0, int(math.ceil(length / 8.0))):
         idx = i * 8
         sys.stdout.write("{0:#0{1}x}: ".format(idx, 4 + 2))

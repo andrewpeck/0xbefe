@@ -1,0 +1,1 @@
+../pre-synthesis-default.tcl

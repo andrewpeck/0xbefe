@@ -46,8 +46,8 @@ architecture counter_arch of counter is
 
 begin
 
-    i_en_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_INPUT_REG_STAGES) port map(clk_i => ref_clk_i, data_i(0) => en_i, data_o(0) => en);
-    i_reset_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_INPUT_REG_STAGES) port map(clk_i => ref_clk_i, data_i(0) => reset_i, data_o(0) => reset);
+    i_en_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_INPUT_REG_STAGES, INFER_SRL => "no") port map(clk_i => ref_clk_i, data_i(0) => en_i, data_o(0) => en);
+    i_reset_pipe : entity work.pipe generic map(WIDTH => 1, DEPTH => g_INPUT_REG_STAGES, INFER_SRL => "no") port map(clk_i => ref_clk_i, data_i(0) => reset_i, data_o(0) => reset);
 
     process(ref_clk_i)
     begin

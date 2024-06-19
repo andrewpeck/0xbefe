@@ -189,17 +189,17 @@ begin
                 probe4 : in std_logic;
                 probe5 : in std_logic;
                 probe6 : in std_logic;
-                probe7 : in std_logic_vector(15 downto 0);
-                probe8 : in std_logic_vector(15 downto 0);
-                probe9 : in std_logic_vector(15 downto 0)
+                probe7 : in std_logic_vector(119 downto 0);
+                probe8 : in std_logic_vector(119 downto 0);
+                probe9 : in std_logic_vector(119 downto 0)
             );
         end component;        
         
-        signal dbg_phalign_done_arr     : std_logic_vector(15 downto 0) := (others => '0');
-        signal dbg_reset_done_arr       : std_logic_vector(15 downto 0) := (others => '0');
-        signal dbg_dlysresetdone_arr    : std_logic_vector(15 downto 0) := (others => '0');
+        signal dbg_phalign_done_arr     : std_logic_vector(119 downto 0) := (others => '0');
+        signal dbg_reset_done_arr       : std_logic_vector(119 downto 0) := (others => '0');
+        signal dbg_dlysresetdone_arr    : std_logic_vector(119 downto 0) := (others => '0');
         
-        constant MAX_IDX : integer := min(g_NUM_CHANNELS - 1, 15);
+        constant MAX_IDX : integer := min(g_NUM_CHANNELS - 1, 120);
         
     begin
         

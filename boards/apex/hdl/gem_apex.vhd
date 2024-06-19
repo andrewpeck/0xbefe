@@ -317,7 +317,8 @@ begin
     i_ttc_clks : entity work.ttc_clocks
         generic map(
             g_GEM_STATION               => CFG_GEM_STATION(0),
-            g_CLK_STABLE_FREQ           => 100_000_000
+            g_CLK_STABLE_FREQ           => 100_000_000,
+            g_INST_BUFG_GT              => false
         )
         port map(
             clk_stable_i        => axil_clk,

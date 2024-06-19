@@ -10,8 +10,8 @@
 --                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
--- expected refclk is 160MHz
--- txoutclk 
+-- BEFE CONFIG TYPE QPLL_LPGBT
+-- BEFE CONFIG IGNORE QPLL1
 
 library ieee;
 use ieee.std_logic_1164.all;

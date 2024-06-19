@@ -72,13 +72,13 @@ package csc_pkg is
         evtfifo_full            : std_logic;
         evtfifo_underflow       : std_logic;
         evtfifo_near_full_cnt   : std_logic_vector(15 downto 0);
-        evtfifo_wr_rate         : std_logic_vector(16 downto 0);
+        evtfifo_wr_rate         : std_logic_vector(19 downto 0);
         infifo_empty            : std_logic;
         infifo_near_full        : std_logic;
         infifo_full             : std_logic;
         infifo_underflow        : std_logic;
         infifo_near_full_cnt    : std_logic_vector(15 downto 0);
-        infifo_wr_rate          : std_logic_vector(14 downto 0);
+        infifo_wr_rate          : std_logic_vector(29 downto 0);
         tts_state               : std_logic_vector(3 downto 0);
         err_event_too_big       : std_logic;
         err_evtfifo_full        : std_logic;
@@ -106,7 +106,7 @@ package csc_pkg is
         empty         : std_logic;
         valid         : std_logic;
         underflow     : std_logic;
-        data_cnt      : std_logic_vector(13 downto 0);
+        data_cnt      : std_logic_vector(15 downto 0);
     end record;
 
     type t_chamber_infifo_rd_array is array(integer range <>) of t_chamber_infifo_rd;
@@ -143,10 +143,10 @@ package csc_pkg is
 
     type t_alct_switches is record
         ------ ALCT board switches ------
-        prog_dis        : std_logic; -- TODO: not sure at this time, need to check schematics, most likely disables program_b when high | default = 0
-        gbt_override    : std_logic; -- when high overrides the switches | default = 1
-        sel_gbt_cclk    : std_logic; -- TODO: not sure at this time, need to check schematics, most likely selects cclk from gbt or prom | default = 1
-        sel_gbt_xprm    : std_logic; -- TODO: not sure at this time, need to check schematics, most likely selects either gbt or prom as the programming source | default = 1
+        prog_dis        : std_logic; -- when high disables PROB_B control through the GBT
+        gbt_override    : std_logic; -- when high overrides the switches
+        sel_gbt_cclk    : std_logic; -- when high selects GBTX deskew clock for CCLK
+        sel_gbt_xprm    : std_logic; -- when high selects GBTX as the programming source
     end record;
 	
 end csc_pkg;

@@ -2,13 +2,17 @@
 -- Company: TAMU
 -- Engineer: Evaldas Juska (evaldas.juska@cern.ch, evka85@gmail.com)
 -- 
--- Create Date:    2021-06-02
--- Module Name:    gty_qpll_trig_3p2
--- Description:    This is a wrapper for a GTY QPLL that can be used with a trigger 3.2Gb/s GTY channel.
+-- Create Date:    2023-10-25
+-- Module Name:    gty_qpll_trig_4p0
+-- Description:    This is a wrapper for a GTY QPLL that can be used with a trigger 4.0Gb/s GTY channel.
 --                 Only QPLL0 is used
 --                 QPLL0 requires a 160MHz LHC freq refclck
+--                 User clk is 200MHz
 --                 Only one refclk for each QPLL is used based on g_QPLL0_REFCLK_01 and g_QPLL1_REFCLK_01 generics
 ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- BEFE CONFIG TYPE QPLL_4P0G
+-- BEFE CONFIG IGNORE QPLL1
 
 library ieee;
 use ieee.std_logic_1164.all;

@@ -164,7 +164,8 @@ CONFIG_ME0_GBT_VER = {
 #            CSC configuration
 # =================================================================================================
 
-CONFIG_CSC_PROMLESS_BITFILE = BEFE_SCRIPTS_DIR + "/resources/csc_promless.bit"
+CONFIG_CSC_XDCFEB_BITFILE = BEFE_SCRIPTS_DIR + "/resources/csc_xdcfeb.bit"
+CONFIG_CSC_ALCT_BITFILE = BEFE_SCRIPTS_DIR + "/resources/csc_alct.bit"
 
 # =================================================================================================
 #            DAQ configuration

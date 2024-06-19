@@ -48,7 +48,9 @@ package mgt_pkg is
                              QPLL_25GBE_156,
                              QPLL0_TRIG_3P2_QPLL1_10GBE,
                              QPLL0_10GBE_QPLL1_GBTX,
-                             QPLL_4P0G); -- note: update address table ENUM when updating this
+                             QPLL_4P0G,
+                             QPLL0_4P0G_QPLL1_GBTX,
+                             QPLL0_TRIG_4P0_QPLL1_10GBE); -- note: update address table ENUM when updating this
 
     type t_mgt_type_config is record
         link_type               : t_mgt_link_type;          -- type of MGT to instantiate
@@ -205,6 +207,8 @@ package mgt_pkg is
         rxprbssel      : std_logic_vector(2 downto 0);
         rxpd           : std_logic_vector(1 downto 0);
         rxrate         : std_logic_vector(2 downto 0);
+        gtrxresetsel   : std_logic;
+        rxphalignreset : std_logic;
     end record;
 
     type t_mgt_rx_fast_ctrl is record
@@ -245,11 +249,41 @@ package mgt_pkg is
         loopback       : std_logic_vector(2 downto 0);
         eyescanreset   : std_logic;
         eyescantrigger : std_logic;
+        
+--        GTTXRESETSEL   : std_logic;
+        
+--        -- CDR ports (for debugging)
+--        RXCDRFREQRESET : std_logic;
+--        RXCDRHOLD      : std_logic;
+--        RXCDROVRDEN    : std_logic;
+--        RXCDRRESET     : std_logic;
+--        RXCDRRESETRSV  : std_logic;
+--        INCPCTRL       : std_logic;
+--        CDRSTEPSX      : std_logic;
+--        CDRSTEPSQ      : std_logic;
+--        CDRSTEPDIR     : std_logic;
+        
+--        -- EQ ports (for debugging)
+--        RXDFELPMRESET  : std_logic;
+--        RXOSHOLD       : std_logic;
+--        RXOSOVRDEN     : std_logic;
+--        RXLPMLFHOLD    : std_logic;
+--        RXLPMLFKLOVRDEN: std_logic;
+--        RXLPMHFHOLD    : std_logic;
+--        RXLPMHFOVRDEN  : std_logic;
+--        RXLPMOSHOLD    : std_logic;
+--        RXLPMOSOVRDEN  : std_logic;
+--        RXLPMGCHOLD    : std_logic;
+--        RXLPMGCOVRDEN  : std_logic;
     end record;
 
     type t_mgt_misc_status is record
         eyescandataerror : std_logic;
         powergood        : std_logic;
+        
+--        -- CDR ports (for debugging)
+--        RXCDRLOCK        : std_logic;
+--        RXCDRPHDONE      : std_logic;
     end record;
 
     type t_drp_mosi_arr is array (integer range <>) of t_drp_mosi;
