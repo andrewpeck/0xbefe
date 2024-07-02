@@ -249,7 +249,8 @@ begin
 
         gen_use_rx_sync_fifos : if g_USE_RX_SYNC_FIFOS generate
 
-            signal had_unf : std_logic;
+            signal had_unf       : std_logic;
+            signal fifo_rd_count : std_logic_vector(6 downto 0);
 
         begin
 
@@ -264,15 +265,16 @@ begin
                     g_REGISTER_OUTPUT   => true
                 )
                 port map(
-                    reset_i     => rx_sync_reset(i),
-                    wr_clk_i    => rx_word_clk_arr_i(i),
-                    rd_clk_i    => rx_word_common_clk_i,
-                    din_i       => rx_header_flag(i) & rx_mgt_data(i),
-                    valid_i     => '1',
-                    dout_o      => rx_mgt_data_sync(i),
-                    valid_o     => rx_sync_valid(i),
-                    overflow_o  => rx_sync_ovf(i),
-                    underflow_o => rx_sync_unf(i)
+                    reset_i         => rx_sync_reset(i),
+                    wr_clk_i        => rx_word_clk_arr_i(i),
+                    rd_clk_i        => rx_word_common_clk_i,
+                    din_i           => rx_header_flag(i) & rx_mgt_data(i),
+                    valid_i         => '1',
+                    dout_o          => rx_mgt_data_sync(i),
+                    valid_o         => rx_sync_valid(i),
+                    overflow_o      => rx_sync_ovf(i),
+                    underflow_o     => rx_sync_unf(i),
+                    fifo_rd_count_o => fifo_rd_count
                 );
 
             i_gbt_rx_sync_ovf_latch : entity work.latch
@@ -292,6 +294,7 @@ begin
                 );
 
             link_status_arr_o(i).gbt_rx_sync_status.had_unf <= had_unf when rising_edge(rx_frame_clk_i);
+            link_status_arr_o(i).gbt_rx_sync_status.fifo_rd_count <= fifo_rd_count when rising_edge(rx_frame_clk_i);
 
         end generate;
 
@@ -302,6 +305,7 @@ begin
             rx_sync_valid(i) <= '1';
             link_status_arr_o(i).gbt_rx_sync_status.had_ovf <= '0';
             link_status_arr_o(i).gbt_rx_sync_status.had_unf <= '0';
+            link_status_arr_o(i).gbt_rx_sync_status.fifo_rd_count <= (others => '0');
         end generate;
 
     end generate;

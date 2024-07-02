@@ -302,6 +302,7 @@ package common_pkg is
     type t_sync_fifo_status is record
         had_ovf         : std_logic;
         had_unf         : std_logic;
+        fifo_rd_count   : std_logic_vector(6 downto 0);
     end record;
 
     type t_gbt_link_status is record

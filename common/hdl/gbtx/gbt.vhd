@@ -191,15 +191,16 @@ begin                                   --========####   Architecture Body   ###
                     g_FIFO_WAIT_NOT_EMPTY => true
                 )
                 port map(
-                    reset_i     => reset_i or not mgt_status_arr_i(i).rx_reset_done,
-                    wr_clk_i    => rx_word_clk_arr_i(i),
-                    rd_clk_i    => rx_word_clk_arr(i),
-                    din_i       => mgt_rx_data_arr_i(i),
-                    valid_i     => '1',
-                    dout_o      => mgt_rx_data_arr(i),
-                    valid_o     => mgt_rx_sync_valid_arr(i),
-                    overflow_o  => rx_ovf_arr(i),
-                    underflow_o => rx_unf_arr(i)
+                    reset_i         => reset_i or not mgt_status_arr_i(i).rx_reset_done,
+                    wr_clk_i        => rx_word_clk_arr_i(i),
+                    rd_clk_i        => rx_word_clk_arr(i),
+                    din_i           => mgt_rx_data_arr_i(i),
+                    valid_i         => '1',
+                    dout_o          => mgt_rx_data_arr(i),
+                    valid_o         => mgt_rx_sync_valid_arr(i),
+                    overflow_o      => rx_ovf_arr(i),
+                    underflow_o     => rx_unf_arr(i),
+                    fifo_rd_count_o => link_status_arr_o(i).gbt_rx_sync_status.fifo_rd_count
                 );
 
             i_sync_ovf : entity work.synch generic map(N_STAGES => 2) port map(async_i => rx_ovf_arr(i), clk_i   => rx_word_clk_arr(i), sync_o  => rx_ovf_sync_arr(i));
@@ -228,6 +229,7 @@ begin                                   --========####   Architecture Body   ###
 
             link_status_arr_o(i).gbt_rx_sync_status.had_ovf <= '0';
             link_status_arr_o(i).gbt_rx_sync_status.had_unf <= '0';
+            link_status_arr_o(i).gbt_rx_sync_status.fifo_rd_count <= (others => '0');
             mgt_rx_sync_valid_arr(i) <= '1';
 
             -- we use a bitslipper here to delay the data from the MGT, the pattern finder will then use rxslide to shift the user clock to align the frame

@@ -11,8 +11,9 @@ library xpm;
 use xpm.vcomponents.all;
 
 library ieee;
-use ieee.std_logic_1164.all;
+use ieee.math_real.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
 
 entity gearbox is
     generic(
@@ -21,18 +22,20 @@ entity gearbox is
         g_OUTPUT_DATA_WIDTH     : integer := 16;
         g_HIGH_WORD_FIRST       : boolean := true; -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior)
         g_REGISTER_OUTPUT       : boolean := false;
-        g_FIFO_WAIT_NOT_EMPTY   : boolean := false -- if set to true, and using FIFO implementation, the rd_en is delayed until empty is asserted low after reset
+        g_FIFO_WAIT_NOT_EMPTY   : boolean := false; -- if set to true, and using FIFO implementation, the rd_en is delayed until empty is asserted low after reset
+        g_FIFO_RD_COUNT_WIDTH   : positive := positive(ceil(log2(real(64*g_INPUT_DATA_WIDTH/g_OUTPUT_DATA_WIDTH)))) + 1 -- DONT TOUCH
     );
     port(
-        reset_i     : in  std_logic;
-        wr_clk_i    : in  std_logic;
-        rd_clk_i    : in  std_logic;
-        din_i       : in  std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
-        valid_i     : in  std_logic;
-        dout_o      : out std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
-        valid_o     : out std_logic;
-        overflow_o  : out std_logic;
-        underflow_o : out std_logic
+        reset_i         : in  std_logic;
+        wr_clk_i        : in  std_logic;
+        rd_clk_i        : in  std_logic;
+        din_i           : in  std_logic_vector(g_INPUT_DATA_WIDTH - 1 downto 0);
+        valid_i         : in  std_logic;
+        dout_o          : out std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+        valid_o         : out std_logic;
+        overflow_o      : out std_logic;
+        underflow_o     : out std_logic;
+        fifo_rd_count_o : out std_logic_vector(g_FIFO_RD_COUNT_WIDTH - 1 downto 0)
     );
 end gearbox;
 
@@ -47,9 +50,10 @@ architecture gearbox_arch of gearbox is
     signal reset_rd     : std_logic;
     signal rd_en        : std_logic;
 
-    signal dout_reg     : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
-    signal valid_reg    : std_logic;
-    signal underflow_reg: std_logic;
+    signal dout_reg          : std_logic_vector(g_OUTPUT_DATA_WIDTH - 1 downto 0);
+    signal valid_reg         : std_logic;
+    signal underflow_reg     : std_logic;
+    signal fifo_rd_count_reg : std_logic_vector(g_FIFO_RD_COUNT_WIDTH - 1 downto 0);
 
     signal wr_rst_busy  : std_logic;
     signal rd_rst_busy  : std_logic;
@@ -65,6 +69,7 @@ begin
                 dout_o <= dout_reg;
                 valid_o <= valid_reg;
                 underflow_o <= underflow_reg;
+                fifo_rd_count_o <= fifo_rd_count_reg;
             end if;
         end process;
         
@@ -74,6 +79,7 @@ begin
         dout_o <= dout_reg;
         valid_o <= valid_reg;
         underflow_o <= underflow_reg;
+        fifo_rd_count_o <= fifo_rd_count_reg;
     end generate;
 
     -- do not change the word order
@@ -131,10 +137,11 @@ begin
                 READ_MODE           => "std",
                 FIFO_READ_LATENCY   => 1,
                 FULL_RESET_VALUE    => 0,
-                USE_ADV_FEATURES    => "1101", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 0; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+                USE_ADV_FEATURES    => "1501", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
                 READ_DATA_WIDTH     => g_OUTPUT_DATA_WIDTH,
                 CDC_SYNC_STAGES     => 2,
-                DOUT_RESET_VALUE    => "0"
+                DOUT_RESET_VALUE    => "0",
+                RD_DATA_COUNT_WIDTH => g_FIFO_RD_COUNT_WIDTH
             )
             port map(
                 sleep         => '0',
@@ -154,7 +161,7 @@ begin
                 dout          => dout,
                 empty         => empty,
                 prog_empty    => open,
-                rd_data_count => open,
+                rd_data_count => fifo_rd_count_reg,
                 underflow     => underflow_reg,
                 rd_rst_busy   => rd_rst_busy,
                 almost_empty  => open,
