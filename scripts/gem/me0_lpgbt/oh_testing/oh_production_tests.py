@@ -22,6 +22,7 @@ from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 oh_testing_dir = scripts_gem_dir + '/me0_lpgbt/oh_testing'
 input_fn = oh_testing_dir + '/resources/input_geb.txt'
+webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
 
 geb_oh_map = {}
 for slot in range(1,9):
@@ -34,7 +35,20 @@ for slot in range(1,9):
 # Constant for missing val
 NULL = -9999
 
+# Flag for sending notifications
+notify_bool = False
+
 if __name__ == "__main__":
+
+    try:
+        if sys.argv[1] in ['-n','--notify']:
+            from notify import *
+            notify_bool = True
+            slack = SlackNotifier(webhook_dir)
+            print('Notifications Enabled')
+    except IndexError:
+        pass
+
     geb_dict         = {}
     input_oh_dict    = {}
     input_vtrxp_dict = {}
@@ -85,6 +99,9 @@ if __name__ == "__main__":
     oh_sn_list = []
     for slot,oh_sn in geb_dict.items():
         oh_sn_list.append(oh_sn)
+
+    if notify_bool:
+        slack.notify('Starting GEB Test for OH SNs: '+ ', '.join(oh_sn_list))
     
     oh_gbt_vfat_map = {}
     oh_ver_dict = {}
@@ -202,6 +219,9 @@ if __name__ == "__main__":
                         print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                         logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                        
         while test_failed:
+            if notify_bool:
+                slack.notify('GEB Initialization Failed')
+
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
                 print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
@@ -2782,6 +2802,10 @@ if __name__ == "__main__":
     time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    #Send message to Slack
+    if notify_bool:    
+        slack.notify('GEB Production Test Finished')
 
     print('Time taken to perform %s tests: %.3f'%(test_type.replace('_','-'),(time.time()-t0)/60))
     logfile.write('Time taken to perform %s tests: %.3f\n'%(test_type.replace('_','-'),(time.time()-t0)/60))
