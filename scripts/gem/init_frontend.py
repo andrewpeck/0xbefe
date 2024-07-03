@@ -67,7 +67,7 @@ def init_gem_frontend():
                 gbt_command(oh, gbt, "config", [gbt_config])
 
         print("Resetting SCAs")
-        write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET", 1)
+        write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET", 0xffff)
 
         print("Sending a hard-reset")
         gem_hard_reset()

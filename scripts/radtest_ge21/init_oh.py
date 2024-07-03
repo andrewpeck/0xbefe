@@ -24,17 +24,17 @@ def main():
     parse_xml()
 
     myprint("Init")
-    write_reg(get_node('BEFE.GEM.TTC.GENERATOR.ENABLE'), 1)
-    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 1)
 
     myprint("Configuring GBT0")
     subprocess.call(["python", BEFE_ROOT + "/scripts/gem/gbt.py", "0", "0", "config", GBT0_CONFIG_FILE])
 
     myprint("Resetting SCA")
-    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0xffff)
 
     myprint("Sending a hard reset")
-    write_reg(get_node('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
+    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.OH_EXT_RESET'), 0xffff)
+    sleep(0.02) # Wait until INIT_B goes up
+    write_reg(get_node('BEFE.GEM.PROMLESS.GO"'), 1)
 
     sleep(0.3)
 

@@ -82,14 +82,15 @@ architecture slow_control_arch of slow_control is
     --============ SCA ============--
     
     -- general
-    signal sca_reset                : std_logic;
-    signal sca_reset_mask           : std_logic_vector(15 downto 0);
+    signal sca_reset_en             : std_logic;
+    signal sca_reset_mask           : std_logic_vector(31 downto 0); -- sized for w/o register
     signal sca_ready_arr            : std_logic_vector(15 downto 0);
     signal sca_critical_error_arr   : std_logic_vector(15 downto 0);
-    signal sca_ttc_hr_enable        : std_logic_vector(15 downto 0);
     
     -- manual commands
-    signal manual_hard_reset            : std_logic;
+    signal oh_ext_reset_en              : std_logic;
+    signal oh_ext_reset_mask            : std_logic_vector(31 downto 0); -- sized for w/o register
+
     signal sca_user_command             : t_sca_command;
     signal sca_user_command_en          : std_logic;
     signal sca_user_command_en_mask     : std_logic_vector(15 downto 0); -- command_en signal will only be sent to the channels that are enabled in this bitmask
@@ -165,7 +166,7 @@ begin
                 g_DEBUG => false --(i = 0)
             )
             port map(
-                reset_i                     => reset_i or (sca_reset and sca_reset_mask(i)),
+                reset_i                     => reset_i or (sca_reset_en and sca_reset_mask(i)),
                 gbt_clk_40_i                => ttc_clk_i.clk_40,
                 clk_80_i                    => ttc_clk_i.clk_80,
             
@@ -173,7 +174,7 @@ begin
                 gbt_rx_sca_elink_i          => gbt_rx_sca_elinks_i(i),
                 gbt_tx_sca_elink_o          => gbt_tx_sca_elinks_o(i),
             
-                hard_reset_i                => manual_hard_reset or (ttc_cmds_i.hard_reset and sca_ttc_hr_enable(i)),
+                oh_ext_reset_i              => oh_ext_reset_en and oh_ext_reset_mask(i),
             
                 user_command_i              => sca_user_command,
                 user_command_en_i           => sca_user_command_en and sca_user_command_en_mask(i),

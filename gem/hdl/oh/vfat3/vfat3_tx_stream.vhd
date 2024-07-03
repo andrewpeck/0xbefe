@@ -39,13 +39,11 @@ end vfat3_tx_stream;
 architecture vfat3_tx_stream_arch of vfat3_tx_stream is
     
     constant SYNC_VERIFY_TIMEOUT: unsigned(11 downto 0) := unsigned(C_TTC_NUM_BXs);
-    constant BEFORE_SYNC_TIMEOUT: unsigned(11 downto 0) := x"fff";
     
-    type t_state is (WAIT_BEFORE_SYNC, SYNC, SET_COMMPORT_MODE, RUNNING);
+    type t_state is (SYNC, SET_COMMPORT_MODE, RUNNING);
     
     signal state                : t_state := SYNC;
     signal sync_countdown       : unsigned(1 downto 0) := "10";
-    signal before_sync_countdown: unsigned(11 downto 0) := BEFORE_SYNC_TIMEOUT;
     signal sync_verify_countdown: unsigned(11 downto 0) := SYNC_VERIFY_TIMEOUT;
     
     signal idle_word            : std_logic_vector(7 downto 0) := x"00";
@@ -66,15 +64,8 @@ begin
                 sync_countdown <= "10";
                 current_sc_only_mode <= '0';
                 sync_verify_countdown <= SYNC_VERIFY_TIMEOUT;
-                before_sync_countdown <= BEFORE_SYNC_TIMEOUT;
             else
-                if (state = WAIT_BEFORE_SYNC) then
-                    data_o <= idle_word;
-                    before_sync_countdown <= before_sync_countdown - 1;
-                    if (before_sync_countdown = x"000") then
-                        state <= SYNC;
-                    end if;
-                elsif (state = SYNC) then
+                if (state = SYNC) then
                     data_o <= VFAT3_SYNC_WORD;
                     idle_o <= '0';
                     sync_o <= '1';
@@ -98,12 +89,7 @@ begin
                     sync_o <= '0';
                     sync_verify_o <= '0';
                     
-                    if (ttc_cmds_i.hard_reset = '1') then
-                        data_o <= idle_word;
-                        sync_countdown <= "10";
-                        before_sync_countdown <= BEFORE_SYNC_TIMEOUT;
-                        state <= WAIT_BEFORE_SYNC;
-                    elsif (ttc_cmds_i.resync = '1') then
+                    if (ttc_cmds_i.resync = '1') then
                         data_o <= VFAT3_RESYNC_WORD;
                     elsif (ttc_cmds_i.l1a = '1' and ttc_cmds_i.ec0 = '1') then
                         data_o <= VFAT3_L1A_EC0_WORD;
@@ -141,7 +127,6 @@ begin
                     sync_verify_o <= '0';
                     data_o <= idle_word;
                     
-                    before_sync_countdown <= BEFORE_SYNC_TIMEOUT;
                     sync_countdown <= "10";
                     state <= SYNC;
                 end if;

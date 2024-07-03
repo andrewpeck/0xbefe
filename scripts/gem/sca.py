@@ -99,7 +99,7 @@ def main():
 
     if instructions == 'r':
         subheading('Reseting the SCA')
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0xffff)
         checkScaStatus(ohList)
     elif instructions == 'hh':
         sleep(0.01)
@@ -107,7 +107,7 @@ def main():
         sendScaCommand(ohList, 0x2, 0x10, 0x4, 0x0, False)
     elif instructions == 'h':
         subheading('Issuing FPGA Hard Reset')
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.OH_FPGA_HARD_RESET'), 0x1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.OH_EXT_RESET'), 0xffff)
     elif 'fpga-id' in instructions:
         enableJtag(ohMask)
 
@@ -726,7 +726,7 @@ def checkScaStatus(ohList):
 
 def resetSca():
     # reset SCA
-    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 1)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 0xffff)
 
 def debug(string):
     if DEBUG:

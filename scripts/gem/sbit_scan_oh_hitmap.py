@@ -211,7 +211,7 @@ def sbit_phase_scan(ohN, vfatNMin = 0, vfatNMax=11, verbose=False, print_result=
             print("####################################################################################################")
             print("")
 
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0xffff)
         gem.gem_hard_reset()
         sleep(0.3)
         gem.gem_link_reset()

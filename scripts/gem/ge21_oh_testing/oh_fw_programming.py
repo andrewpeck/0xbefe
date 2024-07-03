@@ -55,8 +55,6 @@ def program_fw_single(verbose=False):
             ohList.append(i)
 
         write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
-        write_reg('BEFE.GEM.TTC.GENERATOR.ENABLE', 0x1)
-        write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
         if verbose:
             subheading('Disabling monitoring')
         sleep(0.1)
@@ -103,7 +101,7 @@ def program_fw_single(verbose=False):
             sleep(0.01)
             if verbose:
                 subheading('Executing PROMless programming')
-            write_reg('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
+            write_reg('BEFE.GEM.PROMLESS.GO', 1)
             sleep(0.1)
 
             readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
@@ -129,8 +127,6 @@ def program_fw_iter(num_iter, verbose=False):
             ohList.append(i)
 
     write_reg('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK', ohMask)
-    write_reg('BEFE.GEM.TTC.GENERATOR.ENABLE', 0x1)
-    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN', 0x0)
 
     sleep(0.1)
 
@@ -179,7 +175,7 @@ def program_fw_iter(num_iter, verbose=False):
 
         if verbose:
             subheading('Executing PROMless programming')
-        write_reg('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET', 0x1)
+        write_reg('BEFE.GEM.PROMLESS.GO', 1)
         sleep(0.1)
 
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)

@@ -101,7 +101,6 @@ def vfat_sbit(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, par
     sleep(1)
 
     # Configure TTC generator
-    #write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET"), 1)
     ttc_cnt_reset_node = get_backend_node("BEFE.GEM.TTC.CTRL.MODULE_RESET")
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     if calpulse_only:

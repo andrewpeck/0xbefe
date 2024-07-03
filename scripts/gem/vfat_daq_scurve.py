@@ -100,7 +100,6 @@ def vfat_scurve(gem, system, oh_select, vfat_list, channel_list, set_cal_mode, p
     sleep(1)
 
     # Configure TTC generator
-    #write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.RESET"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.ENABLE"), 1)
     write_backend_reg(get_backend_node("BEFE.GEM.TTC.GENERATOR.CYCLIC_L1A_GAP"), l1a_bxgap)

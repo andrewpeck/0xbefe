@@ -37,7 +37,8 @@ entity sca_controller is
         gbt_tx_sca_elink_o      : out std_logic_vector(1 downto 0);
         
         -- control signals
-        hard_reset_i            : in  std_logic;     -- hard-reset request
+        oh_ext_reset_i          : in  std_logic;     -- external OH reset request
+
         user_command_i          : in  t_sca_command; -- custom user command request
         user_command_en_i       : in  std_logic;     -- pulse this to execute the custom user command
         user_reply_o            : out t_sca_reply;   -- reply to the user custom command
@@ -90,7 +91,7 @@ architecture sca_controller_arch of sca_controller is
 
     -------------- types and constants -------------- 
 
-    type top_state_t is (SCA_RESET, SCA_CONFIGURE, IDLE, SET_HARD_RESET, UNSET_HARD_RESET, USER_COMMAND, JTAG_SHIFT, JTAG_SET_LENGTH, JTAG_GO, ERROR);
+    type top_state_t is (SCA_RESET, SCA_CONFIGURE, IDLE, SET_OH_EXT_RESET, UNSET_OH_EXT_RESET, USER_COMMAND, JTAG_SHIFT, JTAG_SET_LENGTH, JTAG_GO, ERROR);
     type transaction_state_t is (INIT, IDLE, WAIT_FOR_TX, WAIT_FOR_REPLY, WAIT_FOR_SCA_RESET, CLOSE_TRANSACTION);
 
     constant CNT_EN_DELAY         : unsigned(15 downto 0) := x"1bd8"; -- delay after reset (in clk80 cycles) after which the counters are started
@@ -111,7 +112,7 @@ architecture sca_controller_arch of sca_controller is
     signal user_reply_valid     : std_logic;
     
     -- command request signals
-    signal hard_reset_req       : std_logic;
+    signal oh_ext_reset_req     : std_logic;
     signal user_command_req     : std_logic;
         
     -- transaction fsm signals
@@ -168,7 +169,7 @@ architecture sca_controller_arch of sca_controller is
     signal jtag_async_tdo_en    : std_logic;                 -- used to latch in a TDO shift command in async mode so that the command can be executed after the previous command is completed
     
     -- debug
-    signal hard_reset_i_sync    : std_logic;
+    signal oh_ext_reset_i_sync     : std_logic;
     signal user_command_en_i_sync  : std_logic;
     
 begin
@@ -231,13 +232,13 @@ begin
                 sca_reset_req <= '0';
                 sca_config_idx <= 0;
                 user_reply_valid <= '0';
-                hard_reset_req <= '0';
+                oh_ext_reset_req <= '0';
                 user_command_req <= '0';
                 jtag_sca_cmd_done <= '0';
             else
                 
-                if (hard_reset_i_sync = '1') then
-                    hard_reset_req <= '1';
+                if (oh_ext_reset_i_sync = '1') then
+                    oh_ext_reset_req <= '1';
                 end if;
                 if (user_command_en_i_sync = '1') then
                     user_command_req <= '1';
@@ -275,8 +276,8 @@ begin
                         end if;
 
                     when IDLE =>                        
-                        if (hard_reset_req = '1') then
-                            top_state <= SET_HARD_RESET;
+                        if (oh_ext_reset_req = '1') then
+                            top_state <= SET_OH_EXT_RESET;
                         elsif (user_command_req = '1') then
                             top_state <= USER_COMMAND;
                         elsif (jtag_sca_cmd_req = '1') then
@@ -285,7 +286,7 @@ begin
                         
                         user_reply_valid <= '0';
                         
-                    when SET_HARD_RESET =>
+                    when SET_OH_EXT_RESET =>
                         if (trans_done = '0') and (trans_error = '0') then
                             trans_en <= '1';
                             tx_sca_command.channel <= SCA_CHANNEL_GPIO;
@@ -298,11 +299,11 @@ begin
                         else
                             trans_en <= '0';
                             if (trans_en = '0') then
-                                top_state <= UNSET_HARD_RESET;
+                                top_state <= UNSET_OH_EXT_RESET;
                             end if;
                         end if;
                         
-                    when UNSET_HARD_RESET =>
+                    when UNSET_OH_EXT_RESET =>
                         if (trans_done = '0') and (trans_error = '0') then
                             trans_en <= '1';
                             tx_sca_command.channel <= SCA_CHANNEL_GPIO;
@@ -315,7 +316,7 @@ begin
                         else
                             trans_en <= '0';
                             top_state <= IDLE;
-                            hard_reset_req <= '0';
+                            oh_ext_reset_req <= '0';
                         end if;
                         
                     when USER_COMMAND =>
@@ -790,15 +791,15 @@ begin
             sync_o  => reset40
         );
 
-    i_hard_reset_i_sync_clk_80: 
+    i_oh_ext_reset_i_sync_clk_80:
     entity work.synch
         generic map(
             N_STAGES => 2
         )
         port map(
-            async_i => hard_reset_i,
+            async_i => oh_ext_reset_i,
             clk_i   => clk_80_i,
-            sync_o  => hard_reset_i_sync
+            sync_o  => oh_ext_reset_i_sync
         );
         
     i_user_command_en_i_sync_clk_80: 
@@ -857,7 +858,7 @@ begin
                 probe1  => std_logic_vector(to_unsigned(top_state_t'pos(top_state), 4)),
                 probe2  => std_logic_vector(to_unsigned(transaction_state_t'pos(trans_state), 3)),
                 probe3  => sca_reset_req,
-                probe4  => hard_reset_req,
+                probe4  => oh_ext_reset_req,
                 probe5  => user_command_req,
                 probe6  => tx_transaction_id,
                 probe7  => tx_sca_command.channel,

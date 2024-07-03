@@ -47,7 +47,7 @@ def read_SCA_Status(verbose=False):
     return Status_Reg
 
 def SCA_reset():
-    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 1)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 0xffff)
     return
 
 def Check_SCA_Flags(SCA_Status, verbose=False):
@@ -100,7 +100,7 @@ def check_SCA_ASIC():
     passFAIL = True
 
     # clear error counters + reset SCA
-    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 1)
+    write_reg('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET', 0xffff)
 
     if read_reg('BEFE.GEM.SLOW_CONTROL.SCA.STATUS.READY') != 1:
         print("FAIL: SCA ASIC not READY!")

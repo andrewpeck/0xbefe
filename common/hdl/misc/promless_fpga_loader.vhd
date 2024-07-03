@@ -17,7 +17,8 @@ use work.common_pkg.all;
 
 entity promless_fpga_loader is
     generic(
-        g_LOADER_CLK_80_MHZ : boolean := true -- if this is set to false then 40MHz operation is assumed and loader_clk_i must be supplied with 40MHz clock instead of 80MHz
+        g_WAIT_FOR_INIT     : boolean := true; -- if this is set to true, the PROM-less loader will wait ~2ms before programming the FPGA
+        g_LOADER_CLK_80_MHZ : boolean := true  -- if this is set to false then 40MHz operation is assumed and loader_clk_i must be supplied with 40MHz clock instead of 80MHz
     );    
     port (
         reset_i             : in  std_logic;
@@ -29,7 +30,7 @@ entity promless_fpga_loader is
         from_promless_i     : in  t_from_promless;
         
         elink_data_o        : out std_logic_vector(15 downto 0);
-        hard_reset_i        : in std_logic;
+        promless_go_i       : in std_logic;
         
         promless_stats_o    : out t_promless_stats;
         promless_cfg_i      : in  t_promless_cfg
@@ -63,15 +64,13 @@ architecture Behavioral of promless_fpga_loader is
         );
     end component;
 
-    ------------- signals -------------
+    ------------- constants -------------
 
---    constant FIRMWARE_SIZE      : unsigned(31 downto 0) := x"0029b1f9"; -- 16bit words for 80MHz
---    constant FIRMWARE_SIZE      : unsigned(31 downto 0) := x"005363f2"; -- 8bit words for 40MHz
-    --constant FIRMWARE_SIZE      : unsigned(31 downto 0) := x"00756767"; -- TODO: only need 32 bits for testing, in normal operation 24 bits should be fine, for 160T the size = x"536403", for 195T the size = x"756767"
---    constant FIRMWARE_SIZE      : unsigned(31 downto 0) := x"00947ab7"; -- 8bit words for 40MHz
     constant WAIT_DATA_TIMEOUT  : unsigned(31 downto 0) := x"00001f40"; -- TODO: should be around 100us
     constant WAIT_INIT_TIMEOUT  : unsigned(19 downto 0) := x"13880";    -- wait time for FPGA to initialize after PROG_B has been pulled low
     
+    ------------- signals -------------
+
     type t_state is (IDLE, RESET_OH, WAIT_FOR_INIT, PROGRAM);
     signal state            : t_state := IDLE;
     
@@ -82,10 +81,10 @@ architecture Behavioral of promless_fpga_loader is
     signal loading_started  : std_logic := '0';
     signal gap_detected     : std_logic := '0';
     
-    signal loader_en        : std_logic := '0';
-    signal hard_reset_local : std_logic := '0';
-    signal hard_reset       : std_logic := '0';
-    signal hard_reset_prev  : std_logic := '0';
+    signal loader_en         : std_logic := '0';
+    signal promless_go_local : std_logic := '0';
+    signal promless_go       : std_logic := '0';
+    signal promless_go_prev  : std_logic := '0';
     
     signal loader_data      : std_logic_vector(15 downto 0);
     signal loader_valid     : std_logic;
@@ -99,7 +98,7 @@ architecture Behavioral of promless_fpga_loader is
     
 begin
 
-    hard_reset <= hard_reset_i or hard_reset_local;
+    promless_go <= promless_go_i or promless_go_local;
 
     process(gbt_clk_i)
     begin
@@ -132,24 +131,17 @@ begin
                             gap_det_cnt <= gap_det_cnt + 1;
                         end if;
                         
-                        hard_reset_prev <= hard_reset;
-                        if ((hard_reset_prev = '0') and (hard_reset = '1')) then
-                            state <= RESET_OH;
+                        promless_go_prev <= promless_go;
+                        if ((promless_go_prev = '0') and (promless_go = '1')) then
+                            load_req_cnt <= load_req_cnt + 1;
+                            if (g_WAIT_FOR_INIT = true) then
+                                state <= WAIT_FOR_INIT;
+                            else
+                                state <= PROGRAM;
+                                loader_en <= '1';
+                            end if;
                         end if;
-                        
-                    -- reset the FPGA (pull PROG_B low)
-                    -- not really used anymore since SCA controller resets the FPGA on TTC hard reset
-                    when RESET_OH =>
-                        elink_data_o <= (others => '1');
-                        loader_en <= '0';
-                        loading_started <= '0';
-                        gap_detected <= '0';
-                        byte_cnt <= (others => '0');
-                        wait_data_timer <= (others => '0');
-                        wait_init_timer <= (others => '0');
-                        load_req_cnt <= load_req_cnt + 1;
-                        state <= WAIT_FOR_INIT; 
-                        
+
                     -- wait for the FPGA to initialize (until INIT_B goes high)
                     -- we use a fixed timer of 2ms here for now (measured time for virtex6 is ~1ms)
                     when WAIT_FOR_INIT =>
@@ -167,8 +159,7 @@ begin
                             state <= WAIT_FOR_INIT;
                             loader_en <= '0';
                         end if; 
-                                                
-                        
+
                     -- send the bitstream once the data becomes available from DDR3
                     when PROGRAM =>
                         if (loader_valid = '0') then
@@ -288,7 +279,7 @@ begin
             clk        => gbt_clk_i,
             probe_in0  => std_logic_vector(success_cnt(7 downto 0)),
             probe_in1  => std_logic_vector(fail_cnt(7 downto 0)),
-            probe_out0 => hard_reset_local
+            probe_out0 => promless_go_local
         );
 
 end Behavioral;

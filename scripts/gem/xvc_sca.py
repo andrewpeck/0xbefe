@@ -109,7 +109,7 @@ class jtag_sca:
         # pass
         # write_reg(get_node('BEFE.GEM.GEM_SYSTEM.CTRL.GLOBAL_RESET'), 1)
         # sleep(0.1)
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0xffff)
         sleep(0.1)
 
     def initJtagRegAddrs(self, oh):

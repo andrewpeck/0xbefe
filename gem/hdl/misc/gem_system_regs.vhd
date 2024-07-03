@@ -54,6 +54,7 @@ port(
     gbt_reset_o                 : out std_logic;
     manual_ipbus_reset_o        : out std_logic;
     
+    promless_go_o               : out std_logic;
     promless_stats_i            : in  t_promless_stats;
     promless_cfg_o              : out t_promless_cfg
 );

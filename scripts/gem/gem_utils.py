@@ -188,12 +188,9 @@ def gem_print_status():
     print(tf.generate_table(rows, cols, grid_style=FULL_TABLE_GRID_STYLE))
 
 def gem_hard_reset():
-    ttc_gen_en = read_reg("BEFE.GEM.TTC.GENERATOR.ENABLE")
-    write_reg("BEFE.GEM.TTC.GENERATOR.ENABLE", 1)
-    write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN", 0xffffffff)
-    write_reg("BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET", 1)
-    if ttc_gen_en != 1:
-        write_reg("BEFE.GEM.TTC.GENERATOR.ENABLE", ttc_gen_en)
+    write_reg("BEFE.GEM.SLOW_CONTROL.SCA.CTRL.OH_EXT_RESET", 0xffff)
+    sleep(0.02) # Wait until INIT_B goes up
+    write_reg("BEFE.GEM.PROMLESS.GO", 1)
 
 def gem_link_reset():
     write_reg("BEFE.GEM.GEM_SYSTEM.CTRL.LINK_RESET", 1)

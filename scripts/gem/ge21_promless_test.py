@@ -23,18 +23,8 @@ def main():
 
     parse_xml()
 
-#    readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)
-#    subheading('Read GPIO = %s' % hex(readData[0]))
-#    return
-
-#    subheading('Reseting the SCA')
-#    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0x1)
+    subheading('Configuring the SCA')
     write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.MANUAL_CONTROL.LINK_ENABLE_MASK'), ohMask)
-    write_reg(get_node('BEFE.GEM.TTC.GENERATOR.ENABLE'), 0x1)
-    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.TTC_HARD_RESET_EN'), 0x0)
-    subheading('Disabling monitoring')
-#    write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.ADC_MONITORING.MONITORING_OFF'), 0xffffffff)
-    sleep(0.1)
 
     gpio_dir = 0xff0fe0
     gpio_default_out = 0x60
@@ -75,7 +65,7 @@ def main():
         sleep(0.01)
 
         subheading('Executing PROMless programming')
-        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET'), 0x1)
+        write_reg(get_node('BEFE.GEM.PROMLESS.GO'), 1)
         sleep(0.1)
 
         readData = sendScaCommand(ohList, 0x2, 0x1, 0x1, 0x0, True)

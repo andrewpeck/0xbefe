@@ -507,7 +507,7 @@ begin
             to_promless_o    => to_promless_cfeb_o,
             from_promless_i  => from_promless_cfeb_i,
             elink_data_o     => promless_tx_data_cfeb,
-            hard_reset_i     => ttc_cmd.hard_reset,
+            promless_go_i    => ttc_cmd.hard_reset,
             promless_stats_o => promless_stats_cfeb,
             promless_cfg_i   => promless_cfg_cfeb
         );
@@ -523,7 +523,7 @@ begin
             to_promless_o    => to_promless_alct_o,
             from_promless_i  => from_promless_alct_i,
             elink_data_o     => promless_tx_data_alct, -- only 8 bits are used
-            hard_reset_i     => ttc_cmd.hard_reset,
+            promless_go_i    => ttc_cmd.hard_reset,
             promless_stats_o => promless_stats_alct,
             promless_cfg_i   => promless_cfg_alct
         );

@@ -23,9 +23,11 @@ def main():
 
     if DO_HARD_RESET:
         print("hard resetting the FPGA")
-        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 1)
-        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.ENABLE'), 1)
-        write_reg(get_node('BEFE.GEM.TTC.GENERATOR.SINGLE_HARD_RESET'), 1)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.MODULE_RESET'), 0xffff)
+        write_reg(get_node('BEFE.GEM.SLOW_CONTROL.SCA.CTRL.OH_EXT_RESET'), 0xffff)
+        sleep(0.02) # Wait until INIT_B goes up
+        write_reg(get_node('BEFE.GEM.PROMLESS.GO'), 1)
+
         print("waiting for the FPGA to load")
         sleep(SLEEP_AFTER_HARD_RESET)
         print("waiting for the SEM IP to initialize")

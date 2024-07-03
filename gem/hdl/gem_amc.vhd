@@ -270,6 +270,7 @@ architecture gem_amc_arch of gem_amc is
     signal loopback_gbt_test_en         : std_logic;
 
     --== Other ==--
+    signal promless_go                  : std_logic;
     signal promless_stats               : t_promless_stats;
     signal promless_cfg                 : t_promless_cfg;
     signal ipb_miso_arr                 : ipb_rbus_array(g_NUM_IPB_SLAVES - 1 downto 0) := (others => (ipb_rdata => (others => '0'), ipb_ack => '0', ipb_err => '0'));
@@ -306,7 +307,7 @@ begin
     reset <= (reset_i or reset_pwrup or manual_global_reset) when rising_edge(ttc_clocks_i.clk_40);
     ipb_reset <= ipb_reset_i or reset_pwrup or manual_ipbus_reset;
     ipb_miso_arr_o <= ipb_miso_arr;
-    link_reset <= manual_link_reset or ttc_cmd.hard_reset;
+    link_reset <= manual_link_reset;
 
     spy_tx_data_o <= spy_gbe_daq_data when spy_gbe_test_en = '0' else spy_gbe_test_data;
 
@@ -636,6 +637,7 @@ begin
             global_reset_o              => manual_global_reset,
             manual_ipbus_reset_o        => manual_ipbus_reset,
             gbt_reset_o                 => manual_gbt_reset,
+            promless_go_o               => promless_go,
             promless_stats_i            => promless_stats,
             promless_cfg_o              => promless_cfg
         );
@@ -913,6 +915,7 @@ begin
     g_use_oh_fpga_loader : if (g_GEM_STATION = 1) or (g_GEM_STATION = 2) generate
         i_oh_fpga_loader : entity work.promless_fpga_loader
             generic map(
+                g_WAIT_FOR_INIT     => false,
                 g_LOADER_CLK_80_MHZ => true
             )
             port map(
@@ -922,7 +925,7 @@ begin
                 to_promless_o    => to_promless_o,
                 from_promless_i  => from_promless_i,
                 elink_data_o     => promless_tx_data,
-                hard_reset_i     => ttc_cmd.hard_reset,
+                promless_go_i    => promless_go,
                 promless_stats_o => promless_stats,
                 promless_cfg_i   => promless_cfg
             );

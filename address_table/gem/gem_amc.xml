@@ -471,6 +471,9 @@
     <node id="LOADER_OVF_UNF_CNT" address="0x2" mask="0x0000ffff" permission="r"
           description="Number of times that the promless loader has reported a FIFO overflow or underflow (note, the counter is 16bit rolling)"
           fw_signal="promless_stats_i.loader_ovf_unf_cnt"/>
+    <node id="GO" address="0x3" permission="w"
+          description="Trigger one iteration of the OptoHybrid FPGA PROM-less programming. Affects any FPGA waiting for a configuration stream."
+          fw_write_pulse_signal="promless_go_o"/>
   </node>
 
   <node id="REG_ACCESS_MONITOR" address="0x500">
@@ -1315,17 +1318,13 @@
   <node id="SCA" address="0x0">
     <node id="CTRL" address="0x0">
       <node id="MODULE_RESET" address="0x0" permission="w"
-            description="SCA controller reset (coming out of module reset it will also reset and reconfigure the SCA chip)"
-            fw_write_pulse_signal="sca_reset"/>
-      <node id="OH_FPGA_HARD_RESET" address="0x1" permission="w"
-            description="Writing to this register will trigger OH FPGA hard reset"
-            fw_write_pulse_signal="manual_hard_reset"/>
-      <node id="TTC_HARD_RESET_EN" address="0x2" mask="0x0000ffff" permission="rw"
-            description="This is a bitmask (one bit per OH) that determines whether or not TTC hard reset commands are forwarded to the SCA to reset the OH FPGA (Nth bit set to 1 will enable TTC hard resets to the Nth OH)"
-            fw_signal="sca_ttc_hr_enable" fw_default="0xffff"/>
-      <node id="SCA_RESET_ENABLE_MASK" address="0x3" mask="0x0000ffff" permission="rw"
-            description="This bitmask defines which SCAs will be reset uppon receipt of MODULE_RESET command."
-            fw_signal="sca_reset_mask" fw_default="0xffff"/>
+            description="Writing a 1 to bit position N will trigger an SCA controller reset for OptoHybrid number N (this is a reset bitmask). Coming out of module reset it will also reset and reconfigure the SCA chip."
+            fw_signal="sca_reset_mask" fw_default="0xffff"
+            fw_write_pulse_signal="sca_reset_en"/>
+      <node id="OH_EXT_RESET" address="0x1" permission="w"
+            description="Writing a 1 to bit position N will trigger an external reset (FPGA and VFAT) for OptoHybrid number N (this is reset bitmask)."
+            fw_signal="oh_ext_reset_mask" fw_default="0xffff"
+            fw_write_pulse_signal="oh_ext_reset_en"/>
     </node>
 
     <node id="STATUS" address="0x100">
