@@ -22,7 +22,8 @@ entity gearbox is
         g_OUTPUT_DATA_WIDTH     : integer := 16;
         g_HIGH_WORD_FIRST       : boolean := true; -- if set to true then it will push and pop most significant words first (same as asymmetric FIFO IP), if false, it will do the oposite (like default asymmetric XPM FIFO behavior)
         g_REGISTER_OUTPUT       : boolean := false;
-        g_FIFO_WAIT_NOT_EMPTY   : boolean := false; -- if set to true, and using FIFO implementation, the rd_en is delayed until empty is asserted low after reset
+        g_FIFO_WAIT_NOT_EMPTY   : boolean := false; -- if set to true and using the FIFO implementation, the rd_en signal is delayed until empty is asserted low after reset
+        g_FIFO_WAIT_FILLED      : boolean := false; -- if set to true and using the FIFO implementation with g_FIFO_WAIT_NOT_EMPTY enabled, the rd_en signal is delayed until prog_empty is asserted low after reset (threshold set to 8)
         g_FIFO_RD_COUNT_WIDTH   : positive := positive(ceil(log2(real(64*g_INPUT_DATA_WIDTH/g_OUTPUT_DATA_WIDTH)))) + 1 -- DONT TOUCH
     );
     port(
@@ -58,6 +59,7 @@ architecture gearbox_arch of gearbox is
     signal wr_rst_busy  : std_logic;
     signal rd_rst_busy  : std_logic;
     signal empty        : std_logic;
+    signal prog_empty   : std_logic;
 
 begin
 
@@ -116,7 +118,9 @@ begin
                 if reset_rd = '1' or rd_rst_busy = '1' then
                     rd_en <= '0';
                 else
-                    if empty = '0' then
+                    if empty = '0' and not g_FIFO_WAIT_FILLED then
+                        rd_en <= '1';
+                    elsif prog_empty = '0' and g_FIFO_WAIT_FILLED then
                         rd_en <= '1';
                     end if;
                 end if;
@@ -137,10 +141,11 @@ begin
                 READ_MODE           => "std",
                 FIFO_READ_LATENCY   => 1,
                 FULL_RESET_VALUE    => 0,
-                USE_ADV_FEATURES    => "1501", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 0; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
+                USE_ADV_FEATURES    => "1701", -- VALID(12) = 1 ; AEMPTY(11) = 0; RD_DATA_CNT(10) = 1; PROG_EMPTY(9) = 1; UNDERFLOW(8) = 1; -- WR_ACK(4) = 0; AFULL(3) = 0; WR_DATA_CNT(2) = 0; PROG_FULL(1) = 0; OVERFLOW(0) = 1
                 READ_DATA_WIDTH     => g_OUTPUT_DATA_WIDTH,
                 CDC_SYNC_STAGES     => 2,
                 DOUT_RESET_VALUE    => "0",
+                PROG_EMPTY_THRESH   => 8,
                 RD_DATA_COUNT_WIDTH => g_FIFO_RD_COUNT_WIDTH
             )
             port map(
@@ -160,7 +165,7 @@ begin
                 rd_en         => rd_en,
                 dout          => dout,
                 empty         => empty,
-                prog_empty    => open,
+                prog_empty    => prog_empty,
                 rd_data_count => fifo_rd_count_reg,
                 underflow     => underflow_reg,
                 rd_rst_busy   => rd_rst_busy,

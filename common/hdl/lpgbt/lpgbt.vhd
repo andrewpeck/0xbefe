@@ -259,10 +259,12 @@ begin
 
             i_rx_sync_fifo : entity work.gearbox
                 generic map(
-                    g_IMPL_TYPE         => "FIFO",
-                    g_INPUT_DATA_WIDTH  => 33,
-                    g_OUTPUT_DATA_WIDTH => 33,
-                    g_REGISTER_OUTPUT   => true
+                    g_IMPL_TYPE           => "FIFO",
+                    g_INPUT_DATA_WIDTH    => 33,
+                    g_OUTPUT_DATA_WIDTH   => 33,
+                    g_REGISTER_OUTPUT     => true,
+                    g_FIFO_WAIT_NOT_EMPTY => true,
+                    g_FIFO_WAIT_FILLED    => true
                 )
                 port map(
                     reset_i         => rx_sync_reset(i),
