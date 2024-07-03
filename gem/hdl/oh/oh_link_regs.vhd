@@ -38,10 +38,12 @@ entity oh_link_regs is
         vfat3_link_status_arr_i     : in t_oh_vfat_link_status_arr(g_NUM_OF_OHs - 1 downto 0);
 
         -- Control
-        vfat_mask_arr_o             : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
         gbt_tx_bitslip_arr_o        : out t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
         gbt_rx_bitslip_arr_o        : out t_std6_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);        
         gbt_rx_bitslip_auto_arr_o   : out std_logic_vector(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);        
+        vfat_mask_arr_o             : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        vfat_link_reset_o           : out t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+        trigger_link_reset_o        : out std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
 
         -- Spy link
         spy_rx_usrclk_i             : in  std_logic;
@@ -58,6 +60,9 @@ end oh_link_regs;
 
 architecture oh_link_regs_arch of oh_link_regs is
     
+    signal vfat_link_reset_en       : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+    signal vfat_link_reset_mask     : t_std32_array(g_NUM_OF_OHs - 1 downto 0); -- sized for w/o register
+    signal trigger_link_reset_en    : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
     signal vfat_mask_arr            : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
     signal gbt_tx_bitslip_arr       : t_std7_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
     signal gbt_rx_bitslip_arr       : t_std6_array(g_NUM_OF_OHs * g_NUM_GBTS_PER_OH - 1 downto 0);
@@ -88,10 +93,14 @@ architecture oh_link_regs_arch of oh_link_regs is
     
 begin
     
-    vfat_mask_arr_o <= vfat_mask_arr;
     gbt_tx_bitslip_arr_o <= gbt_tx_bitslip_arr;
     gbt_rx_bitslip_arr_o <= gbt_rx_bitslip_arr;
     gbt_rx_bitslip_auto_arr_o <= gbt_rx_bitslip_auto_arr;
+    vfat_mask_arr_o <= vfat_mask_arr;
+    g_vfat_link_reset : for i in 0 to g_NUM_OF_OHs - 1 generate
+        vfat_link_reset_o(i) <= vfat_link_reset_mask(i)(23 downto 0) when vfat_link_reset_en(i) = '1' else (others => '0');
+    end generate;
+    trigger_link_reset_o <= trigger_link_reset_en;
     
     --================================--
     -- Spy link counters  

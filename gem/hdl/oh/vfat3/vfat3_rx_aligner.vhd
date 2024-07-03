@@ -123,7 +123,7 @@ begin
                 sync_verify_err_cnt_cont <= (others => '0');
                 sync_verify_good_cnt_cont <= (others => '0');
             else
-                if (do_sync_verify = '0' and sync_verify_i = '1') then
+                if (do_sync_verify = '0' and sync_verify_i = '1' and sync_i = '0') then
                     do_sync_verify <= '1';
                     sync_verify_countdown <= SYNC_VERIFY_TIMEOUT;
                 end if;

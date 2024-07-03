@@ -30,11 +30,13 @@ entity optohybrid is
     );
     port(
         -- reset
-        reset_i                 : in  std_logic;
+        reset_i                 : in std_logic;
+        vfat_link_reset_i       : in std_logic_vector(23 downto 0);
+        trigger_link_reset_i    : in std_logic;
 
         -- TTC
-        ttc_clk_i               : in  t_ttc_clks;
-        ttc_cmds_i              : in  t_ttc_cmds;
+        ttc_clk_i               : in t_ttc_clks;
+        ttc_cmds_i              : in t_ttc_cmds;
         
         -- VFAT3 common TX data stream
         vfat3_tx_datastream_i   : in std_logic_vector(7 downto 0);
@@ -128,6 +130,8 @@ architecture optohybrid_arch of optohybrid is
     signal vfat3_daq_cnt_evt_arr      : t_std16_array(23 downto 0);
     signal vfat3_daq_cnt_crc_err_arr  : t_std8_array(23 downto 0);
     signal vfat3_not_in_table_cnt_arr : t_std8_array(23 downto 0);
+
+    signal vfat_link_reset_sync       : std_logic_vector(23 downto 0);
     
     --== FPGA register access requests ==--
 
@@ -169,7 +173,7 @@ begin
     --==========================--
 
     g_vfat3_tx_links : for i in 0 to 23 generate
-    
+
         i_vfat3_tx_link : entity work.vfat3_tx_link
             port map(
                 reset_i           => reset_i,
@@ -182,7 +186,9 @@ begin
                 sc_valid_i        => not vfat3_sc_tx_empty_i,
                 sc_en_i           => vfat3_sc_tx_en(i),
                 sc_rd_en_o        => vfat3_sc_tx_rd_en(i),
-                elink_data_o      => vfat3_tx_data(i)
+                elink_data_o      => vfat3_tx_data(i),
+                sync_i            => vfat_link_reset_i(i),
+                sync_o            => vfat_link_reset_sync(i)
             );
             
             vfat3_sc_tx_en(i) <= '1' when vfat3_sc_tx_oh_idx_i = g_OH_IDX and vfat3_sc_tx_vfat_idx_i = std_logic_vector(to_unsigned(i, 5)) else '0';
@@ -199,10 +205,10 @@ begin
     
         i_vfat3_rx_aligner : entity work.vfat3_rx_aligner
             port map(
-                reset_i               => reset_i,
+                reset_i               => reset_i or vfat_link_reset_i(i),
                 ttc_clk_i             => ttc_clk_i,
                 data_i                => vfat3_rx_data_i(i),
-                sync_i                => vfat3_sync_i,
+                sync_i                => vfat3_sync_i or vfat_link_reset_sync(i),
                 sync_verify_i         => vfat3_sync_verify_i,
                 sync_ok_o             => vfat3_sync_ok(i),
                 num_bitslips_o        => vfat3_rx_num_bitslips(i),
@@ -212,7 +218,7 @@ begin
     
         i_vfat3_rx_link : entity work.vfat3_rx_link
             port map(
-                reset_i             => reset_i,
+                reset_i             => reset_i or vfat_link_reset_i(i),
                 ttc_clk_i           => ttc_clk_i,
 
                 mask_i              => vfat_mask_arr_i(i) or not vfat_gbt_ready_arr_i(i),
@@ -297,7 +303,7 @@ begin
                         g_DEBUG => g_DEBUG
                     )
                     port map(
-                        reset_i             => reset_i,
+                        reset_i             => reset_i or trigger_link_reset_i,
                         ttc_clk_40_i        => ttc_clk_i.clk_40,
                         rx_usrclk_i         => gth_rx_trig_usrclk_i(i),
                         rx_data_i           => gth_rx_trig_data_i(i),
@@ -329,7 +335,7 @@ begin
                         g_REGISTER_OUTPUT   => true
                     )
                     port map(
-                        reset_i     => reset_i,
+                        reset_i     => reset_i or trigger_link_reset_i,
                         wr_clk_i    => gth_rx_trig_usrclk_i(i),
                         rd_clk_i    => ttc_clk_i.clk_160,
                         din_i       => sync_trig_rx_din_arr(i),
@@ -362,7 +368,7 @@ begin
                         g_DEBUG => g_DEBUG
                     )
                     port map(
-                        reset_i             => reset_i,
+                        reset_i             => reset_i or trigger_link_reset_i,
                         ttc_clk_40_i        => ttc_clk_i.clk_40,
                         ttc_clk_160_i       => ttc_clk_i.clk_160,
                         rx_data_i           => sync_trig_rx_gth_data_arr(i),
@@ -391,7 +397,7 @@ begin
                 g_REGISTER_OUT => false
             )
             port map(
-                reset_i         => reset_i,
+                reset_i         => reset_i or trigger_link_reset_i,
                 ttc_clk_40_i    => ttc_clk_i.clk_40,
                 rx_data_i       => ge21_gbt_trig_data_i,
                 sbit_clusters_o => sbit_clusters_o,

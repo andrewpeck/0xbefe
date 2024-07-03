@@ -1247,6 +1247,15 @@
           description="Mask the DAQ RX of the selected VFATs (the periodic synchronization checks, slow controls, and VFAT DAQ counters, remain functional)."
           fw_signal="vfat_mask_arr(${OH_IDX})" fw_default="0x000000"/>
 
+    <node id="VFAT_LINK_RESET" address="0x19" permission="w"
+          description="Writing 1 to bit position N will trigger a link reset to and from the VFAT3 number N and redo VFAT3 sync procedure (this is a reset bitmask)."
+          fw_signal="vfat_link_reset_mask(${OH_IDX})" fw_default="0xffffff"
+          fw_write_pulse_signal="vfat_link_reset_en(${OH_IDX})"/>
+
+    <node id="TRIGGER_LINK_RESET" address="0x1a" permission="w"
+          description="Writing to this register will trigger a link reset of the trigger links from the OptoHybrid."
+          fw_write_pulse_signal="trigger_link_reset_en(${OH_IDX})"/>
+
     <node id="VFAT${VFAT_IDX}" address="0x40"
           description="Link status of VFAT ${VFAT_IDX} on ${OH_IDX}"
           generate="true" generate_size="&NUM_VFATS_PER_OH;" generate_address_step="0x2" generate_idx_var="VFAT_IDX">

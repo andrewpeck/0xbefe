@@ -190,6 +190,8 @@ architecture gem_amc_arch of gem_amc is
     signal ttc_status           : t_ttc_status;
 
     --== Trigger signals ==--
+    signal trigger_link_reset_arr   : std_logic_vector(g_NUM_OF_OHs - 1 downto 0);
+
     signal sbit_clusters_arr        : t_oh_clusters_arr(g_NUM_OF_OHs - 1 downto 0);
     signal sbit_links_status_arr    : t_oh_sbit_links_arr(g_NUM_OF_OHs - 1 downto 0);
     signal emtf_data_arr            : t_std234_array(g_NUM_TRIG_TX_LINKS - 1 downto 0);
@@ -237,6 +239,8 @@ architecture gem_amc_arch of gem_amc is
     signal ge21_gbt_trig_data_arr       : t_std88_array(g_NUM_OF_OHs - 1 downto 0);
 
     --== VFAT3 ==--
+    signal vfat_link_reset_arr          : t_std24_array(g_NUM_OF_OHs - 1 downto 0);
+
     signal vfat3_sc_only_mode           : std_logic;
     signal vfat3_tx_stream              : std_logic_vector(7 downto 0);
     signal vfat3_tx_idle                : std_logic;
@@ -428,6 +432,9 @@ begin
             )
             port map(
                 reset_i                 => reset or link_reset,
+                vfat_link_reset_i       => vfat_link_reset_arr(i),
+                trigger_link_reset_i    => trigger_link_reset_arr(i),
+
                 ttc_clk_i               => ttc_clocks_i,
                 ttc_cmds_i              => ttc_cmd,
 
@@ -659,11 +666,13 @@ begin
                                         
             gbt_link_status_arr_i       => gbt_link_status_arr,
             vfat3_link_status_arr_i     => vfat3_link_status_arr,
-                                        
-            vfat_mask_arr_o             => vfat_mask_arr,
+
             gbt_tx_bitslip_arr_o        => gbt_tx_bitslip_arr,
             gbt_rx_bitslip_arr_o        => gbt_rx_bitslip_arr,
             gbt_rx_bitslip_auto_arr_o   => gbt_rx_bitslip_auto_arr,
+            vfat_mask_arr_o             => vfat_mask_arr,
+            vfat_link_reset_o           => vfat_link_reset_arr,
+            trigger_link_reset_o        => trigger_link_reset_arr,
 
             spy_rx_usrclk_i             => spy_rx_usrclk_i,
             spy_rx_data_i               => spy_rx_data_i,
