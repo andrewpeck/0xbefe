@@ -66,7 +66,14 @@ architecture trigger_arch of trigger is
     signal reset_local          : std_logic;
     signal reset                : std_logic;
     signal reset_cnt            : std_logic;
-    
+
+    -- regional resets
+    signal tx_link_reset_en       : std_logic;
+    signal rx_link_reset_en       : std_logic;
+    signal rx_link_reset_mask     : std_logic_vector(31 downto 0); -- sized for w/o register
+    signal rx_link_reset_cnt_en   : std_logic;
+    signal rx_link_reset_cnt_mask : std_logic_vector(31 downto 0); -- sized for w/o register
+
     signal self_trig_en         : std_logic;
     signal oh_mask              : std_logic_vector(15 downto 0) := (others => '0');
     signal oh_triggers          : std_logic_vector(g_NUM_OF_OHs - 1 downto 0) := (others => '0');
@@ -192,8 +199,8 @@ begin
                 g_GEM_STATION => g_GEM_STATION
             )
             port map(
-                reset_i              => reset,
-                reset_cnt_i          => reset_cnt,
+                reset_i              => reset or (rx_link_reset_en and rx_link_reset_mask(i)),
+                reset_cnt_i          => reset_cnt or (rx_link_reset_cnt_en and rx_link_reset_cnt_mask(i)),
                 clk_i                => ttc_clk_i.clk_40,
                 sbit_clusters_i      => sbit_clusters_i(i),
                 link_status_i        => sbit_link_status_i(i),
@@ -251,7 +258,7 @@ begin
                 g_NUM_TRIG_TX_LINKS => g_NUM_TRIG_TX_LINKS
             )
             port map(
-                reset_i            => reset_i,
+                reset_i            => reset_i or tx_link_reset_en,
                 ttc_clk_i          => ttc_clk_i,
                 ttc_cmds_i         => ttc_cmds_i,
                 sbit_clusters_i    => sbit_clusters_i,

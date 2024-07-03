@@ -30,9 +30,20 @@
           fw_signal="sector_id"
           fw_default="0x0"/>
     <node id="SELF_TRIGGER_EN" address="0x2" mask="0x10000000" permission="rw"
-        description="Writing 1 enables self triggerring, meaning that valid clusters from unmasked OHs will result in TTC L1A being fired, which goes to the VFATs and DAQ"
-        fw_signal="self_trig_en"
-        fw_default="0x0"/>
+          description="Writing 1 enables self triggerring, meaning that valid clusters from unmasked OHs will result in TTC L1A being fired, which goes to the VFATs and DAQ"
+          fw_signal="self_trig_en"
+          fw_default="0x0"/>
+    <node id="TX_LINK_RESET" address="0x3" permission="w"
+          description="Writing to this register will trigger a reset of all links to the EMTF."
+          fw_write_pulse_signal="tx_link_reset_en"/>
+    <node id="RX_LINK_RESET" address="0x4" permission="w"
+          description="Writing a 1 to bit position N will trigger a reset of the trigger input link processor for OptoHybrid N (this is a reset bitmask)."
+          fw_signal="rx_link_reset_mask" fw_default="0xffff"
+          fw_write_pulse_signal="rx_link_reset_en"/>
+    <node id="RX_LINK_CNT_RESET" address="0x5" permission="w"
+          description="Writing a 1 to bit position N will trigger a reset of the trigger input link counters OptoHybrid N (this is a reset bitmask)."
+          fw_signal="rx_link_reset_cnt_mask" fw_default="0xffff"
+          fw_write_pulse_signal="rx_link_reset_cnt_en"/>
   </node>
 
   <node id="STATUS" address="0x10"
