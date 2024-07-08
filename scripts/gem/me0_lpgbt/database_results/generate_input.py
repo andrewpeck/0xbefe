@@ -18,8 +18,8 @@ if __name__=='__main__':
             if "#" in line:
                 if "TEST_TYPE" in line:
                     test_type = line.split()[2]
-                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
-                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug", "update"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug" or "update"' + Colors.ENDC)
                         sys.exit()
                 continue
             elif not line.split():
@@ -53,7 +53,7 @@ if __name__=='__main__':
                             pass
                         else:
                             sys.exit()
-                elif test_type=="debug":
+                elif test_type in ["debug", "update"]:
                     if int(oh_sn) not in range(1, 2019):
                         print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
                         options = input('Do you want to continue anyway? (y/n) >> ')
@@ -222,7 +222,7 @@ if __name__=='__main__':
             batch = batch_dict[options]
 
         # Special tests         
-        if test_type=="acceptance":
+        if test_type in ["acceptance", "update"]:
             thermal_testing          = 0
             thermal_testing_pass     = 0
             power_cycle_testing      = 0
@@ -369,12 +369,21 @@ if __name__=='__main__':
         data['OH']['RUN']['COMMENT_DESCRIPTION'] = comments_oh
         data['VTRxPlus']['RUN']['COMMENT_DESCRIPTION'] = comments_vtrxp
         data['OH']['DATA'][0]['BATCH'] = batch
-        data['OH']['DATA'][0]['THERMAL_TESTING_DONE'] = thermal_testing
-        data['OH']['DATA'][0]['THERMAL_TESTING_PASS'] = thermal_testing_pass
-        data['OH']['DATA'][0]['POWER_CYCLE_TESTING_DONE'] = power_cycle_testing
-        data['OH']['DATA'][0]['POWER_CYCLE_TESTING_PASS'] = power_cycle_testing_pass
-        data['OH']['DATA'][0]['LINK_RESET_TESTING_DONE'] = link_rst_testing
-        data['OH']['DATA'][0]['LINK_RESET_TESTING_PASS'] = link_rst_testing_pass
+        # Special tests
+        if test_type not in ["acceptance", "update"]:
+            data['OH']['DATA'][0]['THERMAL_TESTING_DONE'] = thermal_testing
+            data['OH']['DATA'][0]['THERMAL_TESTING_PASS'] = thermal_testing_pass
+            data['OH']['DATA'][0]['POWER_CYCLE_TESTING_DONE'] = power_cycle_testing
+            data['OH']['DATA'][0]['POWER_CYCLE_TESTING_PASS'] = power_cycle_testing_pass
+            data['OH']['DATA'][0]['LINK_RESET_TESTING_DONE'] = link_rst_testing
+            data['OH']['DATA'][0]['LINK_RESET_TESTING_PASS'] = link_rst_testing_pass
+        else:
+            data['OH']['DATA'][0]['THERMAL_TESTING_DONE'] = 0
+            data['OH']['DATA'][0]['THERMAL_TESTING_PASS'] = 0
+            data['OH']['DATA'][0]['POWER_CYCLE_TESTING_DONE'] = 0
+            data['OH']['DATA'][0]['POWER_CYCLE_TESTING_PASS'] = 0
+            data['OH']['DATA'][0]['LINK_RESET_TESTING_DONE'] = 0
+            data['OH']['DATA'][0]['LINK_RESET_TESTING_PASS'] = 0
         data['OH']['DATA'][0]['VISUAL_INSPECTION_NO_SHORTS'] = vis_inspection
         data['OH']['DATA'][0]['PASSED_ALL_TESTS'] = passed_all_tests
         #data['OH']['DATA'][0]['LPGBT_M_UPLINK_EYE_DIAGRAM'] = open_eye_fraction_M
