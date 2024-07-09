@@ -12,5 +12,6 @@ class SlackNotifier:
         self.webhook = ('https://hooks.slack.com/services/'+(lines.rstrip()))
         self.slack = get_notifier('slack')
 	
-    def notify(self,msg):
-        self.slack.notify(message = str(datetime.datetime.now())+': '+msg, webhook_url = self.webhook)
+    def notify(self,teststand,msg):
+        time = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        self.slack.notify(message = f'{teststand} {time}: {msg}', webhook_url = self.webhook)
