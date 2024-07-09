@@ -111,6 +111,8 @@ if __name__=='__main__':
     reg_vtrxp_data = {'ROOT':{'PARTS':{'PART':[]}}}
 
     oh_sn_str = '_'.join(oh_sn_list)
+    if test_type == 'update':
+        oh_sn_str = '_'.join(['update', oh_sn_list[0], 'to', oh_sn_list[-1]])
 
     input_OHSNs_Dir = inputDir + '/OH_SNs_%s'%oh_sn_str
     try:

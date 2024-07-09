@@ -172,6 +172,8 @@ if __name__ == '__main__':
         oh_sn_str2 = '_'.join(oh_sn_list[4:])
     else:
         oh_sn_str = '_'.join(oh_sn_list)
+    if test_type == 'update':
+        oh_sn_str = '_'.join(['update', oh_sn_list[0], 'to', oh_sn_list[-1]])
     
     # Check if data directories exist
     if test_type not in ['acceptance', 'update']:
