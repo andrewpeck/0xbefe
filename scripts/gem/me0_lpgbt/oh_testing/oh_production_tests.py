@@ -164,15 +164,15 @@ if __name__ == "__main__":
     logfile.write("\nStarting %s tests\n\n"%test_type)
     logfile.write("Optohybrid Serial Numbers: %s\n\n"%(', '.join(oh_sn_list)))
 
-    if len(sys.argv) > 1:
-        if sys.argv[1] in ['-n','--notify']:
-            from scripts.gem.me0_lpgbt.notify import *
-            teststand_name = 'geb-teststand'
-            slack = SlackNotifier(webhook_dir)
-            # Flag for sending notifications
-            notify_bool = True
-            print('Notifications Enabled\n')
-    else:
+    try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'geb-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('Notifications Enabled\n')
+    except:
         notify_bool = False
 
     if notify_bool:
