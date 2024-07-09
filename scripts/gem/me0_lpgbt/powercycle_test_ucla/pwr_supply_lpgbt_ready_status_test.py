@@ -251,6 +251,9 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
         while (power_supply.is_output_enabled()):
             sleep(0.5)
         print("Output is disabled")
+        
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Failed')
 
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
@@ -421,13 +424,36 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'geb-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('\nNotifications Enabled\n')
+    except:
+        notify_bool = False
+
+    if notify_bool:
+        slack.notify(teststand_name,'Powercycle Test Started')
+
+    try:
         main(args.system, oh_select, gbt_list, current, voltage, int(args.niter))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        
+        if notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Exited')
         rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        
+        if notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Exited w/ EOF Error')
         rw_terminate()
+
+    if notify_bool:
+        slack.notify(teststand_name,'Powercycle Test Finished')
 
     # Termination
     rw_terminate()
