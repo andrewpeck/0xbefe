@@ -2882,7 +2882,7 @@ if __name__ == "__main__":
     logfile.write("#####################################################################################################################################\n\n")
 
     if notify_bool:
-        slack.notify(teststand_name,f'{test_type} Tests Finished for OH SNs: {", ".join(oh_sn_list)}')
+        slack.notify(teststand_name,f'Finished {test_type} Tests for OH SNs: {", ".join(oh_sn_list)}')
 
     print('Time taken to perform %s tests: %.3f'%(test_type.replace('_','-'),(time.time()-t0)/60))
     logfile.write('Time taken to perform %s tests: %.3f\n'%(test_type.replace('_','-'),(time.time()-t0)/60))

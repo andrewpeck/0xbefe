@@ -453,7 +453,7 @@ if __name__ == "__main__":
         rw_terminate()
 
     if notify_bool:
-        slack.notify(teststand_name,'Powercycle Test Finished')
+        slack.notify(teststand_name,'Finished Powercycle Test')
 
     # Termination
     rw_terminate()
