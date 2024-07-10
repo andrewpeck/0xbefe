@@ -547,8 +547,8 @@ if __name__ == "__main__":
             if "#" in line:
                 if "TEST_TYPE" in line:
                     test_type = line.split()[2]
-                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
-                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", or "debug"' + Colors.ENDC)
                         sys.exit()
                 continue
             elif not line.split():
