@@ -85,6 +85,9 @@ if __name__ == "__main__":
                         print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production" or "debug"' + Colors.ENDC)
                         sys.exit()
             continue
+        elif not line.split():
+            # empty line
+            continue
         queso_nr = line.split()[0]
         oh_sn = line.split()[1]
         if oh_sn != "-9999":
@@ -228,6 +231,19 @@ if __name__ == "__main__":
     log_fn = OHDir+"/queso_initialization_log.txt"
     logfile = open(log_fn, "w")
     results_fn = OHDir+"/queso_initialization_results.json"
+
+    try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'queso-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('\nNotifications Enabled\n')
+
+        slack.notify(teststand_name,f'Starting Initialization Tests for OH SNs: {", ".join(oh_ser_nr_list)}')
+    except:
+        notify_bool = False
 
     test_failed = False
     override_test_failed = True
@@ -456,6 +472,9 @@ if __name__ == "__main__":
                         test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+    
+    if test_failed and notify_bool:
+        slack.notify(teststand_name, 'Initialization Failed')
                     
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
@@ -549,7 +568,8 @@ if __name__ == "__main__":
                         test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-    
+    if test_failed and notify_bool:
+        slack.notify(teststand_name, 'Elink Phase and Bitslip Scan Failed')
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
         if end_tests.lower() in ['y','yes']:
@@ -618,7 +638,10 @@ if __name__ == "__main__":
     for oh_sn in results_oh_sn:
         results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_M_QUESO_ELINK_PHASES_BITSLIPS'])
         results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'] = str(results_oh_sn[oh_sn]['LPGBT_S_QUESO_ELINK_PHASES_BITSLIPS'])
-    
+
+    if test_failed and notify_bool:
+        slack.notify(teststand_name, 'Elink Crosstalk Failed')
+
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
         if end_tests.lower() in ['y','yes']:
@@ -695,18 +718,24 @@ if __name__ == "__main__":
     current_ranges = {'2V5':[0.9*current_nominal_2v5, 1.1*current_nominal_2v5],'1V2':[0.9*current_nominal_1v2, 1.1*current_nominal_1v2]}
     for queso,oh_sn in queso_dict.items():
         for v,i_range in current_ranges.items():
-            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] < i_range[0] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_range[1] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
+            # if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] < i_range[0] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_range[1] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
+            if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
                 if not test_failed:
                     print(Colors.RED + "\nReading Currents Failed" + Colors.ENDC)
                     logfile.write("\nReading Currents Failed\n")
-                    test_failed = True 
-                if results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_max:
-                    print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
-                    logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current\n'%(oh_sn,v))
-                elif results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] == -9999:
-                    print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
-                    logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s current\n'%(oh_sn,v))
-   
+                    test_failed = True
+                print(Colors.RED + 'ERROR:MISSING_VALUE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
+                logfile.write('ERROR:MISSING_VALUE encountered at OH %s %s current\n'%(oh_sn,v))
+            elif results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] < i_range[0] or results_oh_sn[oh_sn]['QUESO_CURRENT_%s'%v] > i_range[1]:
+                if not test_failed:
+                    print(Colors.RED + "\nReading Currents Failed" + Colors.ENDC)
+                    logfile.write("\nReading Currents Failed\n")
+                    test_failed = True
+                print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current'%(oh_sn,v) + Colors.ENDC)
+                logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s current\n'%(oh_sn,v))
+    
+    if test_failed and notify_bool:
+        slack.notify(teststand_name, 'Current Measurements Failed')
 
     print(Colors.GREEN + "\nReading Currents done" + Colors.ENDC)
     print("\n######################################################\n")
@@ -720,3 +749,6 @@ if __name__ == "__main__":
     with open(results_fn,"w") as results_oh_sn_file:
         json.dump(results_oh_sn,results_oh_sn_file,indent=2)
     logfile.close()
+
+    if notify_bool:
+        slack.notify(teststand_name,f'Finished Initialization Tests for OH SNs: {", ".join(oh_ser_nr_list)}')

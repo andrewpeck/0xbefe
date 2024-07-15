@@ -218,6 +218,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
         print (err_str)
         logfile.write(err_str + "\n")
 
+    test_failed = False
     # Running QUESO BERT
     while ((time()-t0)/60.0) < runtime:
         time_passed = (time()-time_prev)/60.0
@@ -243,6 +244,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 print (Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n" + Colors.ENDC)
                 logfile.write(Colors.GREEN + "  No PRBS errors on any ELINK on any VFAT\n\n" + Colors.ENDC)
             else:
+                test_failed = True
                 print (err_str)
                 logfile.write(err_str + "\n")
 
@@ -252,21 +254,25 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 for gbt in oh_gbt_vfat_map[oh_select]["GBT"]:
                     fec_uplink_errors[oh_select][gbt] = read_backend_reg(fec_uplink_error_nodes[oh_select][gbt])
                     if fec_uplink_errors[oh_select][gbt] != 0:
-                        err_str += "    OH %d VFAT %d GBT %d: %d uplink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                        err_str += "    OH %d GBT %d: %d uplink errors\n"%(oh_select, gbt, fec_uplink_errors[oh_select][gbt])
                         n_link_fec_errors += 1
                     if gbt%2==0:
                         rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                         fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                         if fec_downlink_errors[oh_select][gbt] != 0:
-                            err_str += "    OH %d VFAT %d GBT %d: %d downlink errors\n"%(oh_select,vfat, gbt, fec_uplink_errors[oh_select][gbt])
+                            err_str += "    OH %d GBT %d: %d downlink errors\n"%(oh_select, gbt, fec_uplink_errors[oh_select][gbt])
                             n_link_fec_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_link_fec_errors == 0:
                 print (Colors.GREEN + "  No FEC errors on any optical link on any GBT\n" + Colors.ENDC)
                 logfile.write(Colors.GREEN + "  No FEC errors on any optical link on any GBT\n\n" + Colors.ENDC)
             else:
+                test_failed = True
                 print (err_str)
                 logfile.write(err_str + "\n")
+
+            if test_failed and notify_bool:
+                slack.notify(teststand_name,f'ELINK BER Test Failed')
 
             time_prev = time()
 
@@ -341,10 +347,10 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                 else:
                     err_str += Colors.RED
                 lpgbt = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][1]
-                if elink == 0:
+                if elink == 8:
                     elink_nr = ME0_VFAT_TO_GBT_ELINK_GPIO[vfat][2]
                 else:
-                    elink_nr = ME0_VFAT_TO_SBIT_ELINK[vfat][elink-1]
+                    elink_nr = ME0_VFAT_TO_SBIT_ELINK[vfat][elink]
                 prbs_errors[oh_select][vfat][elink]["lpgbt"] = lpgbt
                 prbs_errors[oh_select][vfat][elink]["lpgbt_elink"] = elink_nr
                 err_str += "    ELINK %d (GBT: %d, Elink nr: %d): Nr. of PRBS errors = %d"%(elink, lpgbt, elink_nr, prbs_errors[oh_select][vfat][elink]["n_errors"])
@@ -501,6 +507,9 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
     print ("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n")
     logfile.write("Finished BER for elinks for OH Serial Numbers: " + "  ".join(oh_ser_nr_list)  + "\n\n")
 
+    if notify_bool:
+        slack.notify(teststand_name,f'Finished ELINK BER Test for OH SNs: {", ".join(oh_sn_list)}')
+
     logfile.close()
     resultsfile.close()
 
@@ -532,27 +541,30 @@ if __name__ == "__main__":
 
     oh_gbt_vfat_map = {}
     queso_dict = {}
-
-    input_file = open(input_fn)
-    for line in input_file.readlines():
-        if "#" in line:
-            if "TEST_TYPE" in line:
-                test_type = line.split()[2]
-                if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production"]:
-                    print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production" or "long_production"' + Colors.ENDC)
+    oh_sn_list = []
+    with open(input_fn) as input_file:
+        for line in input_file.readlines():
+            if "#" in line:
+                if "TEST_TYPE" in line:
+                    test_type = line.split()[2]
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "debug"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", or "debug"' + Colors.ENDC)
+                        sys.exit()
+                continue
+            elif not line.split():
+                # empty line
+                continue
+            queso_nr = line.split()[0]
+            oh_sn = line.split()[1]
+            if oh_sn != "-9999":
+                if test_type == "pre_production" and int(oh_sn) not in range(1, 1001):
+                    print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
                     sys.exit()
-            continue
-        queso_nr = line.split()[0]
-        oh_sn = line.split()[1]
-        if oh_sn != "-9999":
-            if test_type == "pre_production" and int(oh_sn) not in range(1, 1001):
-                print(Colors.YELLOW + "Valid OH serial number between 1 and 1000" + Colors.ENDC)
-                sys.exit()
-            elif test_type in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
-                print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
-                sys.exit()
-            queso_dict[queso_nr] = oh_sn
-    input_file.close()
+                elif test_type in ["pre_series", "production"] and int(oh_sn) not in range(1001, 2019):
+                    print(Colors.YELLOW + "Valid OH serial number between 1001 and 2018" + Colors.ENDC)
+                    sys.exit()
+                queso_dict[queso_nr] = oh_sn
+                oh_sn_list.append(oh_sn)
     if len(queso_dict) == 0:
         print(Colors.YELLOW + "At least 1 QUESO need to have valid OH serial number" + Colors.ENDC)
         sys.exit()
@@ -579,14 +591,31 @@ if __name__ == "__main__":
     rw_reg_lpgbt.rw_initialize(args.gem, args.system)
     print("Initialization Done\n")
 
+    try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'queso-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('Notifications Enabled\n')
+
+        slack.notify(teststand_name,f'Starting ELINK BER Test for OH SNs: {", ".join(oh_sn_list)}')
+    except:
+        notify_bool = False
+
     # Scanning/setting bitslips
     try:
         queso_bert(args.system, queso_dict, oh_gbt_vfat_map, args.time, args.ber, float(args.cl), args.loopback, test_type=test_type)
     except KeyboardInterrupt:
         print (Colors.RED + "Keyboard Interrupt encountered" + Colors.ENDC)
+        if notify_bool:
+            slack.notify(teststand_name,f'ELINK BER Test Exited')
         terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        if notify_bool:
+            slack.notify(teststand_name,f'ELINK BER Test Failed w/ EOF Error')
         terminate()
 
     # Termination

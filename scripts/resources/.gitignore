@@ -2,6 +2,7 @@
 *
 # Except these files (if you want to add more files, which should be compatible with all setups, list them here)
 !.gitignore
+!cmsme0_environment.yml
 !ge21_gbt0_config.txt
 !ge21_gbt1_config.txt
 
