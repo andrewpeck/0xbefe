@@ -71,7 +71,7 @@ def find_phase_center(err_list):
         width = upper_edge_max - lower_edge_min - 1
         center = int((lower_edge_min + upper_edge_max)/2)
     elif len(bad_phases) == 1:
-        if bad_phases[0] <= 7:
+        if bad_phases[0] < 7:
             center = bad_phases[0] + 4
             width = upper_edge_max - bad_phases[0] - 1
         else:
@@ -261,7 +261,8 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, ali
             widths  = 9*[0]
             for elink in queso_bitslip_nodes[vfat]:
                 centers[elink], widths[elink] = find_phase_center(prbs_min_err_list[vfat][elink])
-                if centers[elink] == 7 and widths[elink]>=14:
+            for elink in queso_bitslip_nodes[vfat]:
+                if centers[elink] == 7 and widths[elink]==15:
                     if elink!=0:
                         centers[elink] = centers[elink-1]
                     else:
@@ -276,6 +277,14 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, ali
                                     if prbs_min_err_list[vfat][elink][p] != 0:
                                         bad_phase = p
                                         break
+                                    if elink!=0:
+                                        if prbs_min_err_list[vfat][elink-1][p] != 0:
+                                            bad_phase = p
+                                            break
+                                    if elink!=8:
+                                        if prbs_min_err_list[vfat][elink+1][p] != 0:
+                                            bad_phase = p
+                                            break
                                 if bad_phase == -9999:
                                     centers[elink] = new_center + 1
                                 else:
@@ -289,6 +298,14 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, ali
                                     if prbs_min_err_list[vfat][elink][p] != 0:
                                         bad_phase = p
                                         break
+                                    if elink!=0:
+                                        if prbs_min_err_list[vfat][elink-1][p] != 0:
+                                            bad_phase = p
+                                            break
+                                    if elink!=8:
+                                        if prbs_min_err_list[vfat][elink+1][p] != 0:
+                                            bad_phase = p
+                                            break
                                 if bad_phase == -9999:
                                     centers[elink] = new_center - 1
                                 else:
