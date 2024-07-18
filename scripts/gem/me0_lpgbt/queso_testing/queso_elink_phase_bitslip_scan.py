@@ -71,7 +71,7 @@ def find_phase_center(err_list):
         width = upper_edge_max - lower_edge_min - 1
         center = int((lower_edge_min + upper_edge_max)/2)
     elif len(bad_phases) == 1:
-        if bad_phases[0] < 7:
+        if bad_phases[0] <= 7:
             center = bad_phases[0] + 4
             width = upper_edge_max - bad_phases[0] - 1
         else:
