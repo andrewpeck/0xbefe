@@ -266,13 +266,15 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
             if n_link_fec_errors == 0:
                 print (Colors.GREEN + "  No FEC errors on any optical link on any GBT\n" + Colors.ENDC)
                 logfile.write(Colors.GREEN + "  No FEC errors on any optical link on any GBT\n\n" + Colors.ENDC)
+            elif not test_failed and notify_bool:
+                slack.notify(teststand_name,f'ELINK BER Test Failed')
+                test_failed = True
+                print (err_str)
+                logfile.write(err_str + "\n")
             else:
                 test_failed = True
                 print (err_str)
                 logfile.write(err_str + "\n")
-
-            if test_failed and notify_bool:
-                slack.notify(teststand_name,f'ELINK BER Test Failed')
 
             time_prev = time()
 
