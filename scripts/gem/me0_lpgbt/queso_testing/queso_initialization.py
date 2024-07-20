@@ -568,7 +568,6 @@ if __name__ == "__main__":
                         test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
-
     if test_failed and notify_bool:
         slack.notify(teststand_name, 'Elink Phase and Bitslip Scan Failed')
     while test_failed:
@@ -642,6 +641,7 @@ if __name__ == "__main__":
 
     if test_failed and notify_bool:
         slack.notify(teststand_name, 'Elink Crosstalk Failed')
+
     while test_failed:
         end_tests = input('\nWould you like to exit testing? >> ')
         if end_tests.lower() in ['y','yes']:
