@@ -71,7 +71,7 @@ def find_phase_center(err_list):
         width = upper_edge_max - lower_edge_min - 1
         center = int((lower_edge_min + upper_edge_max)/2)
     elif len(bad_phases) == 1:
-        if bad_phases[0] < 7:
+        if bad_phases[0] <= 7:
             center = bad_phases[0] + 4
             width = upper_edge_max - bad_phases[0] - 1
         else:
@@ -262,11 +262,19 @@ def scan_set_phase_bitslip(system, oh_select, vfat_list, phase_bitslip_list, ali
             for elink in queso_bitslip_nodes[vfat]:
                 centers[elink], widths[elink] = find_phase_center(prbs_min_err_list[vfat][elink])
             for elink in queso_bitslip_nodes[vfat]:
-                if centers[elink] == 7 and widths[elink]==15:
-                    if elink!=0:
-                        centers[elink] = centers[elink-1]
-                    else:
-                        centers[elink] = centers[elink+1]
+                if centers[elink] == 7 and widths[elink] == 15:
+                    closest_elink = elink
+                    min_diff_elink = 9999
+                    for elink2 in queso_bitslip_nodes[vfat]:
+                        if elink2 == elink:
+                            continue
+                        if centers[elink2] == 7 and widths[elink2] == 15:
+                            continue
+                        diff_elink = abs(elink2 - elink)
+                        if diff_elink < min_diff_elink:
+                            closest_elink = elink2
+                            min_diff_elink = diff_elink
+                    centers[elink] = centers[closest_elink]
                 if align_phases:
                     new_center = aligned_phases_center[vfat][elink]
                     if new_center != -9999:
