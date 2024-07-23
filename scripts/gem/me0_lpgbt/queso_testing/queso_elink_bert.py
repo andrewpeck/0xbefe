@@ -260,7 +260,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                         rw_reg_lpgbt.select_ic_link(oh_select, gbt)
                         fec_downlink_errors[oh_select][gbt] = lpgbt_fec_error_counter(oh_ver[oh_select][gbt])
                         if fec_downlink_errors[oh_select][gbt] != 0:
-                            err_str += "    OH %d GBT %d: %d downlink errors\n"%(oh_select, gbt, fec_uplink_errors[oh_select][gbt])
+                            err_str += "    OH %d GBT %d: %d downlink errors\n"%(oh_select, gbt, fec_downlink_errors[oh_select][gbt])
                             n_link_fec_errors += 1
             err_str += "\n" + Colors.ENDC
             if n_link_fec_errors == 0:
