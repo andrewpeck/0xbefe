@@ -386,7 +386,7 @@ def queso_bert(system, queso_dict, oh_gbt_vfat_map, runtime, ber_limit, cl, loop
                     err_str += Colors.GREEN
                 else:
                     err_str += Colors.RED
-                err_str += "    Downlink FEC Errors = %d"%fec_uplink_errors[oh_select][gbt]
+                err_str += "    Downlink FEC Errors = %d"%fec_downlink_errors[oh_select][gbt]
                 err_str += Colors.ENDC
                 print (err_str)
                 logfile.write(err_str + "\n")
