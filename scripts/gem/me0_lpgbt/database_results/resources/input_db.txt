@@ -1,4 +1,4 @@
-# TEST_TYPE: update
+# TEST_TYPE: production
 # OH_SLOT   OH_SER_NUM  VTRXP_SER_NUM
 1           1043	017801
 2           2007	004039
