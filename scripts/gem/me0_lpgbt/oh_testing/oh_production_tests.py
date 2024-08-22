@@ -22,6 +22,7 @@ from gem.me0_lpgbt_adc import read_chip_id,read_central_adc_calib_file
 scripts_gem_dir = get_befe_scripts_dir() + '/gem'
 oh_testing_dir = scripts_gem_dir + '/me0_lpgbt/oh_testing'
 input_fn = oh_testing_dir + '/resources/input_geb.txt'
+webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
 
 geb_oh_map = {}
 for slot in range(1,9):
@@ -85,6 +86,8 @@ if __name__ == "__main__":
     oh_sn_list = []
     for slot,oh_sn in geb_dict.items():
         oh_sn_list.append(oh_sn)
+
+
     
     oh_gbt_vfat_map = {}
     oh_ver_dict = {}
@@ -161,6 +164,20 @@ if __name__ == "__main__":
     logfile.write("\nStarting %s tests\n\n"%test_type)
     logfile.write("Optohybrid Serial Numbers: %s\n\n"%(', '.join(oh_sn_list)))
 
+    try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'geb-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('Notifications Enabled\n')
+    except:
+        notify_bool = False
+
+    if notify_bool:
+        slack.notify(teststand_name,f'Starting {test_type} Tests for OH SNs: {", ".join(oh_sn_list)}')
+
     print ("\n#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
 
@@ -200,7 +217,10 @@ if __name__ == "__main__":
                     gbt_type = 'BOSS' if not gbt else 'SUB'
                     if not status:
                         print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))                        
+                        logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Initialization Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -218,6 +238,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -379,7 +402,10 @@ if __name__ == "__main__":
         for oh_sn in xml_results:
             xml_results[oh_sn]['LPGBT_M_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_M_ADC_CALIB'])
             xml_results[oh_sn]['LPGBT_S_ADC_CALIB'] = str(xml_results[oh_sn]['LPGBT_S_ADC_CALIB'])
-        
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Checking lpGBT Status Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -397,6 +423,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -497,6 +526,10 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s SUB lpGBT'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s SUB lpGBT\n'%oh_sn)
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Downlink Eye Diagram Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -514,6 +547,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -593,7 +629,11 @@ if __name__ == "__main__":
                     logfile.write("\nStep 4: Downlink Optical BERT Failed\n")
                     test_failed = True
                 print(Colors.RED + 'ERROR encountered at OH %s BOSS lpGBT'%oh_sn + Colors.ENDC)
-                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)                
+                logfile.write('ERROR encountered at OH %s BOSS lpGBT\n'%oh_sn)    
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Downlink Optical BERT Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -611,6 +651,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -695,7 +738,11 @@ if __name__ == "__main__":
                         test_failed = True
                     gbt_type = 'BOSS' if gbt%2==0 else 'SUB'
                     print(Colors.RED + 'ERROR encountered at OH %s %s lpGBT'%(oh_sn,gbt_type) + Colors.ENDC)
-                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))            
+                    logfile.write('ERROR encountered at OH %s %s lpGBT\n'%(oh_sn,gbt_type))       
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Uplink Optical BERT Failed')
+                         
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -713,6 +760,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -779,6 +829,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))                   
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_DAQ_PHASE_SCAN'] = str(xml_results[oh_sn]['VFAT_DAQ_PHASE_SCAN'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'DAQ Phase Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -796,6 +850,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -872,6 +929,10 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s VFAT %d ELINK %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][v],e))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"] = str(xml_results[oh_sn]["VFAT_SBIT_PHASE_SCAN"])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-Bit Phase Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -889,6 +950,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -954,6 +1018,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_BITSLIP"] = str(xml_results[oh_sn]["VFAT_SBIT_BITSLIP"])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-Bit Bitslip Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -971,6 +1039,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1064,6 +1135,10 @@ if __name__ == "__main__":
         # Comment next 2 lines if running cluster mapping too
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
+        
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-Bit Mapping Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1081,6 +1156,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1090,84 +1168,6 @@ if __name__ == "__main__":
         print(Colors.BLUE + "Skipping S-Bit Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
         logfile.write("Skipping S-Bit Mapping for %s tests\n"%test_type.replace("_","-"))
         time.sleep(0.1)
-
-    # if test_type in ["prototype", "pre_production", "pre_series", "production", "acceptance"]:
-    #     for oh_select, gbt_vfat_dict in oh_gbt_vfat_map.items():
-    #         print (Colors.BLUE + "Running S-bit Cluster Mapping on OH %d, all VFATs\n"%oh_select + Colors.ENDC)
-    #         logfile.write("Running S-bit Cluster Mapping on OH %d, all VFATs\n\n"%oh_select)
-    #         os.system("python3 vfat_sbit_monitor_clustermap.py -s backend -q ME0 -o %d -v %s -l -f "%(oh_select," ".join(map(str,gbt_vfat_dict["VFAT"]))))
-    #         list_of_files = glob.glob(scripts_gem_dir + "/results/vfat_data/vfat_sbit_monitor_cluster_mapping_results/*_results_*.txt")
-    #         latest_file = max(list_of_files, key=os.path.getctime)
-    #         with open(latest_file,"r") as mapping_file:
-    #             for line in mapping_file.readlines()[2:]:
-    #                 data = line.split()
-    #                 data = data[:3] + data[3].split(',') + data[4].split(',')
-    #                 data.remove('')
-    #                 vfat = int(data[0])
-    #                 channel = int(data[1])
-    #                 cluster_address = int(data[11])
-
-
-    #                 # sbit_status = 1 if sbit != NULL else 0
-    #                 cluster_status = 1 if cluster_address != NULL else 0
-                    
-    #                 for slot,oh_sn in geb_dict.items():
-    #                     if vfat in geb_oh_map[slot]['VFAT']:
-    #                         i = geb_oh_map[slot]['VFAT'].index(vfat)
-    #                         if cluster_status:
-    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
-    #                         else:
-    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["STATUS"] &= cluster_status
-    #                             xml_results[oh_sn]['VFAT_SBIT_MAPPING'][i]["BAD_CHANNELS_CLUSTER"]+=[channel]
-    #                         break
-
-    #         os.system('cp %s %s/me0_oh%d_vfat_sbit_clustermap.txt'%(latest_file,dataDir,oh_select))
-
-    #     for slot,oh_sn in geb_dict.items():
-    #         for i,result in enumerate(xml_results[oh_sn]["VFAT_SBIT_MAPPING"]):
-    #             if not result['STATUS']:
-    #                 if not test_failed:
-    #                     print (Colors.RED + "\nStep 7: S-Bit Cluster Mapping Failed" + Colors.ENDC)
-    #                     logfile.write("\nStep 7: S-Bit Cluster Mapping Failed\n")
-    #                     test_failed = True
-    #                     test_failed_override = True
-    #                 print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
-    #                 logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
-    #     # Convert results to string
-    #     for oh_sn in xml_results:
-    #         xml_results[oh_sn]["VFAT_SBIT_MAPPING"] = str(xml_results[oh_sn]["VFAT_SBIT_MAPPING"])
-    #     if test_failed_override:
-    #         test_failed = False
-    #         test_failed_override = False
-    #     while test_failed:
-    #         end_tests = input('\nWould you like to exit testing? >> ')
-    #         if end_tests.lower() in ['y','yes']:
-    #             print('\nTerminating and logging database results at directory: %s'%xml_results_fn)
-    #             logfile.write('\nTerminating and logging database results at directory: %s\n'%xml_results_fn)
-    #             print('\nLogging full results at directory: %s\n'%full_results_fn)
-    #             logfile.write('\nLogging full results at directory: %s\n\n'%full_results_fn)
-    #             xml_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in xml_results.items()]
-    #             full_results = [{'SERIAL_NUMBER':oh_sn,**results} for oh_sn,results in full_results.items()]
-    #             vtrxp_results = [{'SERIAL_NUMBER':vtrxp_sn,**results} for vtrxp_sn,results in vtrxp_results.items()]
-    #             with open(xml_results_fn,"w") as xml_results_file:
-    #                 json.dump(xml_results,xml_results_file,indent=2)
-    #             with open(full_results_fn,'w') as full_results_file:
-    #                 json.dump(full_results,full_results_file,indent=2)
-    #             with open(vtrxp_results_fn,'w') as vtrxp_results_file:
-    #                 json.dump(vtrxp_results,vtrxp_results_file,indent=2)
-    #             logfile.close()
-    #             sys.exit()
-    #         elif end_tests.lower() in ['n','no']:
-    #             test_failed = False
-    #         else:
-    #             print('Valid entries: y, yes, n, no')
-    # else:
-    #     print(Colors.BLUE + "Skipping S-Bit Cluster Mapping for %s tests"%test_type.replace("_","-") + Colors.ENDC)
-    #     logfile.write("Skipping S-Bit Cluster Mapping for %s tests\n"%test_type.replace("_","-"))
-    #     time.sleep(0.1)
-
-    # print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n" + Colors.ENDC)
-    # logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping, Cluster Mapping Complete\n\n")
 
     print (Colors.GREEN + "\nStep 7: S-bit Phase Scan, Bitslipping, Mapping Complete\n" + Colors.ENDC)
     logfile.write("\nStep 7: S-bit Phase Scan, Bitslipping, Mapping Complete\n\n")
@@ -1239,6 +1239,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_RESETS'] = str(xml_results[oh_sn]['VFAT_RESETS'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'VFAT Reset Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1256,6 +1260,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1347,6 +1354,10 @@ if __name__ == "__main__":
                         logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_SLOW_CONTROL_ERROR_COUNT'] = str(xml_results[oh_sn]['VFAT_SLOW_CONTROL_ERROR_COUNT'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Slow Control Error Rate Test Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1364,6 +1375,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1449,6 +1463,10 @@ if __name__ == "__main__":
                         logfile.write('ERROR:DAQ_CRC_ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"] = str(xml_results[oh_sn]["VFAT_DAQ_CRC_ERROR_COUNT"])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'DAQ Error Rate Test Failed')
+            
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1466,6 +1484,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1538,6 +1559,10 @@ if __name__ == "__main__":
         for oh_sn in xml_results:
             xml_results[oh_sn]['LPGBT_M_OH_CALIB'] = str(xml_results[oh_sn]['LPGBT_M_OH_CALIB'])
             xml_results[oh_sn]['LPGBT_S_OH_CALIB'] = str(xml_results[oh_sn]['LPGBT_S_OH_CALIB'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'ADC Calibration Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1555,6 +1580,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1630,6 +1658,10 @@ if __name__ == "__main__":
                         test_failed = True
                     print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s'%(oh_sn,voltage) + Colors.ENDC)
                     logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s %s\n'%(oh_sn,voltage))
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'lpGBT Voltage Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1647,6 +1679,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1698,6 +1733,10 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'RSSI Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1715,6 +1754,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -1972,6 +2014,10 @@ if __name__ == "__main__":
                 except KeyError:
                     print(Colors.YELLOW + 'WARNING: Missing result for %s for OH %s'%(key,oh_sn) + Colors.ENDC)
                     logfile.write('WARNING: Missing result for %s for OH %s'%(key,oh_sn))
+                    
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Current and Temperature Scan Failed')
+                    
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -1989,6 +2035,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2045,6 +2094,10 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'OH Temperature Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2062,6 +2115,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2117,6 +2173,10 @@ if __name__ == "__main__":
                     test_failed = True
                 print(Colors.RED + 'ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s'%oh_sn + Colors.ENDC)
                 logfile.write('ERROR:OUTSIDE_ACCEPTANCE_RANGE encountered at OH %s\n'%oh_sn)
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'VTRx+ Temperature Scan Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2134,6 +2194,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2255,6 +2318,10 @@ if __name__ == "__main__":
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_DAQ_S_CURVE_ENC'] = str(xml_results[oh_sn]['VFAT_DAQ_S_CURVE_ENC'])
             xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_DAQ_S_CURVE_BAD_CHANNELS'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'DAQ SCurve Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2272,6 +2339,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2379,6 +2449,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_DAQ_CROSSTALK_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_DAQ_CROSSTALK_BAD_CHANNELS'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'DAQ Crosstalk Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2396,6 +2470,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2502,14 +2579,18 @@ if __name__ == "__main__":
             for i,result in enumerate(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS']):
                 if result:
                     if not test_failed:
-                        print (Colors.RED + "\nStep 14: S-bit SCurves Failed\n" + Colors.ENDC)
-                        logfile.write("\nStep 14: S-bit SCurves Failed\n\n")
+                        print (Colors.RED + "\nStep 14: S-bit SCurve Failed\n" + Colors.ENDC)
+                        logfile.write("\nStep 14: S-bit SCurve Failed\n\n")
                         test_failed = True
                     print(Colors.RED + 'ERROR encountered at OH %s VFAT %d'%(oh_sn,geb_oh_map[slot]['VFAT'][i]) + Colors.ENDC)
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_SBIT_S_CURVE_ENC'] = str(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_ENC'])
             xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS'] = str(xml_results[oh_sn]['VFAT_SBIT_S_CURVE_BAD_CHANNELS'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-bit SCurve Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2527,6 +2608,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2636,6 +2720,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]["VFAT_SBIT_CROSSTALK_BAD_CHANNELS"] = str(xml_results[oh_sn]["VFAT_SBIT_CROSSTALK_BAD_CHANNELS"])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-bit Crosstalk Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2653,6 +2741,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2749,6 +2840,10 @@ if __name__ == "__main__":
                     logfile.write('ERROR encountered at OH %s VFAT %d\n'%(oh_sn,geb_oh_map[slot]['VFAT'][i]))
         for oh_sn in xml_results:
             xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'] = str(xml_results[oh_sn]['VFAT_SBIT_NOISE_SCAN_BAD_ELINKS'])
+
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'S-bit Noise Rate Failed')
+
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
             if end_tests.lower() in ['y','yes']:
@@ -2766,6 +2861,9 @@ if __name__ == "__main__":
                 with open(vtrxp_results_fn,'w') as vtrxp_results_file:
                     json.dump(vtrxp_results,vtrxp_results_file,indent=2)
                 logfile.close()
+                os.system("rm out.txt")
+                if os.path.isfile(calib_active_fn):
+                    os.system("rm %s"%calib_active_fn)
                 sys.exit()
             elif end_tests.lower() in ['n','no']:
                 test_failed = False
@@ -2782,6 +2880,9 @@ if __name__ == "__main__":
     time.sleep(0.1)
     print ("#####################################################################################################################################\n")
     logfile.write("#####################################################################################################################################\n\n")
+
+    if notify_bool:
+        slack.notify(teststand_name,f'Finished {test_type} Tests for OH SNs: {", ".join(oh_sn_list)}')
 
     print('Time taken to perform %s tests: %.3f'%(test_type.replace('_','-'),(time.time()-t0)/60))
     logfile.write('Time taken to perform %s tests: %.3f\n'%(test_type.replace('_','-'),(time.time()-t0)/60))

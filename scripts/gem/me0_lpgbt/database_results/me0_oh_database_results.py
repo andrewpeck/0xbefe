@@ -90,7 +90,10 @@ def combine_data(sn,input_data,*dataset,hardware='OH'):
                 break
     if hardware=='OH':
         data_out["ROOT"]['DATA_SET']['DATA'].update(**input_data['DATA'][1])
-    del data_out["ROOT"]['DATA_SET']['DATA']['SERIAL_NUMBER']
+    try:
+        del data_out["ROOT"]['DATA_SET']['DATA']['SERIAL_NUMBER']
+    except KeyError:
+        pass # Skip for empty dataset
     return data_out
 
 if __name__ == '__main__':
@@ -105,8 +108,8 @@ if __name__ == '__main__':
             if "#" in line:
                 if "TEST_TYPE" in line:
                     test_type = line.split()[2]
-                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug"]:
-                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" or debug' + Colors.ENDC)
+                    if test_type not in ["prototype", "pre_production", "pre_series", "production", "long_production", "acceptance", "debug", "update"]:
+                        print(Colors.YELLOW + 'Valid test type codes are "prototype", "pre_production", "pre_series", "production", "long_production", "acceptance" "debug" or "update"' + Colors.ENDC)
                         sys.exit()
                 continue
             elif not line.split():
@@ -140,7 +143,7 @@ if __name__ == '__main__':
                             pass
                         else:
                             sys.exit()
-                elif test_type=="debug":
+                elif test_type in ["debug", "update"]:
                     if int(oh_sn) not in range(1, 2019):
                         print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
                         options = input('Do you want to continue anyway? (y/n) >> ')
@@ -169,35 +172,38 @@ if __name__ == '__main__':
         oh_sn_str2 = '_'.join(oh_sn_list[4:])
     else:
         oh_sn_str = '_'.join(oh_sn_list)
+    if test_type == 'update':
+        oh_sn_str = '_'.join(['update', oh_sn_list[0], 'to', oh_sn_list[-1]])
     
     # Check if data directories exist
-    if test_type!='acceptance':
+    if test_type not in ['acceptance', 'update']:
         queso_data_dir = quesoDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str)
         if not os.path.exists(queso_data_dir):
             print(Colors.RED + 'QUESO results data directory: %s not found. Please ensure correct list of OH SERIAL NUMBERS and order.'%queso_data_dir + Colors.ENDC)
             sys.exit()
         queso_init_fn = queso_data_dir + 'queso_initialization_results.json'
         queso_bert_fn = queso_data_dir + 'queso_elink_bert_results.json'
-    if len(oh_sn_list) > 4:
-        geb_data2_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str2)
-        geb_data1_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str1)
-        if not os.path.exists(geb_data1_dir):
-            print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data1_dir + Colors.ENDC)
-            sys.exit()
-        if not os.path.exists(geb_data2_dir):
-            print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data2_dir + Colors.ENDC)
-            sys.exit()
-        geb_data1_fn = geb_data1_dir + 'me0_oh_database_results.json'
-        geb_data2_fn = geb_data2_dir + 'me0_oh_database_results.json'
-        vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
-        vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
-    else:
-        geb_data_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str)
-        if not os.path.exists(geb_data_dir):
-            print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
-            sys.exit()
-        geb_data_fn = geb_data_dir + 'me0_oh_database_results.json'
-        vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
+    if test_type != 'update':
+        if len(oh_sn_list) > 4:
+            geb_data2_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str2)
+            geb_data1_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str1)
+            if not os.path.exists(geb_data1_dir):
+                print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data1_dir + Colors.ENDC)
+                sys.exit()
+            if not os.path.exists(geb_data2_dir):
+                print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data2_dir + Colors.ENDC)
+                sys.exit()
+            geb_data1_fn = geb_data1_dir + 'me0_oh_database_results.json'
+            geb_data2_fn = geb_data2_dir + 'me0_oh_database_results.json'
+            vtrxp_data1_fn = geb_data1_dir + 'me0_vtrxp_database_results.json'
+            vtrxp_data2_fn = geb_data2_dir + 'me0_vtrxp_database_results.json'
+        else:
+            geb_data_dir = gebDir + '/%s_tests/OH_SNs_%s/'%(test_type,oh_sn_str)
+            if not os.path.exists(geb_data_dir):
+                print(Colors.RED + 'GEB results data directory: %s not found. OH SERIAL NUMBER order must match test batch directories exactly.'%geb_data_dir + Colors.ENDC)
+                sys.exit()
+            geb_data_fn = geb_data_dir + 'me0_oh_database_results.json'
+            vtrxp_data_fn = geb_data_dir + 'me0_vtrxp_database_results.json'
 
     # input data directory
     inputDataDir = inputDir + '/OH_SNs_%s'%oh_sn_str
@@ -228,7 +234,8 @@ if __name__ == '__main__':
     # -- Begin creating datasets --
 
     oh_dataset = []
-    if test_type!='acceptance':
+    vtrxp_dataset = []
+    if test_type not in ['acceptance', 'update']:
         # Load and check queso data
         queso_data_found = [False for _ in range(len(oh_sn_list))]
         try:
@@ -267,81 +274,82 @@ if __name__ == '__main__':
         else:
             oh_dataset += [queso_init_data,queso_bert_data]
 
-    # Load and check geb (oh + vtrxp) data
-    if len(oh_sn_list) > 4:
-        try:
-            geb_data = get_json_data(geb_data1_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file 1 not found.' + Colors.ENDC)
-            sys.exit()
+    if test_type != 'update':
+        # Load and check geb (oh + vtrxp) data
+        if len(oh_sn_list) > 4:
+            try:
+                geb_data = get_json_data(geb_data1_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'GEB RESULTS file 1 not found.' + Colors.ENDC)
+                sys.exit()
 
-        try:
-            geb_data += get_json_data(geb_data2_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file 2 not found.' + Colors.ENDC)
-            sys.exit()
+            try:
+                geb_data += get_json_data(geb_data2_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'GEB RESULTS file 2 not found.' + Colors.ENDC)
+                sys.exit()
 
-        try:
-            vtrxp_dataset = get_json_data(vtrxp_data1_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
-            sys.exit()
+            try:
+                vtrxp_dataset = get_json_data(vtrxp_data1_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
+                sys.exit()
 
-        try:
-            vtrxp_dataset += get_json_data(vtrxp_data2_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
-            sys.exit()
-    else:
-        try:
-            geb_data = get_json_data(geb_data_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'GEB RESULTS file not found.' + Colors.ENDC)
-            sys.exit()
-        try:
-            vtrxp_dataset = get_json_data(vtrxp_data_fn)
-        except FileNotFoundError:
-            print(Colors.RED + 'VTRx+ RESULTS file not found.' + Colors.ENDC)
-            sys.exit()
+            try:
+                vtrxp_dataset += get_json_data(vtrxp_data2_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'VTRx+ RESULTS file 1 not found.' + Colors.ENDC)
+                sys.exit()
+        else:
+            try:
+                geb_data = get_json_data(geb_data_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'GEB RESULTS file not found.' + Colors.ENDC)
+                sys.exit()
+            try:
+                vtrxp_dataset = get_json_data(vtrxp_data_fn)
+            except FileNotFoundError:
+                print(Colors.RED + 'VTRx+ RESULTS file not found.' + Colors.ENDC)
+                sys.exit()
 
-    # Check for missing data and that oh serial numbers and vtrxp serial numbers match
-    geb_data_found = [False for _ in range(len(oh_sn_list))]
-    vtrxp_data_found = [False for _ in range(len(vtrxp_sn_list))]
-    oh_vtrxp_mismatch = [False for _ in range(len(oh_sn_list))]
-    for i,(oh_sn,vtrxp_sn) in enumerate(zip(oh_sn_list,vtrxp_sn_list)):
-        for j,(geb_result,vtrxp_result) in enumerate(zip(geb_data,vtrxp_dataset)):
-            # Check for oh sn present in geb data
-            if geb_result['SERIAL_NUMBER']==oh_sn:
-                geb_data_found[i] = True
-                oh_i = j
-            # Check for vtrxp sn present in geb data
-            if vtrxp_result['SERIAL_NUMBER']==vtrxp_sn:
-                vtrxp_data_found[i] = True
-                vtrxp_i = j
-            if geb_data_found[i] and vtrxp_data_found[i]:
-                break
+        # Check for missing data and that oh serial numbers and vtrxp serial numbers match
+        geb_data_found = [False for _ in range(len(oh_sn_list))]
+        vtrxp_data_found = [False for _ in range(len(vtrxp_sn_list))]
+        oh_vtrxp_mismatch = [False for _ in range(len(oh_sn_list))]
+        for i,(oh_sn,vtrxp_sn) in enumerate(zip(oh_sn_list,vtrxp_sn_list)):
+            for j,(geb_result,vtrxp_result) in enumerate(zip(geb_data,vtrxp_dataset)):
+                # Check for oh sn present in geb data
+                if geb_result['SERIAL_NUMBER']==oh_sn:
+                    geb_data_found[i] = True
+                    oh_i = j
+                # Check for vtrxp sn present in geb data
+                if vtrxp_result['SERIAL_NUMBER']==vtrxp_sn:
+                    vtrxp_data_found[i] = True
+                    vtrxp_i = j
+                if geb_data_found[i] and vtrxp_data_found[i]:
+                    break
 
-        if not geb_data_found[i]:
-            print(Colors.RED + "Missing GEB RESULTS data for OH %s"%oh_sn + Colors.ENDC)
-        if not vtrxp_data_found[i]:
-            print(Colors.RED + "Missing RESULTS data for VTRxPlus %s"%vtrxp_sn + Colors.ENDC)
-        
-        # Check for correct vtrxp sn in oh dataset
-        if geb_data[oh_i]['VTRXPLUS_SERIAL_NUMBER']!=vtrxp_dataset[vtrxp_i]['SERIAL_NUMBER']:
-            oh_vtrxp_mismatch[i] = True
-            print(Colors.RED + 'Mismatch VTRxPlus SERIAL NUMBER. In OH results: %s, In VTRxPlus results: %s'%(geb_data['VTRXPLUS_SERIAL_NUMBER'],vtrxp_dataset['SERIAL_NUMBER']) + Colors.ENDC)
+            if not geb_data_found[i]:
+                print(Colors.RED + "Missing GEB RESULTS data for OH %s"%oh_sn + Colors.ENDC)
+            if not vtrxp_data_found[i]:
+                print(Colors.RED + "Missing RESULTS data for VTRxPlus %s"%vtrxp_sn + Colors.ENDC)
+            
+            # Check for correct vtrxp sn in oh dataset
+            if geb_data[oh_i]['VTRXPLUS_SERIAL_NUMBER']!=vtrxp_dataset[vtrxp_i]['SERIAL_NUMBER']:
+                oh_vtrxp_mismatch[i] = True
+                print(Colors.RED + 'Mismatch VTRxPlus SERIAL NUMBER. In OH results: %s, In VTRxPlus results: %s'%(geb_data['VTRXPLUS_SERIAL_NUMBER'],vtrxp_dataset['SERIAL_NUMBER']) + Colors.ENDC)
 
-    if not np.all(geb_data_found):
-        print(Colors.RED + 'Please check GEB results files for missing data.' + Colors.ENDC)
-        sys.exit()
-    if not np.all(vtrxp_data_found):
-        print(Colors.RED + 'Please check VTRxPlus results files for missing data.' + Colors.ENDC)
-        sys.exit()
-    elif np.any(oh_vtrxp_mismatch):
-        print(Colors.RED + 'VTRx+ SERIAL NUMBER order must match the OHs on which they are mounted.' + Colors.ENDC)
-        sys.exit()
-    else:
-        oh_dataset+=[geb_data]
+        if not np.all(geb_data_found):
+            print(Colors.RED + 'Please check GEB results files for missing data.' + Colors.ENDC)
+            sys.exit()
+        if not np.all(vtrxp_data_found):
+            print(Colors.RED + 'Please check VTRxPlus results files for missing data.' + Colors.ENDC)
+            sys.exit()
+        elif np.any(oh_vtrxp_mismatch):
+            print(Colors.RED + 'VTRx+ SERIAL NUMBER order must match the OHs on which they are mounted.' + Colors.ENDC)
+            sys.exit()
+        else:
+            oh_dataset+=[geb_data]
 
     for oh_sn,vtrxp_sn in zip(oh_sn_list,vtrxp_sn_list):
         input_oh = input_dataset['OH_%s_VTRxPlus_%s'%(oh_sn,vtrxp_sn)]['OH']

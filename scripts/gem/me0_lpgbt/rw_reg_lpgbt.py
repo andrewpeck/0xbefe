@@ -304,7 +304,7 @@ def get_oh_ver(ohIdx, gbtIdx):
         rw_terminate()
     return oh_ver
 
-def mpeek(address):
+def mpeek(address,do_terminate=True):
     if system=="chc" or system=="queso":
         success, data = gbt_rpi_chc.lpgbt_read_register(address)
         if success:
@@ -313,9 +313,9 @@ def mpeek(address):
             print(Colors.RED + "ERROR: Problem in reading register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
-        gem_utils.write_backend_reg(NODE_IC_ADDR, address)
-        gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1)
-        data = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
+        gem_utils.write_backend_reg(NODE_IC_ADDR, address,do_terminate=do_terminate)
+        gem_utils.write_backend_reg(NODE_IC_EXEC_READ, 1,do_terminate=do_terminate)
+        data = gem_utils.read_backend_reg(NODE_IC_READ_DATA,do_terminate=do_terminate) & 0xFF
         #data = reg_list_dryrun[address]
         return data
     elif system=="dryrun":
@@ -324,7 +324,7 @@ def mpeek(address):
         print(Colors.RED + "ERROR: Incorrect system" + Colors.ENDC)
         rw_terminate()
 
-def mpoke(address, value, write_only=False):
+def mpoke(address, value, write_only=False,do_terminate=True):
     global reg_list_dryrun
     if system=="chc" or system=="queso":
         success = gbt_rpi_chc.lpgbt_write_register(address, value)
@@ -332,12 +332,12 @@ def mpoke(address, value, write_only=False):
             print(Colors.RED + "ERROR: Problem in writing register: " + str(hex(address)) + Colors.ENDC)
             rw_terminate()
     elif system=="backend":
-        gem_utils.write_backend_reg(NODE_IC_ADDR, address)
-        gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value)
-        gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1)
+        gem_utils.write_backend_reg(NODE_IC_ADDR, address,do_terminate=do_terminate)
+        gem_utils.write_backend_reg(NODE_IC_WRITE_DATA, value,do_terminate=do_terminate)
+        gem_utils.write_backend_reg(NODE_IC_EXEC_WRITE, 1,do_terminate=do_terminate)
         reg_list_dryrun[address] = value
         if not write_only:
-            read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA) & 0xFF
+            read_value = gem_utils.read_backend_reg(NODE_IC_READ_DATA,do_terminate=do_terminate) & 0xFF
             if read_value != value:
                 print(Colors.RED + "ERROR: Value read from register does not match what was written for register: " + str(hex(address)) + Colors.ENDC)
                 rw_terminate()

@@ -53,19 +53,19 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             n_rw_reg = (0x14F+1)
         select_ic_link(oh_select, gbt)
         for reg in range(n_rw_reg):
-            reg_list_boss[gbt][reg] = mpeek(reg)
+            reg_list_boss[gbt][reg] = mpeek(reg,do_terminate=False)
     for gbt in gbt_list["sub"]:
         reg_list_sub[gbt] = {}
         oh_ver = get_oh_ver(str(oh_select), str(gbt))
         select_ic_link(oh_select, gbt)
         if oh_ver == 1:
             for i in range(0,10):
-                test_read = mpeek(0x00)
+                test_read = mpeek(0x00,do_terminate=False)
             n_rw_reg = (0x13C+1)
         if oh_ver == 2:
             n_rw_reg = (0x14F+1)
         for reg in range(n_rw_reg):
-            reg_list_sub[gbt][reg] = mpeek(reg)
+            reg_list_sub[gbt][reg] = mpeek(reg,do_terminate=False)
 
     # Turn power supply off
     power_supply.disable_output()
@@ -146,13 +146,13 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if oh_ver == 1:
                 ready_value = 18
                 mode_value = 11
-                mode = (mpeek(0x140) & 0xF0) >> 4
-                pusmstate = mpeek(0x1C7)
+                mode = (mpeek(0x140,do_terminate=False) & 0xF0) >> 4
+                pusmstate = mpeek(0x1C7,do_terminate=False)
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 11
-                mode = (mpeek(0x150) & 0xF0) >> 4
-                pusmstate = mpeek(0x1D9)
+                mode = (mpeek(0x150,do_terminate=False) & 0xF0) >> 4
+                pusmstate = mpeek(0x1D9,do_terminate=False)
 
             if mode != mode_value:
                 n_error_mode_boss[gbt] += 1
@@ -173,7 +173,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if oh_ver == 2:
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
-                val = mpeek(reg)
+                val = mpeek(reg,do_terminate=False)
                 if val != reg_list_boss[gbt][reg]:
                     n_error_reg_list_boss[gbt] += 1
                     test_failed = True
@@ -207,16 +207,16 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             # Check lpGBT PUSM READY and MODE
             if oh_ver == 1:
                 for i in range(0,10):
-                    test_read = mpeek(0x00)
+                    test_read = mpeek(0x00,do_terminate=False)
                 ready_value = 18
                 mode_value = 9
-                mode = (mpeek(0x140) & 0xF0) >> 4
-                pusmstate = mpeek(0x1C7)
+                mode = (mpeek(0x140,do_terminate=False) & 0xF0) >> 4
+                pusmstate = mpeek(0x1C7,do_terminate=False)
             elif oh_ver == 2:
                 ready_value = 19
                 mode_value = 9
-                mode = (mpeek(0x150) & 0xF0) >> 4
-                pusmstate = mpeek(0x1D9)
+                mode = (mpeek(0x150,do_terminate=False) & 0xF0) >> 4
+                pusmstate = mpeek(0x1D9,do_terminate=False)
 
             if mode != mode_value:
                 n_error_mode_sub[gbt] += 1
@@ -237,7 +237,7 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
             if oh_ver == 2:
                 n_rw_reg = (0x14F+1)
             for reg in range(n_rw_reg):
-                val = mpeek(reg)
+                val = mpeek(reg,do_terminate=False)
                 if val != reg_list_sub[gbt][reg]:
                     n_error_reg_list_sub[gbt] += 1
                     test_failed = True
@@ -251,6 +251,9 @@ def main(system, oh_select, gbt_list, current, voltages, niter):
         while (power_supply.is_output_enabled()):
             sleep(0.5)
         print("Output is disabled")
+        
+        if test_failed and notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Failed')
 
         while test_failed:
             end_tests = input('\nWould you like to exit testing? >> ')
@@ -421,13 +424,36 @@ if __name__ == "__main__":
     print("Initialization Done\n")
 
     try:
+        from gem.me0_lpgbt.notify import *
+        teststand_name = 'geb-teststand'
+        webhook_dir = get_befe_scripts_dir() + '/resources/webhook'
+        slack = SlackNotifier(webhook_dir)
+        # Flag for sending notifications
+        notify_bool = True
+        print('\nNotifications Enabled\n')
+    except:
+        notify_bool = False
+
+    if notify_bool:
+        slack.notify(teststand_name,'Powercycle Test Started')
+
+    try:
         main(args.system, oh_select, gbt_list, current, voltage, int(args.niter))
     except KeyboardInterrupt:
         print (Colors.RED + "\nKeyboard Interrupt encountered" + Colors.ENDC)
+        
+        if notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Exited')
         rw_terminate()
     except EOFError:
         print (Colors.RED + "\nEOF Error" + Colors.ENDC)
+        
+        if notify_bool:
+            slack.notify(teststand_name,'Powercycle Test Exited w/ EOF Error')
         rw_terminate()
+
+    if notify_bool:
+        slack.notify(teststand_name,'Finished Powercycle Test')
 
     # Termination
     rw_terminate()

@@ -84,6 +84,8 @@ Use -h option for any script to check usage
 
 ```vfat_temp_monitor.py```: temp monitor for VFAT
 
+```dbinteract/get.sh```: tool for retreiving data from the GEM CMS database
+
 ## Retrieving VFAT Calibrbation Data
 
 To execute the script get_cal_info_vfat.py:
