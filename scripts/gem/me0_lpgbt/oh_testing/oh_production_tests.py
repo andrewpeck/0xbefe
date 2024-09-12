@@ -63,12 +63,12 @@ if __name__ == "__main__":
                     print(Colors.YELLOW + "Valid %s OH serial number between 1 and 1000"%test_type.replace('_','-') + Colors.ENDC)
                     sys.exit()
             elif test_type in ["pre_series", "production", "acceptance"]:
-                if int(oh_sn) not in range(1001, 2019):
-                    print(Colors.YELLOW + "Valid %s OH serial number between 1001 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                if int(oh_sn) not in range(1001, 2349):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1001 and 2348"%test_type.replace('_','-') + Colors.ENDC)
                     sys.exit()
             elif test_type=="debug":
-                if int(oh_sn) not in range(1, 2019):
-                    print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2018"%test_type.replace('_','-') + Colors.ENDC)
+                if int(oh_sn) not in range(1, 2349):
+                    print(Colors.YELLOW + "Valid %s OH serial number between 1 and 2348"%test_type.replace('_','-') + Colors.ENDC)
                     sys.exit()
             if int(slot) > 4:
                 print(Colors.YELLOW + "Tests for more than 1 OH layer is not yet supported. Valid slots (1-4)" + Colors.ENDC)
