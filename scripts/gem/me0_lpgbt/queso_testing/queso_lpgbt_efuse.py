@@ -45,8 +45,8 @@ if __name__ == "__main__":
         queso_nr = line.split()[0]
         oh_serial_nr = line.split()[1]
         if oh_serial_nr != "-9999":
-            if int(oh_serial_nr) not in range(1, 1019):
-                print(Colors.YELLOW + "Valid OH serial number between 1 and 1018" + Colors.ENDC)
+            if int(oh_serial_nr) not in range(1, 2349):
+                print(Colors.YELLOW + "Valid OH serial number between 1 and 2348" + Colors.ENDC)
                 sys.exit() 
             queso_list[queso_nr] = oh_serial_nr
     input_file.close()
