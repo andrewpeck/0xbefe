@@ -1,0 +1,7 @@
+To use this script update the credential file to your CERN SSO username and password
+
+To download a list of all OH's or VTRx's, run "./get.sh oh" or "./get.sh vtrx"
+
+To download a specific device run "./get.sh oh xxxx" or "./get.sh vtrx xxxxxx"
+
+The results are stored in resources/oh or resources/vtrx
